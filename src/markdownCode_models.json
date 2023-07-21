@@ -1,0 +1,6 @@
+{
+    "list_service_usage": {
+        "default": "gpt-3.5-turbo-16k",
+        "topics": {}
+    }
+}

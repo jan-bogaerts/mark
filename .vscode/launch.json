@@ -1,0 +1,315 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+       
+
+        {
+            "name": "compress mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/compress.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_cond"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "double compress mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/double_compress.py",
+            "args": [
+                "${workspaceFolder}/src/generated/mdc_cond_compress.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "extract packages mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/package_extractor.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_class_files.md",
+                "${workspaceFolder}/src/generated/mdc_component_files.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "list components mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/component_lister.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "list classes mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/class_lister.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "list constants mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/constant_lister.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get primary component - mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/primary_component.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_components.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get primary class - mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/primary_class.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_classes.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "classify declare or use component - mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/declare_or_use_comp_classifier.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_components.md",
+                "${workspaceFolder}/src/generated/mdc_primary_comp.md",
+                "${workspaceFolder}/src/generated/mdc_comp_descriptions.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "classify declare or use class - mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/declare_or_use_class_classifier.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_classes.md",
+                "${workspaceFolder}/src/generated/mdc_primary_class.md",
+                "${workspaceFolder}/src/generated/mdc_class_descriptions.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get class descriptions - mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/class_descriptions.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_double_compress.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get component descriptions - mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/component_descriptions.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_double_compress.md",
+                "${workspaceFolder}/src/generated/mdc_components.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get if service is used mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/get_if_service_is_used.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get if component is used mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/get_if_component_is_used.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
+                "${workspaceFolder}/src/generated/mdc_comp_descriptions.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "list service usage mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/list_service_usage.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
+                "${workspaceFolder}/src/generated/mdc_is_service_used.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "list component expansion mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/list_component_expansions.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
+                "${workspaceFolder}/src/generated/mdc_is_component_used.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "render components mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/render_component.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_components.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
+                "${workspaceFolder}/src/generated/mdc_component_expansion.md",
+                "${workspaceFolder}/src/generated/code/",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "render classes mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/render_classes.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_classes.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
+                "${workspaceFolder}/src/generated/mdc_service_usage.md",
+                "${workspaceFolder}/src/generated/code/",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "list project files mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/get_project_files.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get packages file mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/get_packages_list_file.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_project_files.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "render project files mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/render_project_files.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_project_files.md",
+                "${workspaceFolder}/src/generated/mdc_packages_file.md",
+                "${workspaceFolder}/src/generated/code/"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+    ]
+}
