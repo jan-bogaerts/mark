@@ -12,7 +12,7 @@ import class_descriptions
 import openai
 import tiktoken
 
-ONLY_MISSING = True # only check if the fragment has not yet been processed
+ONLY_MISSING = False # only check if the fragment has not yet been processed
 
 system_prompt = """Act as an ai software analyst.
 It is your task to classify if the class '{0}', described as: '{1}', is declared in one of the given titles.

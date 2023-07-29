@@ -13,7 +13,7 @@ import class_lister
 import result_loader
 
 
-ONLY_MISSING = True # only check if the fragment has not yet been processed
+ONLY_MISSING = False # only check if the fragment has not yet been processed
 
 
 import openai
@@ -174,11 +174,11 @@ def has_fragment(title):
 
 def get_data(title):
     '''returns the list of components for the given title'''
-    to_search = title.lower().strip()
+    to_search = title.strip()
     if not to_search.startswith('# '):
         to_search = '# ' + to_search
     for fragment in text_fragments:
-        if fragment.title.lower() == to_search:
+        if fragment.title == to_search:
             return fragment.data or []
     return []    
 

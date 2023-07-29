@@ -11,7 +11,7 @@ DEFAULT_MODEL = "gpt-3.5-turbo" # we recommend 'gpt-4' if you have it # gpt3.5 i
 DEFAULT_MAX_TOKENS = 2000 # i wonder how to tweak this properly. we dont want it to be max length as it encourages verbosity of code. but too short and code also truncates suddenly.
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
-file = os.path.join(os.path.dirname(__file__), "../src/Pelikaan_models.json")
+file = os.path.join(os.path.dirname(__file__), "../src/markdownCode_models.json")
 if os.path.exists(file):
     MODELS_CONFIG = json.load(open(file, "r"))
 else:

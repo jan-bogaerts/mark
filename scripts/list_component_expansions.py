@@ -9,6 +9,7 @@ import declare_or_use_comp_classifier
 import get_if_component_is_used
 import json
 import result_loader
+import compress
 
 import openai
 import tiktoken
@@ -24,6 +25,9 @@ ex:
 Feature: The user can select a model from a dropdownbox where the list of models is provided by the service.
 function: getModels
 description: getModels will retrieve a list of all the models that are currently available. 
+
+keep in mind that the following development stack is used:
+{1}
 
 Do not include any introduction, explanation comments or notes.
 return the results as a json structure. If no results are found, return an empty array."""
@@ -85,7 +89,7 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['class_name'] )
+    prompt = system_prompt.format(params['class_name'], params['dev_stack'] )
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
     prompt = user_prompt.format(params['feature_description'])
@@ -141,6 +145,8 @@ def collect_response(title, response, result, writer):
 def process_data(writer):
     result = []
 
+    dev_stack = compress.text_fragments[1].content
+
     for to_check in project.fragments[2:]:  # skip the first two fragments cause that's the description and dev stack
         if to_check.content == '':
             continue
@@ -163,6 +169,7 @@ def process_data(writer):
                         continue
                     params = {
                         'class_name': comp_name,
+                        'dev_stack': dev_stack,
                         'feature_description': to_check.content,
                     }
                     response = generate_response(params, to_check.full_title)
@@ -181,7 +188,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, class_list, is_used, file=None):
+def main(prompt, class_list, is_used, compressed, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -193,6 +200,7 @@ def main(prompt, class_list, is_used, file=None):
     project.split_standard(prompt)
     declare_or_use_comp_classifier.load_results(class_list)
     get_if_component_is_used.load_results(is_used)
+    compress.load_results(compressed)
 
     print("rendering results")
 
@@ -254,7 +262,7 @@ def get_all_expansions_for(name):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         print("Please provide a prompt")
         sys.exit(1)
     else:
@@ -262,9 +270,10 @@ if __name__ == "__main__":
         prompt = sys.argv[1]
         class_list = sys.argv[2]
         is_used = sys.argv[3]
+        compressed = sys.argv[4]
 
     # Pull everything else as normal
-    file = sys.argv[4] if len(sys.argv) > 4 else None
+    file = sys.argv[5] if len(sys.argv) > 5 else None
 
     # Run the main function
-    main(prompt, class_list, is_used, file)
+    main(prompt, class_list, is_used, compressed, file)

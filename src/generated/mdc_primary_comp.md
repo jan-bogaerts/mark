@@ -1,42 +1,36 @@
-# Pelikaan > components
-ThemeSwitcher
-# Pelikaan > components > main window
+# MarkdownCode > components > main window
 MainWindow
-# Pelikaan > components > toolbar
+# MarkdownCode > components > toolbar
 Toolbar
-# Pelikaan > components > toolbar > home
+# MarkdownCode > components > toolbar > home
 Home
-# Pelikaan > components > toolbar > home > file section
+# MarkdownCode > components > toolbar > home > file section
 FileSection
-# Pelikaan > components > toolbar > home > edit section
+# MarkdownCode > components > toolbar > home > edit section
 EditSection
-# Pelikaan > components > toolbar > home > undo section
+# MarkdownCode > components > toolbar > home > undo section
 UndoSection
-# Pelikaan > components > toolbar > home > build section
+# MarkdownCode > components > toolbar > home > build section
 BuildSection
-# Pelikaan > components > toolbar > format
+# MarkdownCode > components > toolbar > format
 FormatTab
-# Pelikaan > components > toolbar > format > style section
+# MarkdownCode > components > toolbar > format > style section
 StyleSection
-# Pelikaan > components > toolbar > format > paragraph section
+# MarkdownCode > components > toolbar > format > paragraph section
 ParagraphSection
-# Pelikaan > components > toolbar > format > font section
+# MarkdownCode > components > toolbar > format > font section
 FontSection
-# Pelikaan > components > toolbar > preferences
-ToolbarTab
-# Pelikaan > components > toolbar > preferences > project section:
-ProjectSection
-# Pelikaan > components > toolbar > preferences > GPT section:
+# MarkdownCode > components > toolbar > preferences
+PreferencesTab
+# MarkdownCode > components > toolbar > preferences > GPT section:
 GptSection
-# Pelikaan > components > toolbar > preferences > view section:
+# MarkdownCode > components > toolbar > preferences > view section:
 ViewSection
-# Pelikaan > components > body
+# MarkdownCode > components > body
 Body
-# Pelikaan > components > body > editor
+# MarkdownCode > components > body > editor
 Editor
-# Pelikaan > components > body > outline
-OutlineView
-# Pelikaan > components > body > preview
-Preview
-# Pelikaan > components > body > generated
-View
+# MarkdownCode > components > body > outline
+Outline
+# MarkdownCode > components > body > results view
+ResultsView

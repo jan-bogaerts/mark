@@ -5,18 +5,20 @@ from time import sleep
 from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
 import declare_or_use_class_classifier
+import class_descriptions
 import json
 import result_loader
 
 import openai
 import tiktoken
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """Act as an ai software analyst.
-It is your task to find features in the source text that are related to a specific service.
+It is your task to find features in the source text that are related to the specified service.
 
-Does the source-text contain any features related to "{0}"?
+Does the source-text contain any features related to "{0}", described as:
+{1}
 
 only return yes or no
 
@@ -54,7 +56,7 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['class_name'] )
+    prompt = system_prompt.format(params['class_name'], params['class_description'] )
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
     prompt = user_prompt.format(params['feature_description'])
@@ -116,20 +118,26 @@ def process_data(writer):
         if ONLY_MISSING and has_fragment(to_check.full_title):
             continue
         results = {}
+        if to_check.full_title.startswith('# '):
+            to_check_title = to_check.full_title
+        else:
+            to_check_title = '# ' + to_check.full_title
         for check_against in declare_or_use_class_classifier.text_fragments:
             if check_against.content == '':
                 continue
-            if check_against.title == to_check.title:
+            if check_against.full_title == to_check_title:
                 continue
             classes = check_against.data
             if not classes:
                 continue
             fragment_results = {}
             for class_name, value in classes.items():
+                description = class_descriptions.get_description(check_against.full_title, class_name)
                 if value == 'declare':
                     params = {
                         'class_name': class_name,
                         'feature_description': to_check.content,
+                        'class_description': description
                     }
                     response = generate_response(params, to_check.full_title)
                     if response:
@@ -146,7 +154,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, class_list, file=None):
+def main(prompt, class_list, descriptions, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -157,6 +165,7 @@ def main(prompt, class_list, file=None):
     # split the prompt into a toolbar, list of components and a list of services, based on the markdown headers
     project.split_standard(prompt)
     declare_or_use_class_classifier.load_results(class_list)
+    class_descriptions.load_results(descriptions)
 
     # save there result to a file while rendering.
     if file is None:
@@ -199,7 +208,10 @@ def get_data(title):
 def is_used(root, title, class_name):
     '''returns true if the given class is used in the given title'''
     data = get_data(root)
-    section = data[title]
+    if title in data:
+        section = data[title]
+    else:
+        return False
     if not section:
         return False
     value = section[class_name]
@@ -220,16 +232,17 @@ def has_fragment(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print("Please provide a prompt")
         sys.exit(1)
     else:
         # Set prompt to the first argument
         prompt = sys.argv[1]
         class_list = sys.argv[2]
+        descriptions = sys.argv[3]
 
     # Pull everything else as normal
-    file = sys.argv[3] if len(sys.argv) > 3 else None
+    file = sys.argv[4] if len(sys.argv) > 4 else None
 
     # Run the main function
-    main(prompt, class_list, file)
+    main(prompt, class_list, descriptions, file)

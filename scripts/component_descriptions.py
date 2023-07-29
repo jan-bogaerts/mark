@@ -31,6 +31,7 @@ term_prompt = """"""
 def generate_response(params, key):
 
     total_tokens = 0
+    key = key.split('#')[-1].strip()
     model = get_model_config('component_descriptions', key)
     
     def reportTokens(prompt):

@@ -10,7 +10,7 @@ import openai
 import tiktoken
 
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
 Any text between ``` or \""" signs are declarations of constant values, do not change them, but replace with the name of the constant. Remove the markdown, but use bullet points where appropriate.
@@ -149,7 +149,7 @@ def load_results(filename, overwrite_file_name=None):
     if not overwrite_file_name:
         # modify the filename so that the filename without extension ends on _overwrite
         overwrite_file_name = filename.split('.')[0] + '_overwrite.' + filename.split('.')[1]
-    result_loader.load(filename, text_fragments, True, overwrite_file_name)
+    result_loader.load(filename, text_fragments, False, overwrite_file_name)
 
 
 def has_fragment(title):

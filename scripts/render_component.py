@@ -8,6 +8,7 @@ import component_lister
 import declare_or_use_comp_classifier
 # import declare_or_use_class_classifier
 import list_component_expansions
+import list_how_service_describes_components
 import json
 import result_loader
 
@@ -28,6 +29,9 @@ user_prompt = """The component '{0}' is described as follows:
 
 make certain that the following functionality is publicly available:
 {3}
+
+the following funcionalities are required to be available from the services:
+{4}
 """
 term_prompt = """
 Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
@@ -74,7 +78,7 @@ def generate_response(params, key):
     prompt = system_prompt.format(params['component'], params['dev_stack'], params['imports'] ) + term_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['public_features'])
+    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['public_features'], params['features_from_services'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
@@ -153,6 +157,13 @@ def get_to_render_and_imports(title, components):
     return to_render, imports
 
 
+def get_features_from_services(component):
+    items = list_how_service_describes_components.get_all_expansions_for(component)
+    result = ''
+    for item in items:
+        result += f' - {item}\n'
+
+
 def process_data(root_path, writer):
     dev_stack = project.fragments[1].content
     for fragment in project.fragments:
@@ -164,13 +175,15 @@ def process_data(root_path, writer):
             to_render, imports = get_to_render_and_imports(fragment.full_title, components)
             for component in to_render:
                 public_features = list_component_expansions.get_all_expansions_for(component)
+                features_from_services = get_features_from_services(component)
                 params = {
                     'component': component,
                     'feature_title': fragment.title,
                     'feature_description': fragment.content,
                     'dev_stack': dev_stack,
                     'imports': get_all_imports(imports, component, to_render, fragment.full_title),
-                    'public_features': public_features
+                    'public_features': public_features,
+                    'features_from_services': features_from_services,
                 }
                 response = generate_response(params, fragment.full_title)
                 if response:
@@ -188,7 +201,7 @@ def process_data(root_path, writer):
                     
 
 
-def main(prompt, components_list, declare_or_use_list, expansions, root_path=None, file=None):
+def main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, root_path=None, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -201,6 +214,7 @@ def main(prompt, components_list, declare_or_use_list, expansions, root_path=Non
     component_lister.load_results(components_list)
     declare_or_use_comp_classifier.load_results(declare_or_use_list)
     list_component_expansions.load_results(expansions)
+    list_how_service_describes_components.load_results(comp_features_from_service)
 
     # save there result to a file while rendering.
     if file is None:
@@ -259,7 +273,7 @@ def get_data(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 6:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -268,10 +282,11 @@ if __name__ == "__main__":
         components_list = sys.argv[2]
         declare_or_use_list = sys.argv[3]
         expansions = sys.argv[4]
+        comp_features_from_service = sys.argv[5]
 
     # Pull everything else as normal
-    folder = sys.argv[5] if len(sys.argv) > 5 else None
-    file = sys.argv[6] if len(sys.argv) > 6 else None
+    folder = sys.argv[6] if len(sys.argv) > 6 else None
+    file = sys.argv[7] if len(sys.argv) > 7 else None
 
     # Run the main function
-    main(prompt, components_list, declare_or_use_list, expansions, folder, file)
+    main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, folder, file)

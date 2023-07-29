@@ -13,7 +13,7 @@ import json
 import openai
 import tiktoken
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """Act as an ai software analyst.
 It is your task to classify if the component '{0}', described as: '{1}', is declared in one of the given titles.
@@ -180,13 +180,23 @@ def load_results(filename, overwrite_file_name=None):
     result_loader.load(filename, text_fragments, True, overwrite_file_name)
         
 
-def get_is_declared(full_title, name):
-    """Returns true if the class is declared in the given text fragment"""
-    to_search = full_title.lower().strip()
+def get_data(full_title):
+    """Returns the data for the given text fragment"""
+    to_search = full_title.strip()
     if not to_search.startswith('# '):
         to_search = '# ' + to_search
     for fragment in text_fragments:
-        if fragment.full_title.lower().strip() == to_search:
+        if fragment.full_title.strip() == to_search:
+            return fragment.data
+    return None
+
+def get_is_declared(full_title, name):
+    """Returns true if the class is declared in the given text fragment"""
+    to_search = full_title.strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
+    for fragment in text_fragments:
+        if fragment.full_title.strip() == to_search:
             if name in fragment.data:
                 return fragment.data[name] == 'declare'
     return False

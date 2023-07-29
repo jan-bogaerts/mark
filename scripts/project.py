@@ -132,3 +132,15 @@ def split_standard(prompt):
             current_content += line + "\n"
     if current_title:
         fragments.append(TextFragment(current_title, current_content, ' > '.join(parents)))
+
+
+
+def get_fragment(title):
+    """Returns the fragment with the given title"""
+    to_search = title.strip()
+    if to_search.startswith('# '):
+        to_search = to_search.split('# ')[-1]
+    for fragment in fragments:
+        if fragment.full_title.strip() == to_search:
+            return fragment
+    return None

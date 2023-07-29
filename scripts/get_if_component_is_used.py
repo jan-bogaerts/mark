@@ -124,7 +124,7 @@ def process_data(writer):
         for check_against in declare_or_use_comp_classifier.text_fragments:
             if check_against.content == '':
                 continue
-            if check_against.title == to_check_title:
+            if check_against.full_title == to_check_title:
                 continue
             components = check_against.data
             if not components:

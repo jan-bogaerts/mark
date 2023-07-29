@@ -1,16 +1,22 @@
-# Pelikaan > services
+# MarkdownCode > services
 {"ErrorService": "declare", "DialogService": "declare"}
-# Pelikaan > services > project service
+# MarkdownCode > services > Theme service
+{"ThemeService": "declare"}
+# MarkdownCode > services > project service
 {"ProjectService": "declare"}
-# Pelikaan > services > line parser
+# MarkdownCode > services > Selection service
+{"SelectionService": "declare"}
+# MarkdownCode > services > Undo service
+{"UndoService": "declare"}
+# MarkdownCode > services > line parser
 {"LineParser": "declare"}
-# Pelikaan > services > position-tracking service
+# MarkdownCode > services > position-tracking service
 {"PositionTrackingService": "declare"}
-# Pelikaan > services > gpt service
+# MarkdownCode > services > gpt service
 {"GptService": "declare"}
-# Pelikaan > services > result-cache service
+# MarkdownCode > services > result-cache service
 {"ResultCacheService": "declare"}
-# Pelikaan > services > build service
-{"BuildService": "declare", "PackageExtractorService": "Pelikaan > services > package extractor service", "ComponentListerService": "Pelikaan > services > component lister service", "PublicDiscoveryService": "Pelikaan > services > public discovery service", "ClassGenerator": "declare", "ConstantGenerator": "declare", "ComponentGenerator": "Pelikaan > services > component lister service"}
-# Pelikaan > services > compress service
-{"CompressService": "declare"}
+# MarkdownCode > services > build service
+{"BuildService": "declare"}
+# MarkdownCode > services > compress service
+{"CompressService": "declare", "ResultCacheService": "MarkdownCode > services > result-cache service"}
