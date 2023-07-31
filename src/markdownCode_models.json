@@ -18,10 +18,14 @@
         }
     },
     "list_service_usage": {
-        "default": "gpt-3.5-turbo",
+        "default": "gpt-4",
         "topics": {}
     },
     "list_component_expansions":{
+        "default": "gpt-4",
+        "topics": {}
+    },
+    "list_how_service_describes_components":{
         "default": "gpt-4",
         "topics": {}
     }

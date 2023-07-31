@@ -14,52 +14,13 @@ import openai
 import tiktoken
 
 
-ONLY_MISSING = True # only check if the fragment has not yet been processed
+ONLY_MISSING = False # only check if the fragment has not yet been processed
 
-system_prompt = """Act as an ai software analyst.
-It is your task to find features in the source text that are related to a specific service.
-
-list the features in the source text related to "{0}". For each feature, provide the name of the function that the service needs to provide together with a detailed description of what the function should do.
-
-ex: 
-Feature: The user can select a model from a dropdownbox where the list of models is provided by the service.
-function: getModels
-description: getModels will retrieve a list of all the models that are currently available. 
-
-Do not include any introduction, explanation comments or notes.
-return the results as a json structure. If no results are found, return an empty array."""
+system_prompt = """list everything related to '{0}' that is declared in the source text. If nothing is found, return an empty value. 
+Do not say: the source text doesn't contain'or provide any information specifically related to..."""
 user_prompt = """source text:
 {0}"""
-term_prompt = """Remember: only include features related to '{0}' and return an empty array if nothing is found.
-
-good response:
-[
-  {{
-    "feature": "x",
-    "function": "y",
-    "description": "z"
-  }},
-{{
-    "feature": "x",
-    "function": "y",
-    "description": "z"
-  }}
-]
-
-good response:
-[]
- 
-bad response:
-```json
-[
-  {{
-    "feature": "x",
-    "function": "y",
-    "description": "z"
-  }}
-]
-```
-"""
+term_prompt = """Remember: only include features related to '{0}' and return an empty string (no quotes) if nothing is found."""
 
 
 def generate_response(params, key):
@@ -147,7 +108,7 @@ def process_data(writer):
             continue
         if ONLY_MISSING and has_fragment(to_check.full_title):
             continue
-        results = {}
+        results = []
         for check_against in declare_or_use_class_classifier.text_fragments:
             if check_against.content == '':
                 continue
@@ -156,7 +117,6 @@ def process_data(writer):
             classes = check_against.data
             if not classes:
                 continue
-            fragment_results = {}
             for class_name, value in classes.items():
                 if value == 'declare':
                     params = {
@@ -169,15 +129,16 @@ def process_data(writer):
                     response = generate_response(params, to_check.full_title)
                     if response:
                         try:
-                            response = json.loads(response)
-                            fragment_results[class_name] = response
+                            value_to_add = {
+                                'class_name': class_name,
+                                'value': response,
+                                'source': check_against.full_title,
+                            }
+                            results.append(value_to_add)
                         except Exception as e:
                             print("Failed to parse response: ", e)
                             print("Response: ", response)
-            if fragment_results:
-                results[check_against.title] = fragment_results
-        if results:
-            collect_response(to_check.full_title, json.dumps(results), result, writer)
+        collect_response(to_check.full_title, json.dumps(results), result, writer)
     return result
                     
 

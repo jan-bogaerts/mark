@@ -16,53 +16,13 @@ import openai
 import tiktoken
 
 
-ONLY_MISSING = True # only check if the fragment has not yet been processed
+ONLY_MISSING = False # only check if the fragment has not yet been processed
 
-system_prompt = """Act as an ai software analyst.
-It is your task to find features in the source text that are related to components in general and to the specific component called "{0}".
-
-For each feature, provide the name of the function or property that the component needs to use from the service called "{1}" together with a detailed description of what the function should do or property value contains.
-
-ex: 
-Feature: The x service requires that all components call x for displaying an error.
-function: x
-description: components should call x for displaying an error.
-
-keep in mind that the following development stack is used:
-{2}
-
-Do not include any introduction, explanation comments or notes.
-return the results as a json structure. If no results are found, return an empty array."""
-user_prompt = """{0}"""
-term_prompt = """Remember: only include features related to 'Toolbar' or all components and return an empty array if nothing is found.
-
-good response:
-[
-  {{
-    "feature": "x",
-    "function": "y",
-    "description": "z"
-  }},
-{{
-    "feature": "x",
-    "property": "y",
-    "description": "z"
-  }}
-]
-
-good response:
-[]
- 
-bad response:
-```json
-[
-  {{
-    "feature": "x",
-    "function": "y",
-    "description": "z"
-  }}
-]
-"""
+system_prompt = """List how all components should use the service described in the source text. If nothing is found, return an empty value (no quotes). 
+Do not say: the source text doesn't contain or provide any information specifically related to..."""
+user_prompt = """Source text:
+{0}"""
+term_prompt = """"""
 
 
 def generate_response(params, key):
@@ -89,14 +49,14 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['component_name'], params['service_name'], params['dev_stack'] )
+    prompt = system_prompt   #.format(params['component_name'], params['service_name'], params['dev_stack'] )
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
     prompt = user_prompt.format(params['feature_description'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     if term_prompt:
-        prompt = term_prompt
+        prompt = term_prompt  #.format(params['component_name'])
         messages.append({"role": "assistant", "content": prompt})
         total_tokens += reportTokens(prompt)
     
@@ -145,54 +105,21 @@ def collect_response(title, response, result, writer):
 def process_data(writer):
     result = []
 
-    dev_stack = compress.text_fragments[1].content
 
-    for to_check in project.fragments[2:]:  # skip the first two fragments cause that's the description and dev stack
-        if to_check.content == '':
-            continue
-        if ONLY_MISSING and has_fragment(to_check.full_title):
-            continue
+    for to_check in get_is_service_for_all_components.text_fragments:
         results = {}
-        components = declare_or_use_comp_classifier.get_data(to_check.full_title)
-        if not components or len(components) == 0:
-            continue
-        results = {}
-        for component, is_declared in components.items():
-            if not is_declared == 'declare':
+        for service, is_used in to_check.data.items():
+            if not is_used == 'yes':
                 continue
-            fragment_results = []
-            for check_against in get_is_service_for_all_components.text_fragments:
-                if check_against.content == '':
-                    continue
-                if check_against.title == to_check.title:
-                    continue
-                for service, is_used in check_against.data.items():
-                    if not is_used == 'yes':
-                        continue
-                    service_description = project.get_fragment(check_against.full_title)
-                    params = {
-                        'component_name': component,
-                        'service_name': service,
-                        'dev_stack': dev_stack,
-                        'feature_description': service_description.content,
-                    }
-                    response = generate_response(params, to_check.full_title)
-                    if response:
-                        try:
-                            response = {
-                                "description": json.loads(response),
-                                "service": service,
-                                "service_declared_in": check_against.full_title,
-                            }
-                            fragment_results.append(response)
-                        except Exception as e:
-                            print("Failed to parse response: ", e)
-                            print("Response: ", response)
-
-            if len(fragment_results) > 0:
-                results[component] = fragment_results
-        if results:
-            collect_response(to_check.full_title, json.dumps(results), result, writer)
+            service_description = project.get_fragment(to_check.full_title)
+            params = {
+                'service_name': service,
+                'feature_description': service_description.content,
+            }
+            response = generate_response(params, to_check.full_title)
+            if response:
+                results[service] = response
+        collect_response(to_check.full_title, json.dumps(results), result, writer)
     return result
                     
 
