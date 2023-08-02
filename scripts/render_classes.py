@@ -28,6 +28,9 @@ user_prompt = """The class '{0}' is described as follows:
 
 make certain that the following functionality is publicly available:
 {3}
+
+globally declared features:
+{4}
 """
 term_prompt = """
 Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
@@ -35,7 +38,7 @@ Use small functions.
 Add documentation to your code.
 only write valid code
 do not include any intro or explanation, only write code
-add css styling
+add styling names
 
 bad response:
 ```javascript

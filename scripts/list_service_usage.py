@@ -14,7 +14,7 @@ import openai
 import tiktoken
 
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """list everything related to '{0}' that is declared in the source text. If nothing is found, return an empty value. 
 Do not say: the source text doesn't contain'or provide any information specifically related to..."""
@@ -106,9 +106,11 @@ def process_data(writer):
     for to_check in project.fragments[2:]:  # skip the first two fragments cause that's the description and dev stack
         if to_check.content == '':
             continue
+
         if ONLY_MISSING and has_fragment(to_check.full_title):
-            continue
-        results = []
+            results = get_data(to_check.full_title)
+        else:
+            results = []
         for check_against in declare_or_use_class_classifier.text_fragments:
             if check_against.content == '':
                 continue
@@ -126,18 +128,17 @@ def process_data(writer):
                     class_used = get_if_service_is_used.is_used(to_check.full_title, check_against.title, class_name)
                     if not class_used:
                         continue
+                    existing_response = [x for x in results if x['class_name'] == class_name]
+                    if ONLY_MISSING and len(existing_response) > 0: # already have a response for this class
+                        continue
                     response = generate_response(params, to_check.full_title)
-                    if response:
-                        try:
-                            value_to_add = {
-                                'class_name': class_name,
-                                'value': response,
-                                'source': check_against.full_title,
-                            }
-                            results.append(value_to_add)
-                        except Exception as e:
-                            print("Failed to parse response: ", e)
-                            print("Response: ", response)
+                    # if the response is empty, still store, so we know it was processed
+                    value_to_add = {
+                        'class_name': class_name,
+                        'value': response,
+                        'source': check_against.full_title,
+                    }
+                    results.append(value_to_add)
         collect_response(to_check.full_title, json.dumps(results), result, writer)
     return result
                     
@@ -164,7 +165,7 @@ def main(prompt, class_list, is_used, file=None):
     open_mode = 'w'
     if ONLY_MISSING:
         load_results(file_name)
-        open_mode = 'a'
+        #open_mode = 'a' not for this one, cause all fragments area always processed
 
     print("rendering results")
     with open(file_name, open_mode) as writer:
@@ -184,8 +185,11 @@ def load_results(filename, overwrite_file_name=None):
 
 def get_data(title):
     '''returns the list of components for the given title'''
+    to_search = title.strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
     for fragment in text_fragments:
-        if fragment.title == '# ' + title:
+        if fragment.title == to_search:
             return fragment.data or []
     return []    
 

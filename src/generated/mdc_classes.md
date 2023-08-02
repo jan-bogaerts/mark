@@ -1,8 +1,3 @@
-# MarkdownCode > services
-[
-    "ErrorService",
-    "DialogService"
-]
 # MarkdownCode > services > Theme service
 [
     "ThemeService"
@@ -43,4 +38,8 @@
 [
   "CompressService",
   "ResultCacheService"
+]
+# MarkdownCode > services > dialog service
+[
+    "DialogService"
 ]

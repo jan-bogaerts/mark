@@ -212,9 +212,9 @@ def get_all_expansions_for(name):
     '''returns a list of all the expansions for the given component name'''
     result = []
     for fragment in text_fragments:
-        for title, components in fragment.data.items():
-            if name in components:
-                result.append(components[name])
+        for item in fragment.data:
+            if item['component_name'] == name:
+                result.append(item['value'])
     return result
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import sys
 import os
 from time import sleep
 from utils import clean_dir
-from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
+from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY, MAX_TOKENS
 import project
 import component_lister
 import declare_or_use_comp_classifier
@@ -15,7 +15,7 @@ import result_loader
 import openai
 import tiktoken
 
-ONLY_MISSING = True # only check if the fragment has not yet been processed
+ONLY_MISSING = False # only check if the fragment has not yet been processed
 
 system_prompt = """Act as a full-stack ai software developer.
 It is your task to write all the code for the component '{0}'
@@ -30,25 +30,17 @@ user_prompt = """The component '{0}' is described as follows:
 make certain that the following functionality is publicly available:
 {3}
 
-the following funcionalities are required to be available from the services:
+globally declared features:
 {4}
 """
 term_prompt = """
 Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
 Use small functions.
+When the user text contains references to other components, use the component, do not write the functionality inline. 
 Add documentation to your code.
 only write valid code
 do not include any intro or explanation, only write code
-add css styling
-
-bad response:
-```javascript
-const a = 1;
-```
-
-good response:
-const a = 1;
-"""
+add styling names"""
 
 
 def generate_response(params, key):
@@ -78,13 +70,13 @@ def generate_response(params, key):
     prompt = system_prompt.format(params['component'], params['dev_stack'], params['imports'] ) + term_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['public_features'], params['features_from_services'])
+    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['public_features'], params['global_features'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
-    total_tokens = DEFAULT_MAX_TOKENS # code needs max allowed
-    if total_tokens > DEFAULT_MAX_TOKENS:
-        total_tokens = DEFAULT_MAX_TOKENS
+    total_tokens = total_tokens + DEFAULT_MAX_TOKENS # code needs max allowed
+    if total_tokens > MAX_TOKENS:
+        total_tokens = MAX_TOKENS
     params = {
         "model": model,
         "messages": messages,
@@ -157,15 +149,19 @@ def get_to_render_and_imports(title, components):
     return to_render, imports
 
 
-def get_features_from_services(component):
-    items = list_how_service_describes_components.get_all_expansions_for(component)
+def get_global_features():
     result = ''
-    for item in items:
-        result += f' - {item}\n'
-
+    for fragment in list_how_service_describes_components.text_fragments:
+        if fragment.data:
+            if result:
+                result += '\n'
+            for service, features in fragment.data.items():
+                result += f' - {service}\n{features}'
+    return result
 
 def process_data(root_path, writer):
     dev_stack = project.fragments[1].content
+    global_features = get_global_features()
     for fragment in project.fragments:
         if ONLY_MISSING and has_fragment(fragment.full_title):
             continue
@@ -175,7 +171,6 @@ def process_data(root_path, writer):
             to_render, imports = get_to_render_and_imports(fragment.full_title, components)
             for component in to_render:
                 public_features = list_component_expansions.get_all_expansions_for(component)
-                features_from_services = get_features_from_services(component)
                 params = {
                     'component': component,
                     'feature_title': fragment.title,
@@ -183,7 +178,7 @@ def process_data(root_path, writer):
                     'dev_stack': dev_stack,
                     'imports': get_all_imports(imports, component, to_render, fragment.full_title),
                     'public_features': public_features,
-                    'features_from_services': features_from_services,
+                    'global_features': global_features,
                 }
                 response = generate_response(params, fragment.full_title)
                 if response:

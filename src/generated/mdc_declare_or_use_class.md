@@ -1,5 +1,5 @@
-# MarkdownCode > services
-{"ErrorService": "declare", "DialogService": "declare"}
+# MarkdownCode > services > dialog service
+{"DialogService": "declare"}
 # MarkdownCode > services > Theme service
 {"ThemeService": "declare"}
 # MarkdownCode > services > project service

@@ -28,5 +28,9 @@
     "list_how_service_describes_components":{
         "default": "gpt-4",
         "topics": {}
+    },
+    "render_component": {
+        "default": "gpt-4",
+        "topics": {}
     }
 }

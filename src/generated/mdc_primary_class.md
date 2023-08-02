@@ -1,5 +1,3 @@
-# MarkdownCode > services
-ErrorService
 # MarkdownCode > services > Theme service
 ThemeService
 # MarkdownCode > services > project service
@@ -20,3 +18,5 @@ ResultCacheService
 BuildService
 # MarkdownCode > services > compress service
 CompressService
+# MarkdownCode > services > dialog service
+DialogService

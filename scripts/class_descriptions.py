@@ -13,7 +13,7 @@ import class_lister
 import result_loader
 
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 
 import openai

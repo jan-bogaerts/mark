@@ -263,6 +263,7 @@
                 "${workspaceFolder}/src/generated/mdc_components.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
                 "${workspaceFolder}/src/generated/mdc_component_expansion.md",
+                "${workspaceFolder}/src/generated/mdc_service_describes_components.md",
                 "${workspaceFolder}/src/generated/code/",
                 "${workspaceFolder}/src/generated/mdc"
             ],

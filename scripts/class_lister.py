@@ -8,7 +8,7 @@ import openai
 import tiktoken
 
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """Act as an ai software analyst.
 You are tasked with writing software for an application called '{0}',

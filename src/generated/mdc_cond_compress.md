@@ -116,10 +116,6 @@
 - User can copy the current text in the center to the clipboard
 - View monitors changes in the currently selected text fragment from the position-tracking service
   - Updates the content of the active tab by setting the selected value of the first combobox to the header title of the text fragment.
-# MarkdownCode > services
-- The app utilizes multiple services for commonly performed actions across different user interfaces.
-- All user-triggered service functions should have error handling to display a dialog box when an error occurs.
-- The electron app's dialog box should be used to show errors.
 # MarkdownCode > services > Theme service
 - The theme service manages the currently selected theme.
 - It allows for selecting a light or dark theme.
@@ -258,3 +254,7 @@
 - Clicking on a tree item scrolls the related text into view on the editor
 - Monitors position-tracking service for changes to the selected text-fragment
 - Sets the corresponding tree-item as selected when the position changes
+# MarkdownCode > services > dialog service
+- The dialog service is a shared interface for displaying dialog boxes in other components and services.
+- It supports dialog boxes for errors, warnings, and information.
+- All user-triggered actions or functions in a component should be wrapped in an error handler. If an error occurs, an electron dialog box will be shown to the user, providing details about the error.

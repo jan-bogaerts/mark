@@ -1,5 +1,3 @@
-# MarkdownCode > services
-{"ErrorService": "yes", "DialogService": "no"}
 # MarkdownCode > services > Theme service
 {"ThemeService": "yes"}
 # MarkdownCode > services > project service
@@ -20,3 +18,5 @@
 {"BuildService": "no"}
 # MarkdownCode > services > compress service
 {"CompressService": "no"}
+# MarkdownCode > services > dialog service
+{"DialogService": "yes"}

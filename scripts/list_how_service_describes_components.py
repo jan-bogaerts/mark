@@ -7,7 +7,6 @@ from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
 import declare_or_use_comp_classifier
 import get_is_service_for_all_components
-import get_if_service_is_used
 import json
 import result_loader
 import compress
@@ -16,7 +15,7 @@ import openai
 import tiktoken
 
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """List how all components should use the service described in the source text. If nothing is found, return an empty value (no quotes). 
 Do not say: the source text doesn't contain or provide any information specifically related to..."""
@@ -98,7 +97,7 @@ def add_result(to_add, result, writer):
 
 def collect_response(title, response, result, writer):
     # get the first line in the component without the ## and the #
-    add_result(f'# {title}', result, writer)
+    add_result(title, result, writer)
     add_result(response, result, writer)
 
 
@@ -107,6 +106,8 @@ def process_data(writer):
 
 
     for to_check in get_is_service_for_all_components.text_fragments:
+        if ONLY_MISSING and has_fragment(to_check.full_title):
+            continue
         results = {}
         for service, is_used in to_check.data.items():
             if not is_used == 'yes':

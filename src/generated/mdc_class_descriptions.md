@@ -1,5 +1,3 @@
-# MarkdownCode > services
-{"ErrorService": "The 'ErrorService' class handles error handling and displays error messages using the electron app's dialog box.", "DialogService": "The 'DialogService' is a service class that handles error handling and displays dialog boxes for error messages in an electron app."}
 # MarkdownCode > services > Theme service
 {"ThemeService": "The ThemeService class manages the selected theme, allowing for light or dark themes. It is used by components to apply the theme, and the main window refreshes when the theme is updated."}
 # MarkdownCode > services > project service
@@ -20,3 +18,5 @@
 {"BuildService": "The 'BuildService' is a service class that uses gpt-services to convert markdown project data into source code. It can generate conversions on multiple text frames and transform the original markdown code into source code files. Additionally, it utilizes a compress service to render results for each text-fragment in the project."}
 # MarkdownCode > services > compress service
 {"CompressService": "The 'CompressService' is a service that uses the GPT service to shorten a text fragment. It provides a 'get-result' function that calls the GPT service with specific parameters and utilizes a result-cache-service to store and track results. The service is useful for checking if the GPT service understands the fragment and can be used for other processes.", "ResultCacheService": "The ResultCacheService is a service that stores and tracks results obtained from the GPT service. It is used to check if the GPT service understands a text fragment and can be utilized for other processes."}
+# MarkdownCode > services > dialog service
+{"DialogService": "The DialogService is a shared interface that allows for displaying dialog boxes in other components and services. It supports errors, warnings, and information, and can be used to show electron dialog boxes with error details when user-triggered actions encounter errors."}

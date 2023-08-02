@@ -4,13 +4,12 @@ MarkdownCode is an ideation and software building tool driven by machine learnin
 ## development stack
 - developed in javascript
 - it uses electron as it's runtime
-- text editing features are provided by the monaco editor.
 - The UI is built using react and antd
 
 ## components
 
 ### main window
-- the main-window component is the the content of the first window that is shown when the application starts.
+- the main-window component is the content of the first window that is shown when the application starts.
 - it contains the following components:
   - a toolbar: located at the top of the window.
   - a body: this component occupies all of the remaining space in the window
@@ -219,11 +218,12 @@ the following tabs are available:
 - the view monitors the position-tracking service for changes to the currently selected text-fragment. 
   - when this changes update the content of the currently active tab by setting the selected value of the first combobox to the header-title of the text-fragment.
 
-
 ## services
-- The application makes use of a number of services to perform actions that are often shared across multiple components.
-- all service functions that the user can trigger directly, should do proper error handling so that when an error occurs, a dialog box is shown to the user. 
-- The dialogBox of the electron app should be used to display errors.
+
+### dialog service
+- the dialog service provides a common interface for other components and services to show dialog boxes.
+- the service can show a dialog box for errors, warnings and info.
+- all actions or functions that the user can trigger from a component, should be wrapped in a proper error handler so that when an error occurs, an electron dialog box is shown to the user with details on the error. 
 
 ### Theme service
 - The theme service is responsible for managing the currently selected theme.

@@ -52,8 +52,6 @@ The preferences tab customizes and sets up the system. It includes GPT and View 
 - User can copy current text to clipboard
 - View monitors changes in selected text fragment from position-tracking service
   - Updates active tab content with fragment title
-# MarkdownCode > services
-The app uses multiple services for common actions across different interfaces. All user-triggered service functions should have error handling to display a dialog box when an error occurs. The electron app's dialog box should be used for showing errors.
 # MarkdownCode > services > Theme service
 The theme service manages the selected theme, allowing for light or dark themes. Components use the service to apply the theme, and the main window refreshes when the theme is updated.
 # MarkdownCode > services > project service
@@ -124,3 +122,5 @@ The body component is the main part of the application, consisting of an outline
 - Clicking tree item scrolls related text into view
 - Monitors position-tracking service for selected text changes
 - Updates selected tree item when position changes
+# MarkdownCode > services > dialog service
+The dialog service is a shared interface for displaying dialog boxes in other components and services, supporting errors, warnings, and information. User-triggered actions in a component should be wrapped in an error handler to show an electron dialog box with error details if needed.
