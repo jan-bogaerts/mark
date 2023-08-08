@@ -1,11 +1,10 @@
-# only checks if a component is used or expanded upon (extra features declared), (values: yes/no)
-# run before list_component_expansion.py
+# only checks if a service is used, (values: yes/no)
+# run before list_service_usage.py
 import sys
 from time import sleep
 from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
-import declare_or_use_comp_classifier
-import component_descriptions
+import declare_or_use_class_classifier
 import json
 import result_loader
 
@@ -15,10 +14,9 @@ import tiktoken
 ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """Act as an ai software analyst.
-It is your task to find features in the source text that are related to the specified component.
+It is your task to to classify if a service is described as a singleton / global instance or not.
 
-Does the source-text contain any features related to "{0}", described as:
-{1}?
+Does the source-text require that "{0}", is a singleton object?
 
 only return yes or no
 
@@ -26,15 +24,16 @@ good response:
 yes
 
 bad response:
-the following text does not contain any references to the given component."""
-user_prompt = """{0}"""
+the following text does describes the service as a singleton."""
+user_prompt = """source-text:
+{0}"""
 term_prompt = """"""
 
 
 def generate_response(params, key):
 
     total_tokens = 0
-    model = get_model_config('get_if_component_used', key)
+    model = get_model_config('is_service_singleton', key)
     
     def reportTokens(prompt):
         encoding = tiktoken.encoding_for_model(model)
@@ -55,18 +54,18 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['component_name'], params['component_description'] )
+    prompt = system_prompt.format(params['class_name'])
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
     prompt = user_prompt.format(params['feature_description'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     if term_prompt:
-        prompt = term_prompt.format(params['component_name'])
+        prompt = term_prompt.format(params['class_name'])
         messages.append({"role": "assistant", "content": prompt})
         total_tokens += reportTokens(prompt)
     
-    total_tokens += 4 
+    total_tokens += 3
     if total_tokens > DEFAULT_MAX_TOKENS:
         total_tokens = DEFAULT_MAX_TOKENS
     params = {
@@ -104,65 +103,39 @@ def add_result(to_add, result, writer):
 
 def collect_response(title, response, result, writer):
     # get the first line in the component without the ## and the #
-    add_result(f'# {title}', result, writer)
+    add_result(title, result, writer)
     add_result(response, result, writer)
 
 
 def process_data(writer):
     result = []
 
-    for to_check in project.fragments[2:]:  # skip the first two fragments cause that's the description and dev stack
-        is_existing = ONLY_MISSING and has_fragment(to_check.full_title)
-        if is_existing:
-            results = get_data(to_check.full_title)
-        else:
-            results = {}
-        if to_check.content:
-            if to_check.full_title.startswith('# '):
-                to_check_title = to_check.full_title
-            else:
-                to_check_title = '# ' + to_check.full_title
-            for check_against in declare_or_use_comp_classifier.text_fragments:
-                if check_against.content == '':
-                    continue
-                if check_against.full_title == to_check_title:
-                    continue
-                components = check_against.data
-                if not components:
-                    continue
-                if is_existing:
-                    old_fragment_results = results.get(check_against.title, {})
-                else:
-                    old_fragment_results = None
-                fragment_results = {}
-                for component_name, value in components.items():
-                    if is_existing and old_fragment_results and component_name in old_fragment_results:
-                        fragment_results[component_name] = old_fragment_results[component_name]
-                        del old_fragment_results[component_name] # remove it, so we know which components were deleted
-                        continue
-                    description = component_descriptions.get_description(check_against.full_title, component_name)
-                    if value == 'declare':
-                        params = {
-                            'component_name': component_name,
-                            'component_description': description,
-                            'feature_description': to_check.content,
-                        }
-                        response = generate_response(params, to_check.full_title)
-                        sleep(1) # wait a bit to prevent the api from getting overloaded
-                        if response:
-                            try:
-                                fragment_results[component_name] = response
-                            except Exception as e:
-                                print("Failed to parse response: ", e)
-                                print("Response: ", response)
-                if fragment_results:
-                    results[check_against.title] = fragment_results
-        collect_response(to_check.full_title, json.dumps(results), result, writer)
+    for to_check in declare_or_use_class_classifier.text_fragments: 
+        if to_check.content == '':
+            continue
+        if ONLY_MISSING and has_fragment(to_check.full_title):
+            continue
+        results = {}
+        classes = to_check.data
+        if not classes:
+            continue
+        desc_fragment = project.get_fragment(to_check.full_title)
+        for class_name, value in classes.items():
+            if value == 'declare':
+                params = {
+                    'class_name': class_name,
+                    'feature_description': desc_fragment.content,
+                }
+                response = generate_response(params, to_check.full_title)
+                if response:
+                    results[class_name] = response
+        if results:
+            collect_response(to_check.full_title, json.dumps(results), result, writer)
     return result
                     
 
 
-def main(prompt, class_list, descriptions, file=None):
+def main(prompt, class_list, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -172,27 +145,27 @@ def main(prompt, class_list, descriptions, file=None):
 
     # split the prompt into a toolbar, list of components and a list of services, based on the markdown headers
     project.split_standard(prompt)
-    declare_or_use_comp_classifier.load_results(class_list)
-    component_descriptions.load_results(descriptions)
-
-    if file is None:
-        file = 'output'
-
-    open_mode = 'w'
-    if ONLY_MISSING:
-        load_results(file + "_is_component_used.md")
-        # open_mode = 'a' every fragment is processed cause of sub items
-
-    print("rendering results")
+    declare_or_use_class_classifier.load_results(class_list)
 
     # save there result to a file while rendering.
-    with open(file + "_is_component_used.md", open_mode) as writer:
+    if file is None:
+        file = 'output'
+    
+    file_name = file + "_is_service_singleton.md"
+    open_mode = 'w'
+    if ONLY_MISSING:
+        load_results(file_name)
+        open_mode = 'a'
+
+    print("rendering results")
+    with open(file_name, open_mode) as writer:
         process_data(writer)
     
     print("done! check out the output file for the results!")
 
 
 text_fragments = []  # the list of text fragments representing all the results that were rendered.
+
 
 def load_results(filename, overwrite_file_name=None):
     if not overwrite_file_name:
@@ -208,8 +181,18 @@ def get_data(title):
         to_search = '# ' + to_search
     for fragment in text_fragments:
         if fragment.title == to_search:
-            return fragment.data or {}
-    return {}   
+            return fragment.data or []
+    return []  
+
+
+def is_singleton(title, class_name):
+    '''returns true if the given class is declared as a global singleton'''
+    data = get_data(title)
+    if data and class_name in data:
+        return data[class_name] == 'yes'
+    else:
+        return False
+
 
 def has_fragment(title):
     '''returns true if the title is in the list of fragments'''
@@ -221,31 +204,20 @@ def has_fragment(title):
             return True
     return False
 
-def is_used(root, title, class_name):
-    '''returns true if the given class is used in the given title'''
-    data = get_data(root)
-    if not title in data:
-        return False
-    section = data[title]
-    if not section:
-        return False
-    value = section[class_name]
-    return value.lower() == 'yes'
 
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         print("Please provide a prompt")
         sys.exit(1)
     else:
         # Set prompt to the first argument
         prompt = sys.argv[1]
         class_list = sys.argv[2]
-        descriptions = sys.argv[3]
 
     # Pull everything else as normal
-    file = sys.argv[4] if len(sys.argv) > 4 else None
+    file = sys.argv[3] if len(sys.argv) > 3 else None
 
     # Run the main function
-    main(prompt, class_list, descriptions, file)
+    main(prompt, class_list, file)

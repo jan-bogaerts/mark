@@ -18,25 +18,25 @@ MarkdownCode is an ideation and software building tool driven by machine learnin
 
 the application uses a toolbar similar to applications like mS Access, excel, word or draw: a single integrated menu and toolbar
 
-- At the top of the toolbar are a nr of tabs
-- all components on the toolbar have a tooltip containing a short description of the action.
+- At the top of the toolbar are a nr of tabs (use the tabs from the antd library)
+- all components on the toolbar show a F (from the antd library) containing a short description of the action.
 
 the following tabs are available:
-- home
+- home: this is shown as the first tab when the application starts.
 - format
 - preferences
 
 #### home
-
-- The home tab is the component that is used as the main tab of the toolbar. This is first shown when the application starts.
-- This component contains the following sections:
-  - file
-  - edit
-  - undo
-  - build
+- the home-tab component is a wrapper that displays it's children in a row.
+- This component contains the following child components :
+  - file component
+  - edit component
+  - undo component
+  - build component
   
 ##### file section
 - the file-section component contains actions related to the project and file management.
+- all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - New Project: a button to create a new project
     - if there is a project loaded with changes (the project's undo-service has data in the undo list), ask to save first.
@@ -64,6 +64,7 @@ the following tabs are available:
   
 ##### edit section
 - the edit-section component contains actions related to the clipboard and the currently selected data.
+- all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - cut: a button to initiate the cut command of the selection service
     - enabled when the selection service has any data marked as selected.
@@ -79,14 +80,19 @@ the following tabs are available:
 
 ##### undo section
 - the undo-section component contains actions that the undo / redo service can perform.
-- it supports the following actions
-  - undo: a button to undo the last action, performed by the current project's undo-service
-    - enabled when the project's undo-service has undo actions
+- all buttons use an appropriate icon as content, no text.
+- the service supports the following actions
+  - undo: a button to undo the last action
+    - enabled when the undo-service has undo actions. 
+    - calls the undo-service's undo function
   - redo: a button to redo the last action, preformed by the project's undo service.
     - enabled when the undo-service has redo actions
+    - calls the undo-service's redo function.
+- The undo service needs to be monitored for changes so that the state of the buttons can be updated.
 
 ##### build section
 - the build-section component contains actions that the build-service can perform.
+- all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - all: a button to start rendering all the code for the entire project.
     - enabled when the result-cache of any of the services in the GPT-service's list has an out-of-date result fragment or missing result fragments.
@@ -96,22 +102,22 @@ the following tabs are available:
     - enabled when the selected fragment is out-of-date or missing in the service related to the currently selected 
 
 #### format
-- the format-tab component contains various commands to format the entire document, selected text or to activate a formatting style starting from the current cursor position.
-- this toolbar tab has the following sections:
+- the format-tab component is a wrapper that displays it's children in a row.
+- This component contains the following child components :
   - style
   - paragraph
   - font
 
 ##### style section
 - the style-section component contains actions related to the markup used in the text for applying markdown formatting.
-- whenever the text selection is changed, the state of the toggle buttons is updated to reflect the state of the selected text.
-- it supports the following actions
-  - paragraph style: this is a toggle group where the user can make a selection between one of the items
-    - only 1 item can be selected at the same time, it is not possible to have no selection at all.
-    - each item is represented as a button.
+- all buttons use an appropriate icon as content, no text.
+- it currently only has 1 action:
+  - paragraph style: this is a list of styles that can be assigned to the currently selected text.
+    - only 1 style can be selected at the same time, it is not possible to have no selection at all.
+    - each style is represented as a button.
     - all the buttons are lined up in a single row.
-    - when a button is pressed, the selected style is applied as markdown to the text that's currently in the selection service.
-    - buttons in the group:
+    - when a button is pressed, the selection-service reformats the markdown text.
+    - styles that can be selected:
       - heading 1
       - heading 2
       - heading 3
@@ -121,9 +127,11 @@ the following tabs are available:
       - paragraph
       - quote
       - code
+- the selection-service (not a component) is monitored for changes in the currently selected text. whenever the text selection is changed, the state of the toggle buttons is updated to reflect the style of the currently selected text. The selection service provides a method for retrieving the style of the currently selected text.
 
 ##### paragraph section
 - the paragraph-section component contains actions related to the markup used in the text for applying markdown formatting.
+- all buttons use an appropriate icon as content, no text.
 - whenever the text selection is changed, the state of the toggle buttons is updated to reflect the state of the selected text.
 - it supports the following actions
   - bullet list: a toggle button to turn the current selection into a bullet list or when there is no selection but only a cursor position, to make the current line into a bullet point.
@@ -133,6 +141,7 @@ the following tabs are available:
   
 ##### font section
 - the font-section component contains actions related to the markup used in the text for applying markdown formatting.
+- all buttons use an appropriate icon as content, no text.
 - whenever the text selection is changed, the state of the toggle buttons is updated to reflect the state of the selected text.
 - it supports the following actions
   - bold: a toggle button to set the bold state on/off on the selected text and to show the state of the current selection. 
@@ -141,13 +150,14 @@ the following tabs are available:
   - strike-though: a toggle button to set the strike-through state on/off on the selected text and to show the state of the current selection. 
 
 #### preferences
-- the preferences-tab component contains various commands that the user can do to customize and set up his system.
-- the preferences tab has the following sections:
+- the preferences-tab component is a wrapper that displays it's children in a row.
+- This component contains the following child components :
   - GPT
   - View
   
 ##### GPT section:
 - the GPT-section component contains actions related to the configuration of the GPT service.
+- all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - key: this button opens a dialog box where the user can enter his api-key that will be used for api-calls with the open-ai platform.
   - model: this is a combobox where the user can select which default model should be used when requests are sent to open-ai.
@@ -155,6 +165,7 @@ the following tabs are available:
   
 ##### view section:
 - the view-section component contains actions related to the configuration of the appearance of the application
+- all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - theme: this is a combobox where the user can select the preferred color mode: light or dark mode. This maps to the theme used by the monaco editor.
   - font: this is a combobox that the user can use to select the font that is used by the monaco editor and markdown viewer.
@@ -232,7 +243,7 @@ the following tabs are available:
 - The main window refreshes it's entire content when the selected theme is updated.
 
 ### project service
-- the project service is responsible for:
+- the project service is a global singleton that is responsible for:
   - creating a new project
     - all data is cleared from the project's data list
     - all registered gpt-services recreate their cache object.
@@ -264,7 +275,7 @@ the following tabs are available:
 
 
 ### Undo service
-- The undo service keeps track of all the text edits that the user perforsms on the various monaco-editors.
+- The undo service is a global singleton that keeps track of all the text edits that the user performs on the various monaco-editors.
 - It has an undo and redo list.
 
 ### line parser
@@ -297,7 +308,7 @@ the following tabs are available:
         - If this is a new text-fragment or a line-object who's parent points to a text-fragment that is different from the currently selected text-fragment, then trigger the on-changed event for all the registered events.
 
 ### gpt service
-- this service is responsible for communicating with the open-ai api backend. It is primarily used by other services that perform more specific tasks.
+- the GPT service is a global singleton that is responsible for communicating with the open-ai api backend. It is primarily used by other services that perform more specific tasks.
 - the service uses the openai node.js library to communicate with the backend.
 - it provides a function that other services (or components) can call to send an api request to open-ai.
   - this function accepts a list (called `messages`) json objects that contain a `role` and `content` field.
@@ -352,7 +363,7 @@ the following tabs are available:
       - if there are any other cache services that monitor this cache-service (instead of the project service directly), then let them know that the specified text-fragment (from the result) has gone out-of-date.
 
 ### build service
-- this service turns the markdown project data list into source code. It uses a set of gpt-services to iteratively generate conversions on the different text frames, starting with the original markdown code and finally ending with source code files that are stored on disk.
+- the build service is a global singleton that turns the markdown project data list into source code. It uses a set of gpt-services to iteratively generate conversions on the different text frames, starting with the original markdown code and finally ending with source code files that are stored on disk.
 - to build the project, the service performs the following actions:
   - for each text-fragment in the project:
     - ask the compress service to render it's result.

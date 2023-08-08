@@ -12,20 +12,6 @@
 - It includes the following components:
   - Toolbar: positioned at the top of the window.
   - Body: occupies the remaining space in the window.
-# MarkdownCode > components > toolbar
-- The application has a toolbar similar to mS Access, Excel, Word, or Draw.
-- The toolbar consists of a single integrated menu and toolbar.
-- At the top of the toolbar, there are multiple tabs.
-- Each component on the toolbar has a tooltip that provides a brief description of the action.
-- The available tabs are: Home, Format, and Preferences.
-# MarkdownCode > components > toolbar > home
-- The home tab is the main tab of the toolbar in the application.
-- It is the first tab shown when the application starts.
-- The home tab contains the following sections:
-  - file
-  - edit
-  - undo
-  - build
 # MarkdownCode > components > toolbar > home > file section
 - The file-section component handles project and file management actions.
 - Supported actions include:
@@ -59,9 +45,6 @@
     - Enabled when the selected fragment is out-of-date or missing in any service's result-cache in the GPT-service's list.
   - Active topic in active prompt: Renders code for the selected fragment in the currently selected service.
     - Enabled when the selected fragment is out-of-date or missing in the related service.
-# MarkdownCode > components > toolbar > format
-- The format-tab component has commands for formatting the document, selected text, and applying formatting styles from the cursor position.
-- The toolbar tab includes sections for style, paragraph, and font.
 # MarkdownCode > components > toolbar > format > style section
 - The style-section component handles actions related to applying markdown formatting to the text.
 - The toggle buttons in the component update their state based on the selected text.
@@ -86,11 +69,7 @@
   - Italic: toggle button for setting italic state and displaying current selection state.
   - Underline: toggle button for setting underline state and displaying current selection state.
   - Strike-through: toggle button for setting strike-through state and displaying current selection state.
-# MarkdownCode > components > toolbar > preferences
-- The preferences tab allows users to customize and set up their system.
-- The preferences tab includes the following sections:
-  - GPT
-  - View
+
 # MarkdownCode > components > body > results view
 - Positioned at the bottom of the main body
 - Displays various results based on the selected text block
@@ -258,3 +237,27 @@
 - The dialog service is a shared interface for displaying dialog boxes in other components and services.
 - It supports dialog boxes for errors, warnings, and information.
 - All user-triggered actions or functions in a component should be wrapped in an error handler. If an error occurs, an electron dialog box will be shown to the user, providing details about the error.
+# MarkdownCode > components > toolbar
+- The application has a toolbar with a similar design to applications like MS Access, Excel, Word, or Draw.
+- The toolbar consists of a single integrated menu and toolbar.
+- At the top of the toolbar, there are multiple tabs, which are implemented using the tabs from the antd library.
+- Each component on the toolbar displays a tooltip from the antd library, providing a brief description of the action.
+- The available tabs on the toolbar are: Home (shown as the first tab when the application starts), Format, and Preferences.
+# MarkdownCode > components > toolbar > home
+- The home-tab component is a wrapper that arranges its children in a horizontal row.
+- It includes the following child components (sections on the toolbar):
+  - file component
+  - edit component
+  - undo component
+  - build component
+# MarkdownCode > components > toolbar > format
+- The format-tab component is a wrapper that arranges its children in a horizontal row.
+- The component includes the following child components (sections on the toolbar):
+  - Style
+  - Paragraph
+  - Font
+# MarkdownCode > components > toolbar > preferences
+- The preferences-tab component is a wrapper that arranges its children in a row.
+- This component includes the following child components (sections on the toolbar):
+  - GPT
+  - View

@@ -3,7 +3,7 @@ MainWindow
 # MarkdownCode > components > toolbar
 Toolbar
 # MarkdownCode > components > toolbar > home
-Home
+HomeTab
 # MarkdownCode > components > toolbar > home > file section
 FileSection
 # MarkdownCode > components > toolbar > home > edit section

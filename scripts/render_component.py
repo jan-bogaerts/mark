@@ -6,7 +6,8 @@ from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY, MAX
 import project
 import component_lister
 import declare_or_use_comp_classifier
-# import declare_or_use_class_classifier
+import get_if_service_is_used
+import get_if_service_is_singleton
 import list_component_expansions
 import list_how_service_describes_components
 import json
@@ -15,7 +16,7 @@ import result_loader
 import openai
 import tiktoken
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """Act as a full-stack ai software developer.
 It is your task to write all the code for the component '{0}'
@@ -32,6 +33,9 @@ make certain that the following functionality is publicly available:
 
 globally declared features:
 {4}
+
+imports:
+{5}
 """
 term_prompt = """
 Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
@@ -67,10 +71,10 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['component'], params['dev_stack'], params['imports'] ) + term_prompt
+    prompt = system_prompt.format(params['component'], params['dev_stack']) + term_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['public_features'], params['global_features'])
+    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['public_features'], params['global_features'], params['imports'] )
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
@@ -120,16 +124,43 @@ def collect_response(title, response, root_path):
         writer.write(response)
     return file_path
 
+def get_import_service_line(cur_path_parts, title, service):
+    service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
+    is_global = get_if_service_is_singleton.is_singleton(title, service)
+    if is_global:
+        global_txt = "global "
+        service = service.lower()
+    else:
+        global_txt = ""
+    return f"The {global_txt}service {service} can be imported from {service_path}\n"
 
 def get_all_imports(imports, component, components, full_title):
+    imported = {} # so we don't list the same thing twice
     imports_txt = ''
     for comp, import_file in imports:
         imports_txt += f"The component {comp} can be imported from {import_file}\n"
     cur_path_parts = full_title.split("#")[-1].split(" > ")
     for other_comp in components:
         if other_comp != component:
-            other_path = os.path.join(*cur_path_parts, other_comp.replace(" ", "_") + ".js")
-            imports_txt += f"The component {other_comp} can be imported from {other_path}\n"
+            if not other_comp in imported:
+                imported[other_comp] = True
+                other_path = os.path.join(*cur_path_parts, other_comp.replace(" ", "_"))
+                imports_txt += f"The component {other_comp} can be imported from {other_path}\n"
+    services_used = get_if_service_is_used.get_data(full_title)
+    if services_used:
+        for service_loc, values in services_used.items():
+            cur_path_parts = service_loc.split("#")[-1].split(" > ")
+            for service, value in values.items():
+                if value == 'yes' and not service in imported:
+                    imported[service] = True
+                    imports_txt += get_import_service_line(cur_path_parts, service_loc, service)
+    for fragment in list_how_service_describes_components.text_fragments:
+        cur_path_parts = fragment.full_title.split("#")[-1].split(" > ")
+        if fragment.data:
+            for service, features in fragment.data.items():
+                if not service in imported:
+                    imported[service] = True
+                    imports_txt += get_import_service_line(cur_path_parts, fragment.full_title, service)
     return imports_txt  
 
 def get_to_render_and_imports(title, components):
@@ -142,7 +173,8 @@ def get_to_render_and_imports(title, components):
             if not declared_in:
                 print(f"can't find import location for component {component} used in {title}")
             else:
-                path = os.path.join(*title.split(" > "), component.replace(" ", "_") + ".js")
+                declared_in = declared_in.replace("'", "").replace('"', '') # remove quotes cause gpr sometimes adds them
+                path = os.path.join(*declared_in.split(" > "), component.replace(" ", "_") )
                 imports.append((component, path))
         else:
             to_render.append(component)
@@ -188,7 +220,8 @@ def process_data(root_path, writer):
                         response = response[len("```javascript"):]
                     if response.endswith("```"):
                         response = response[:-len("```")]
-                    path_section = os.path.join(root_path, *fragment.full_title.split(" > "))
+                    title_to_path = fragment.full_title.replace(":", "").replace('?', '').replace('!', '')
+                    path_section = os.path.join(root_path, *title_to_path.split(" > "))
                     file_name = collect_response(component, response, path_section)
                     file_names.append(file_name)
             if file_names:
@@ -196,7 +229,7 @@ def process_data(root_path, writer):
                     
 
 
-def main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, root_path=None, file=None):
+def main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, is_service_singleton, root_path=None, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -210,6 +243,8 @@ def main(prompt, components_list, declare_or_use_list, expansions, comp_features
     declare_or_use_comp_classifier.load_results(declare_or_use_list)
     list_component_expansions.load_results(expansions)
     list_how_service_describes_components.load_results(comp_features_from_service)
+    get_if_service_is_used.load_results(is_service_used)
+    get_if_service_is_singleton.load_results(is_service_singleton)
 
     # save there result to a file while rendering.
     if file is None:
@@ -268,7 +303,7 @@ def get_data(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 6:
+    if len(sys.argv) < 8:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -278,10 +313,12 @@ if __name__ == "__main__":
         declare_or_use_list = sys.argv[3]
         expansions = sys.argv[4]
         comp_features_from_service = sys.argv[5]
+        is_service_used = sys.argv[6]
+        is_service_singleton = sys.argv[7]
 
     # Pull everything else as normal
-    folder = sys.argv[6] if len(sys.argv) > 6 else None
-    file = sys.argv[7] if len(sys.argv) > 7 else None
+    folder = sys.argv[8] if len(sys.argv) > 8 else None
+    file = sys.argv[9] if len(sys.argv) > 9 else None
 
     # Run the main function
-    main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, folder, file)
+    main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, is_service_singleton, folder, file)

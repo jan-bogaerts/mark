@@ -1,11 +1,5 @@
 # MarkdownCode > components > main window
 [{"component_name": "Body", "value": "- a body: this component occupies all of the remaining space in the window", "source": "# MarkdownCode > components > body"}, {"component_name": "Toolbar", "value": "- a toolbar: located at the top of the window.", "source": "# MarkdownCode > components > toolbar"}]
-# MarkdownCode > components > toolbar
-[{"component_name": "Home", "value": "- Home tab on the toolbar", "source": "# MarkdownCode > components > toolbar > home"}, {"component_name": "FormatTab", "value": "- Format tab is available on the toolbar.", "source": "# MarkdownCode > components > toolbar > format"}, {"component_name": "PreferencesTab", "value": "The source text declares that 'PreferencesTab' is one of the available tabs on the toolbar of the application.", "source": "# MarkdownCode > components > toolbar > preferences"}, {"component_name": "Tab", "value": "- At the top of the toolbar are a number of tabs\n- The following tabs are available: home, format, preferences", "source": "# MarkdownCode > components > body > results view"}]
-# MarkdownCode > components > toolbar > home
-[{"component_name": "Toolbar", "value": "- The home tab is the main tab of the toolbar\n- The home tab is first shown when the application starts\n- The home tab contains the following sections: file, edit, undo, build", "source": "# MarkdownCode > components > toolbar"}]
-# MarkdownCode > components > toolbar > format
-[{"component_name": "StyleSection", "value": "The source text does not provide any specific information related to 'StyleSection'.", "source": "# MarkdownCode > components > toolbar > format > style section"}, {"component_name": "Toolbar", "value": "- Format-tab component\n- Style section\n- Paragraph section\n- Font section", "source": "# MarkdownCode > components > toolbar"}]
 # MarkdownCode > components > toolbar > home > file section
 []
 # MarkdownCode > components > toolbar > home > edit section
@@ -20,8 +14,6 @@
 []
 # MarkdownCode > components > toolbar > format > font section
 []
-# MarkdownCode > components > toolbar > preferences
-[{"component_name": "Tab", "value": "- The 'preferences-tab' component\n- The 'preferences-tab' contains various commands for system customization and setup\n- The 'preferences-tab' has the following sections: GPT and View", "source": "# MarkdownCode > components > body > results view"}]
 # MarkdownCode > components > toolbar > preferences > GPT section:
 []
 # MarkdownCode > components > toolbar > preferences > view section:
@@ -56,3 +48,13 @@
 []
 # MarkdownCode > services > compress service
 []
+# MarkdownCode > services > dialog service
+[]
+# MarkdownCode > components > toolbar
+[{"component_name": "Tab", "value": "- The application uses a toolbar with a number of tabs.\n- The tabs are from the antd library.\n- The following tabs are available: home, format, preferences.\n- The home tab is shown as the first tab when the application starts.", "source": "# MarkdownCode > components > body > results view"}, {"component_name": "HomeTab", "value": "- Home: This is shown as the first tab when the application starts.", "source": "# MarkdownCode > components > toolbar > home"}, {"component_name": "FormatTab", "value": "The source text declares that there is a 'Format' tab available in the toolbar of the application.", "source": "# MarkdownCode > components > toolbar > format"}, {"component_name": "PreferencesTab", "value": "The source text mentions a 'Preferences' tab as one of the available tabs in the application's toolbar.", "source": "# MarkdownCode > components > toolbar > preferences"}]
+# MarkdownCode > components > toolbar > home
+[]
+# MarkdownCode > components > toolbar > format
+[]
+# MarkdownCode > components > toolbar > preferences
+[{"component_name": "Tab", "value": "- The 'preferences-tab' component is a wrapper that displays its children in a row.", "source": "# MarkdownCode > components > body > results view"}]

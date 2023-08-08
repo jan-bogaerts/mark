@@ -8,8 +8,6 @@ MarkdownCode is a machine learning tool for ideation and software building. User
 The main window is the first window shown when the app starts. It has a toolbar at the top and the rest of the space is the body.
 # MarkdownCode > components > toolbar
 The app has a toolbar like mS Access, Excel, Word, or Draw, with a single menu and toolbar. It has multiple tabs at the top, including Home, Format, and Preferences. Each component on the toolbar has a tooltip for a brief description.
-# MarkdownCode > components > toolbar > home
-The home tab is the main tab of the toolbar, shown first when the application starts. It includes sections for file, edit, undo, and build.
 # MarkdownCode > components > toolbar > home > file section
 The file-section component manages project and file actions. Actions include creating a new project, opening an existing project, saving the current project, saving the current project to a new location, and toggling the auto-save state. Error handlers are included to display any errors.
 # MarkdownCode > components > toolbar > home > edit section
@@ -18,9 +16,6 @@ The edit-section component handles clipboard and selected data actions. It suppo
 The undo-section component has actions for the undo/redo service. It supports undo and redo buttons that are enabled based on the project's undo-service actions.
 # MarkdownCode > components > toolbar > home > build section
 The build-section component has actions for the build-service. It supports the following actions: rendering all code for the entire project, rendering code files for the currently active fragment, and rendering code for the selected fragment in the currently selected service. These actions are enabled when there are out-of-date or missing results in the result-cache.
-# MarkdownCode > components > toolbar > format
-- The format-tab component formats the document, selected text, and applies formatting styles.
-- The toolbar tab has sections for style, paragraph, and font.
 # MarkdownCode > components > toolbar > format > style section
 The style-section component applies markdown formatting to text. Toggle buttons update their state based on selected text. Supported actions include paragraph style, where only one item can be selected at a time. Each item is represented as a button in a row. Pressing a button applies the selected style as markdown to the selected text. Available buttons: heading 1-6, paragraph, quote, code.
 # MarkdownCode > components > toolbar > format > paragraph section
@@ -29,8 +24,6 @@ The style-section component applies markdown formatting to text. Toggle buttons 
 - Supported actions: bullet list, numbered list, indent, unindent.
 # MarkdownCode > components > toolbar > format > font section
 The font-section component handles markdown formatting actions for text, including bold, italic, underline, and strike-through. Toggle buttons update based on the selected text.
-# MarkdownCode > components > toolbar > preferences
-The preferences tab customizes and sets up the system. It includes GPT and View sections.
 # MarkdownCode > components > body > results view
 - Bottom position displays results based on selected text block
 - Services list creates tabs with service names
@@ -124,3 +117,9 @@ The body component is the main part of the application, consisting of an outline
 - Updates selected tree item when position changes
 # MarkdownCode > services > dialog service
 The dialog service is a shared interface for displaying dialog boxes in other components and services, supporting errors, warnings, and information. User-triggered actions in a component should be wrapped in an error handler to show an electron dialog box with error details if needed.
+# MarkdownCode > components > toolbar > home
+The home-tab component arranges its children horizontally and includes the file, edit, undo, and build components.
+# MarkdownCode > components > toolbar > format
+The format-tab component arranges children horizontally and includes Style, Paragraph, and Font sections.
+# MarkdownCode > components > toolbar > preferences
+The preferences-tab component arranges its children in a row and includes the GPT and View sections on the toolbar.

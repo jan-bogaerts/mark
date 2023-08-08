@@ -17,6 +17,7 @@ It is your task to list all the components that you can find in the text, keepin
 {0}
 
 Do not include UI components that are provided by the UI framework. So don't include: buttons, dropdowns, inputs, sliders, toggle buttons, but only list the components that need to be custom built.
+Don't include any non visual services.
 Don't include any explanation, just write the list of component names as a json array and nothing else.
 If no components can be found, return an empty json array.
 
@@ -28,7 +29,7 @@ bad response:
 """
 user_prompt = """{0}
 {1}"""
-term_prompt = """Remember: use CamelCasing for the component names."""
+term_prompt = """Remember: only components and use CamelCasing for the component names."""
 
 
 def generate_response(params, key):

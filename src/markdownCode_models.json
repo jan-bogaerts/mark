@@ -2,7 +2,12 @@
     "component_lister": {
         "default":"gpt-3.5-turbo",
         "topics": {
-            "MarkdownCode > components > toolbar": "gpt-4"
+            "MarkdownCode > components > toolbar": "gpt-4",
+            "MarkdownCode > components > toolbar > home > undo section": "gpt-4",
+            "MarkdownCode > components > toolbar > format > style section": "gpt-4",
+            "MarkdownCode > components > toolbar > preferences > GPT section": "gpt-4",
+            "MarkdownCode > components > toolbar > preferences > view section:": "gpt-4", 
+            "MarkdownCode > components > toolbar > format > font section": "gpt-4"
         }
     },
     "component_descriptions": {

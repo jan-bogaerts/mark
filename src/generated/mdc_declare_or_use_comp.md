@@ -1,7 +1,5 @@
 # MarkdownCode > components > main window
 {"MainWindow": "declare", "Toolbar": "MarkdownCode > components > toolbar", "Body": "MarkdownCode > components > body"}
-# MarkdownCode > components > toolbar > home
-{"Home": "declare", "File": "MarkdownCode > components > toolbar > home > file section", "Edit": "MarkdownCode > components > toolbar > home > edit section", "Undo": "MarkdownCode > components > toolbar > home > undo section", "Build": "MarkdownCode > components > toolbar > home > build section"}
 # MarkdownCode > components > toolbar > home > file section
 {"FileSection": "declare"}
 # MarkdownCode > components > toolbar > home > edit section
@@ -10,16 +8,12 @@
 {"UndoSection": "declare", "UndoButton": "declare", "RedoButton": "declare"}
 # MarkdownCode > components > toolbar > home > build section
 {"BuildSection": "declare"}
-# MarkdownCode > components > toolbar > format
-{"FormatTab": "declare", "StyleSection": "MarkdownCode > components > toolbar > format > style section", "ParagraphSection": "MarkdownCode > components > toolbar > format > paragraph section", "FontSection": "MarkdownCode > components > toolbar > format > font section"}
 # MarkdownCode > components > toolbar > format > style section
 {"StyleSection": "declare", "ParagraphStyle": "declare", "Heading1Button": "declare", "Heading2Button": "declare", "Heading3Button": "declare", "Heading4Button": "declare", "Heading5Button": "declare", "Heading6Button": "declare", "ParagraphButton": "MarkdownCode > components > toolbar > format > paragraph section", "QuoteButton": "declare", "CodeButton": "declare"}
 # MarkdownCode > components > toolbar > format > paragraph section
 {"ParagraphSection": "declare"}
 # MarkdownCode > components > toolbar > format > font section
 {"FontSection": "declare", "BoldToggleButton": "declare", "ItalicToggleButton": "declare", "UnderlineToggleButton": "declare", "StrikeThroughToggleButton": "declare"}
-# MarkdownCode > components > toolbar > preferences
-{"PreferencesTab": "declare", "GPTSection": "MarkdownCode > components > toolbar > preferences > GPT section:", "ViewSection": "MarkdownCode > components > toolbar > preferences > view section:"}
 # MarkdownCode > components > toolbar > preferences > GPT section:
 {"GptSection": "declare", "KeyButton": "declare", "ModelComboBox": "declare"}
 # MarkdownCode > components > toolbar > preferences > view section:
@@ -33,4 +27,10 @@
 # MarkdownCode > components > body > results view
 {"ResultsView": "declare", "Tab": "declare", "MonacoEditor": "declare", "ContextMenu": "declare", "MenuItem": "declare", "Button": "declare"}
 # MarkdownCode > components > toolbar
-{"Toolbar": "declare", "Tabs": "'MarkdownCode > components > toolbar > home', 'MarkdownCode > components > toolbar > format', 'MarkdownCode > components > toolbar > preferences'", "Tooltip": "declare", "HomeTab": "'MarkdownCode > components > toolbar > home'", "FormatTab": "'MarkdownCode > components > toolbar > format'", "PreferencesTab": "'MarkdownCode > components > toolbar > preferences'"}
+{"Toolbar": "declare", "HomeTab": "'MarkdownCode > components > toolbar > home'", "FormatTab": "'MarkdownCode > components > toolbar > format'", "PreferencesTab": "'MarkdownCode > components > toolbar > preferences'"}
+# MarkdownCode > components > toolbar > home
+{"HomeTab": "declare", "FileComponent": "MarkdownCode > components > toolbar > home > file section", "EditComponent": "MarkdownCode > components > toolbar > home > edit section", "UndoComponent": "MarkdownCode > components > toolbar > home > undo section", "BuildComponent": "MarkdownCode > components > toolbar > home > build section"}
+# MarkdownCode > components > toolbar > format
+{"FormatTab": "declare", "Style": "MarkdownCode > components > toolbar > format > style section", "Paragraph": "MarkdownCode > components > toolbar > format > paragraph section", "Font": "MarkdownCode > components > toolbar > format > font section"}
+# MarkdownCode > components > toolbar > preferences
+{"PreferencesTab": "declare", "GPT": "MarkdownCode > components > toolbar > preferences > GPT section:", "View": "MarkdownCode > components > toolbar > preferences > view section:"}
