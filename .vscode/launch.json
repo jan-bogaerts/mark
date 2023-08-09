@@ -268,6 +268,24 @@
         },
 
         {
+            "name": "resolve component imports mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/resolve_component_imports.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_components.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
+                "${workspaceFolder}/src/generated/mdc_component_expansion.md",
+                "${workspaceFolder}/src/generated/mdc_service_describes_components.md",
+                "${workspaceFolder}/src/generated/mdc_is_service_used.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
             "name": "render components mdc",
             "type": "python",
             "request": "launch",
@@ -281,6 +299,20 @@
                 "${workspaceFolder}/src/generated/mdc_is_service_used.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_singleton.md",
                 "${workspaceFolder}/src/generated/code/",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "get styling names mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/get_styling_names.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_component_files.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
