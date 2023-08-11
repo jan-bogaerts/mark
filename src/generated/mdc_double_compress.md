@@ -117,9 +117,9 @@ The body component is the main part of the application, consisting of an outline
 - Updates selected tree item when position changes
 # MarkdownCode > services > dialog service
 The dialog service is a shared interface for displaying dialog boxes in other components and services, supporting errors, warnings, and information. User-triggered actions in a component should be wrapped in an error handler to show an electron dialog box with error details if needed.
-# MarkdownCode > components > toolbar > home
-The home-tab component arranges its children horizontally and includes the file, edit, undo, and build components.
 # MarkdownCode > components > toolbar > format
 The format-tab component arranges children horizontally and includes Style, Paragraph, and Font sections.
 # MarkdownCode > components > toolbar > preferences
 The preferences-tab component arranges its children in a row and includes the GPT and View sections on the toolbar.
+# MarkdownCode > components > toolbar > home
+The home-tab component arranges its children in a row and includes the following child components: File, Edit, Undo, and Build sections.

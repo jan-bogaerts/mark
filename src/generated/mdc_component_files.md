@@ -2,8 +2,6 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\main window\\MainWindow.js"]
 # MarkdownCode > components > toolbar
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\Toolbar.js"]
-# MarkdownCode > components > toolbar > home
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\HomeTab.js"]
 # MarkdownCode > components > toolbar > home > file section
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\file section\\FileSection.js"]
 # MarkdownCode > components > toolbar > home > edit section
@@ -35,3 +33,5 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\body\\outline\\Outline.js"]
 # MarkdownCode > components > body > results view
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\body\\results view\\ResultsView.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\body\\results view\\Tab.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\body\\results view\\MonacoEditor.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\body\\results view\\ContextMenu.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\body\\results view\\MenuItem.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\body\\results view\\Button.js"]
+# MarkdownCode > components > toolbar > home
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\HomeTab.js"]

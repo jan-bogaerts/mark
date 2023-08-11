@@ -243,13 +243,6 @@
 - At the top of the toolbar, there are multiple tabs, which are implemented using the tabs from the antd library.
 - Each component on the toolbar displays a tooltip from the antd library, providing a brief description of the action.
 - The available tabs on the toolbar are: Home (shown as the first tab when the application starts), Format, and Preferences.
-# MarkdownCode > components > toolbar > home
-- The home-tab component is a wrapper that arranges its children in a horizontal row.
-- It includes the following child components (sections on the toolbar):
-  - file component
-  - edit component
-  - undo component
-  - build component
 # MarkdownCode > components > toolbar > format
 - The format-tab component is a wrapper that arranges its children in a horizontal row.
 - The component includes the following child components (sections on the toolbar):
@@ -261,3 +254,10 @@
 - This component includes the following child components (sections on the toolbar):
   - GPT
   - View
+# MarkdownCode > components > toolbar > home
+- The home-tab component is a wrapper that arranges its children in a row.
+- The component includes the following child components:
+  - File section
+  - Edit section
+  - Undo section
+  - Build section

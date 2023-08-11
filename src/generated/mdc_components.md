@@ -16,8 +16,6 @@
 ["ResultsView", "Tab", "MonacoEditor", "ContextMenu", "MenuItem", "Button"]
 # MarkdownCode > components > toolbar
 ["Toolbar", "HomeTab", "FormatTab", "PreferencesTab"]
-# MarkdownCode > components > toolbar > home
-["HomeTab", "FileComponent", "EditComponent", "UndoComponent", "BuildComponent"]
 # MarkdownCode > components > toolbar > format
 ["FormatTab", "Style", "Paragraph", "Font"]
 # MarkdownCode > components > toolbar > preferences
@@ -35,3 +33,5 @@
 
 # MarkdownCode > components > toolbar > format > style section
 ["StyleSection", "ParagraphStyle"]
+# MarkdownCode > components > toolbar > home
+["HomeTab", "FileSection", "EditSection", "UndoSection", "BuildSection"]

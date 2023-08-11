@@ -1,10 +1,17 @@
 # MarkdownCode
 
-MarkdownCode is an ideation and software building tool driven by machine learning. It allows users to enter text in markdown which is automatically analyzed for various parameters and which can automatically be converted into various stages of software code.
+MarkdownCode is an ideation and software building tool driven by machine learning. It allows users to enter text in markdown of any length, which is automatically analyzed for various parameters and which can automatically be converted into various stages of software code.
+
+## The problem(s) it's trying to solve
+- Large language models have a limited size: you can't just throw any large text to it and have it to render any possible code size, they have limits. Some models can handle more tokens than others, but no matter the size of the model, there is a hard limit that determines how much can go in and out in 1 go.
+To solve this, the prompt engine splits up the markdown text into smaller chunks and perform the conversions on each of these chunks (text fragment).
+- translating an application description to code takes a bit of time and requires a lot of calls to the llm. Some models are cheaper and faster but less accurate. Some prompts and text fragments are simple and can be handled by a simpler, faster model. Others need the big guns. In order to optimize speed and cost, you want to be able to determine which model is used by each prompt, and even for each text fragment.
+- not all applications or environments have the same structure (backend web servers usually don't have much use of UI components), so not all application descriptions can be processed with the same prompts, flexibility in the translation process is needed.
+- I am a software developer, so I want some control and debug ability over the entire conversion process. This is why the output of every step can be examined and manually overwritten.
 
 ## Supported Languages
 
-MarkdownCode is currently tested on JavaScript, but it should work with most other programming languages as well.
+MarkdownCode is currently tested on JavaScript, but it should work with most other programming languages as well, especially with custom prompt pipeline configurations.
 
 ## Prerequisites
 

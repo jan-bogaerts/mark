@@ -29,10 +29,10 @@ the following tabs are available:
 #### home
 - the home-tab component is a wrapper that displays it's children in a row.
 - This component contains the following child components :
-  - file component
-  - edit component
-  - undo component
-  - build component
+  - file section
+  - edit section
+  - undo section
+  - build section
   
 ##### file section
 - the file-section component contains actions related to the project and file management.

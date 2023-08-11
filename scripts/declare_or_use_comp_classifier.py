@@ -132,6 +132,11 @@ def process_data(writer):
                     response = generate_response(params, fragment.full_title)
                     if response == 'no':
                         response = 'declare'
+                    else:
+                        if response.startswith("'"):
+                            response = response[1:]
+                        if response.endswith("'"):
+                            response = response[:-1]
                 if response:
                     response_dict[component] = response
             collect_response(fragment.full_title, json.dumps(response_dict), result, writer)
@@ -192,25 +197,45 @@ def get_data(full_title):
 
 def get_is_declared(full_title, name):
     """Returns true if the class is declared in the given text fragment"""
+    name = name.lower()
     to_search = full_title.strip()
     if not to_search.startswith('# '):
         to_search = '# ' + to_search
     for fragment in text_fragments:
         if fragment.full_title.strip() == to_search:
-            if name in fragment.data:
-                return fragment.data[name] == 'declare'
+            # doing case insensitive search here, otherwise things can go wrong
+            temp_items = {k.lower(): v for k, v in fragment.data.items()}
+            if name in temp_items:
+                return temp_items[name] == 'declare'
+            else:
+                return False
     return False
 
 
-def get_declared_in(full_title, name):
-    """Returns the title of the text fragment where the class is declared in the given text fragment"""
+def get_all_declared(full_title):
+    """Returns the list of classes that are declared in the given text fragment"""
     to_search = full_title.strip()
     if not to_search.startswith('# '):
         to_search = '# ' + to_search
     for fragment in text_fragments:
         if fragment.full_title.strip() == to_search:
-            if name in fragment.data:
-                return fragment.data[name]
+            return [name for name in fragment.data if fragment.data[name] == 'declare']
+    return []
+
+def get_declared_in(full_title, name):
+    """Returns the title of the text fragment where the class is declared in the given text fragment"""
+    name = name.lower()
+    to_search = full_title.strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
+    for fragment in text_fragments:
+        if fragment.full_title.strip() == to_search:
+            # doing case insensitive search here, otherwise things can go wrong
+            temp_items = {k.lower(): v for k, v in fragment.data.items()}
+            if name in temp_items:
+                return temp_items[name]
+            else:
+                return None
     return None
 
 def has_fragment(title):

@@ -16,8 +16,6 @@
 {"FontSection": "declare", "BoldToggleButton": "declare", "ItalicToggleButton": "declare", "UnderlineToggleButton": "declare", "StrikeThroughToggleButton": "declare"}
 # MarkdownCode > components > toolbar > preferences > GPT section:
 {"GptSection": "declare", "KeyButton": "declare", "ModelComboBox": "declare"}
-# MarkdownCode > components > toolbar > preferences > view section:
-{"ViewSection": "declare", "Theme": "declare", "Font": "MarkdownCode > components > toolbar > format > font section", "FontSize": "declare"}
 # MarkdownCode > components > body
 {"Body": "declare", "Outline": "MarkdownCode > components > body > outline", "ResultsView": "MarkdownCode > components > body > results view", "Editor": "MarkdownCode > components > body > editor", "HorizontalSplitter": "declare", "VerticalSplitter": "declare"}
 # MarkdownCode > components > body > editor
@@ -27,10 +25,12 @@
 # MarkdownCode > components > body > results view
 {"ResultsView": "declare", "Tab": "declare", "MonacoEditor": "declare", "ContextMenu": "declare", "MenuItem": "declare", "Button": "declare"}
 # MarkdownCode > components > toolbar
-{"Toolbar": "declare", "HomeTab": "'MarkdownCode > components > toolbar > home'", "FormatTab": "'MarkdownCode > components > toolbar > format'", "PreferencesTab": "'MarkdownCode > components > toolbar > preferences'"}
-# MarkdownCode > components > toolbar > home
-{"HomeTab": "declare", "FileComponent": "MarkdownCode > components > toolbar > home > file section", "EditComponent": "MarkdownCode > components > toolbar > home > edit section", "UndoComponent": "MarkdownCode > components > toolbar > home > undo section", "BuildComponent": "MarkdownCode > components > toolbar > home > build section"}
+{"Toolbar": "declare", "HomeTab": "MarkdownCode > components > toolbar > home", "FormatTab": "MarkdownCode > components > toolbar > format", "PreferencesTab": "MarkdownCode > components > toolbar > preferences"}
 # MarkdownCode > components > toolbar > format
 {"FormatTab": "declare", "Style": "MarkdownCode > components > toolbar > format > style section", "Paragraph": "MarkdownCode > components > toolbar > format > paragraph section", "Font": "MarkdownCode > components > toolbar > format > font section"}
 # MarkdownCode > components > toolbar > preferences
 {"PreferencesTab": "declare", "GPT": "MarkdownCode > components > toolbar > preferences > GPT section:", "View": "MarkdownCode > components > toolbar > preferences > view section:"}
+# MarkdownCode > components > toolbar > home
+{"HomeTab": "declare", "FileSection": "MarkdownCode > components > toolbar > home > file section", "EditSection": "MarkdownCode > components > toolbar > home > edit section", "UndoSection": "MarkdownCode > components > toolbar > home > undo section", "BuildSection": "MarkdownCode > components > toolbar > home > build section"}
+# MarkdownCode > components > toolbar > preferences > view section:
+{"ViewSection": "declare", "ThemeComboBox": "declare", "FontComboBox": "declare", "FontSizeComboBox": "MarkdownCode > components > toolbar > format > font section"}

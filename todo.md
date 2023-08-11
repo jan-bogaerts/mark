@@ -1,7 +1,3 @@
-# imports incorrect filenames 
-the location of external components is correctly found, but not the exact name of the component, 
-as defined by the component itself, which we need to import the correct filename
-
 # does not always know how to implement using the themeservice 
 (ex: only writes 'apply theme here' in the event handler)
 # multiple components in the same fragment sometimes fails

@@ -9,17 +9,18 @@ import declare_or_use_comp_classifier
 import get_if_service_is_used
 import list_component_expansions
 import list_how_service_describes_components
+import component_descriptions
 import json
 import result_loader
 
 import openai
 import tiktoken
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
-system_prompt = """
-"""
-user_prompt = """
+system_prompt = """Only return the name of the most likely match, don't give any introduction or explanation."""
+user_prompt = """Which of these component names best matches '{0}', described as {1}:
+{2}
 """
 term_prompt = """"""
 
@@ -48,14 +49,14 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['component'], params['dev_stack']) + term_prompt
+    prompt = system_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['public_features'], params['global_features'], params['imports'] )
+    prompt = user_prompt.format(params['component'], params['description'], params['items'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
-    total_tokens = total_tokens + DEFAULT_MAX_TOKENS # code needs max allowed
+    total_tokens = total_tokens + 50 # code needs max allowed
     if total_tokens > MAX_TOKENS:
         total_tokens = MAX_TOKENS
     params = {
@@ -92,20 +93,20 @@ def collect_file_list(title, file_names, writer):
     writer.flush()
 
 
-def collect_response(title, response, root_path):
-    file_name = title.replace(" > ", "_")
-    if not os.path.exists(root_path):
-        os.makedirs(root_path)
-    file_path = os.path.join(root_path, file_name.replace(" ", "_") + ".js")
-    with open(file_path, "w") as writer:
-        writer.write(response)
-    return file_path
+def add_result(to_add, writer):
+    writer.write(to_add + "\n")
+    writer.flush()
+
+
+def collect_response(title, response, writer):
+    # get the first line in the component without the ## and the #
+    add_result(f'# {title}', writer)
+    add_result(response, writer)
 
 
 def get_service_imports(full_title):
     imported = {} # so we don't list the same thing twice
     results = []
-    missing = []
    
     services_used = get_if_service_is_used.get_data(full_title)
     if services_used:
@@ -115,7 +116,7 @@ def get_service_imports(full_title):
                 if value == 'yes' and not service in imported:
                     imported[service] = True
                     service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
-                    results.append({'service': service, 'path': service_path})
+                    results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
     for fragment in list_how_service_describes_components.text_fragments:
         cur_path_parts = fragment.full_title.split("#")[-1].split(" > ")
         if fragment.data:
@@ -123,8 +124,8 @@ def get_service_imports(full_title):
                 if not service in imported:
                     imported[service] = True
                     service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
-                    results.append({'service': service, 'path': service_path})
-    return missing, results  
+                    results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
+    return results  
 
 
 def resolve_component_imports(full_title, component, results):
@@ -139,16 +140,25 @@ def resolve_component_imports(full_title, component, results):
             path = os.path.join(*declared_in.split(" > "), component.replace(" ", "_") )
             results[component] = path
         else:
-            params = {
-                'component': component,
-                'items': '- ' + '\n- '.join(components),
-            }
-            response = generate_response(params, full_title)
-            if response:
-                results[component] = response
+            # if there is only 1 component declared in the fragment, we can presume that's the one we need
+            declared_comps = declare_or_use_comp_classifier.get_all_declared(declared_in)
+            if len(declared_comps) == 1:
+                declared_in = declared_in.replace("'", "").replace('"', '')
+                path = os.path.join(*declared_in.split(" > "), declared_comps[0].replace(" ", "_") )
+                results[component] = path
             else:
-                print(f"can't find import location for component {component} used in {full_title}")
-                return # serious error
+                description = component_descriptions.get_description(full_title, component)
+                params = {
+                    'component': component,
+                    'description': description,
+                    'items': '- ' + '\n- '.join(declared_comps),
+                }
+                response = generate_response(params, full_title)
+                if response:
+                    results[component] = response
+                else:
+                    print(f"can't find import location for component {component} used in {full_title}")
+                    exit(-1) # serious error
 
 def process_data(writer):
     for fragment in project.fragments:
@@ -160,18 +170,7 @@ def process_data(writer):
             for component in components:
                 is_declare = declare_or_use_comp_classifier.get_is_declared(fragment.full_title, component)
                 if is_declare:
-                    continue # testing
-                    missing_imports, imports = get_service_imports(fragment.full_title)
-                    for missing in missing_imports:
-                        params = {
-                            'component': component,
-                            'feature_title': fragment.title,
-                            'feature_description': fragment.content,
-                            'imports': missing,
-                        }
-                        response = generate_response(params, fragment.full_title)
-                        if response:
-                            imports[missing] = response
+                    imports = get_service_imports(fragment.full_title)
                     results[component] = imports
                 else:
                     resolve_component_imports(fragment.full_title, component, results)
@@ -179,7 +178,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, file=None):
+def main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, descriptions, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -194,6 +193,7 @@ def main(prompt, components_list, declare_or_use_list, expansions, comp_features
     list_component_expansions.load_results(expansions)
     list_how_service_describes_components.load_results(comp_features_from_service)
     get_if_service_is_used.load_results(is_service_used)
+    component_descriptions.load_results(descriptions)
 
     # save there result to a file while rendering.
     if file is None:
@@ -248,7 +248,7 @@ def get_data(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 6:
+    if len(sys.argv) < 7:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -259,9 +259,10 @@ if __name__ == "__main__":
         expansions = sys.argv[4]
         comp_features_from_service = sys.argv[5]
         is_service_used = sys.argv[6]
+        description = sys.argv[7] 
 
     # Pull everything else as normal
-    file = sys.argv[7] if len(sys.argv) > 7 else None
+    file = sys.argv[8] if len(sys.argv) > 8 else None
 
     # Run the main function
-    main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, file)
+    main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, description, file)

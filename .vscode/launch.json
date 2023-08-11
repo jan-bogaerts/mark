@@ -279,6 +279,7 @@
                 "${workspaceFolder}/src/generated/mdc_component_expansion.md",
                 "${workspaceFolder}/src/generated/mdc_service_describes_components.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_used.md",
+                "${workspaceFolder}/src/generated/mdc_comp_descriptions.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -298,6 +299,7 @@
                 "${workspaceFolder}/src/generated/mdc_service_describes_components.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_used.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_singleton.md",
+                "${workspaceFolder}/src/generated/mdc_resolve_component_imports.md",
                 "${workspaceFolder}/src/generated/code/",
                 "${workspaceFolder}/src/generated/mdc"
             ],
