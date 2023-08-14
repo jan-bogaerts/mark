@@ -1,5 +1,4 @@
-# MarkdownCode > services > Theme service
-{"ThemeService": "The ThemeService class manages the selected theme, allowing for light or dark themes. It is used by components to apply the theme, and the main window refreshes when the theme is updated."}
+
 # MarkdownCode > services > project service
 {"ProjectService": "The ProjectService class is responsible for creating, managing, and updating projects. It handles tasks such as clearing data, recreating cache objects, notifying components of data changes, reading and parsing files, saving projects, and managing user configurations."}
 # MarkdownCode > services > Selection service
@@ -20,3 +19,5 @@
 {"CompressService": "The 'CompressService' is a service that uses the GPT service to shorten a text fragment. It provides a 'get-result' function that calls the GPT service with specific parameters and utilizes a result-cache-service to store and track results. The service is useful for checking if the GPT service understands the fragment and can be used for other processes.", "ResultCacheService": "The ResultCacheService is a service that stores and tracks results obtained from the GPT service. It is used to check if the GPT service understands a text fragment and can be utilized for other processes."}
 # MarkdownCode > services > dialog service
 {"DialogService": "The DialogService is a shared interface that allows for displaying dialog boxes in other components and services. It supports errors, warnings, and information, and can be used to show electron dialog boxes with error details when user-triggered actions encounter errors."}
+# MarkdownCode > services > Theme service
+{"ThemeService": "The ThemeService class is responsible for saving and retrieving the selected theme using local storage. It allows for selecting a light or dark theme and applies the selected theme to components without the need for subscription. Additionally, it triggers a refresh of the main window when the theme is updated."}

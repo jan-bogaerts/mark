@@ -1,50 +1,61 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, Input } from 'antd';
-import { KeyOutlined, SelectOutlined } from '@ant-design/icons';
-import ModelComboBox from 'MarkdownCode/components/toolbar/preferences/GPT section/ModelComboBox';
+import GPTSection from 'MarkdownCode/components/toolbar/preferences/GPT section/GPTSection';
 import DialogService from 'MarkdownCode/services/dialog service/DialogService';
 import SelectionService from 'MarkdownCode/services/Selection service/SelectionService';
 import GptService from 'MarkdownCode/services/gpt service/GptService';
+import CompressService from 'MarkdownCode/services/compress service/CompressService';
 import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
+import ModelComboBox from 'MarkdownCode/components/toolbar/preferences/GPT section/ModelComboBox';
 
 /**
  * KeyButton component
- * Contains actions related to the configuration of the GPT service.
+ * This component allows users to enter an API key and select a default model from a list provided by the GPT service.
  */
 const KeyButton = () => {
   const [apiKey, setApiKey] = useState('');
-  const [theme, setTheme] = useState(ThemeService.getCurrentTheme());
+  const [selectedModel, setSelectedModel] = useState('');
 
-  useEffect(() => {
-    ThemeService.subscribe(setTheme);
-    return () => {
-      ThemeService.unsubscribe(setTheme);
-    };
-  }, []);
+  const theme = ThemeService.getCurrentTheme();
 
-  const handleKeyClick = async () => {
+  const handleApiKeyChange = (event) => {
+    setApiKey(event.target.value);
+  };
+
+  const handleModelChange = (value) => {
+    setSelectedModel(value);
+  };
+
+  const handleSave = () => {
     try {
-      const result = await DialogService.showDialog({
-        type: 'input',
-        title: 'Enter API Key',
-        message: 'Please enter your OpenAI API Key',
-        defaultText: apiKey
-      });
-      if (result) {
-        setApiKey(result);
-        GptService.setApiKey(result);
-      }
+      GptService.setApiKey(apiKey);
+      SelectionService.setDefaultModel(selectedModel);
     } catch (error) {
-      DialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error saving API key and model', error.message);
     }
   };
 
   return (
-    <div className={`key-button ${theme}`}>
-      <Button icon={<KeyOutlined />} onClick={handleKeyClick} />
-      <ModelComboBox />
-    </div>
+    <GPTSection>
+      <Input
+        className={`key-input ${theme}`}
+        value={apiKey}
+        onChange={handleApiKeyChange}
+        placeholder="Enter API key"
+      />
+      <ModelComboBox
+        className={`model-combo-box ${theme}`}
+        value={selectedModel}
+        onChange={handleModelChange}
+      />
+      <Button
+        className={`save-button ${theme}`}
+        onClick={handleSave}
+      >
+        Save
+      </Button>
+    </GPTSection>
   );
 };
 

@@ -16,8 +16,6 @@
 {"FontSection": "declare", "BoldToggleButton": "declare", "ItalicToggleButton": "declare", "UnderlineToggleButton": "declare", "StrikeThroughToggleButton": "declare"}
 # MarkdownCode > components > toolbar > preferences > GPT section:
 {"GptSection": "declare", "KeyButton": "declare", "ModelComboBox": "declare"}
-# MarkdownCode > components > body
-{"Body": "declare", "Outline": "MarkdownCode > components > body > outline", "ResultsView": "MarkdownCode > components > body > results view", "Editor": "MarkdownCode > components > body > editor", "HorizontalSplitter": "declare", "VerticalSplitter": "declare"}
 # MarkdownCode > components > body > editor
 {"Editor": "declare", "MonacoEditor": "declare"}
 # MarkdownCode > components > body > outline
@@ -34,3 +32,9 @@
 {"HomeTab": "declare", "FileSection": "MarkdownCode > components > toolbar > home > file section", "EditSection": "MarkdownCode > components > toolbar > home > edit section", "UndoSection": "MarkdownCode > components > toolbar > home > undo section", "BuildSection": "MarkdownCode > components > toolbar > home > build section"}
 # MarkdownCode > components > toolbar > preferences > view section:
 {"ViewSection": "declare", "ThemeComboBox": "declare", "FontComboBox": "declare", "FontSizeComboBox": "MarkdownCode > components > toolbar > format > font section"}
+# MarkdownCode > components > body
+{"Body": "declare", "HorizontalSplitter": "MarkdownCode > components > body > horizontal splitter", "Outline": "MarkdownCode > components > body > outline", "VerticalSplitter": "MarkdownCode > components > body > vertical splitter", "Editor": "MarkdownCode > components > body > editor", "ResultsView": "MarkdownCode > components > body > results view"}
+# MarkdownCode > components > body > horizontal splitter
+{"HorizontalSplitter": "declare"}
+# MarkdownCode > components > body > vertical splitter
+{"VerticalSplitter": "declare"}

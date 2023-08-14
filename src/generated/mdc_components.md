@@ -6,8 +6,6 @@
 ["EditSection"]
 # MarkdownCode > components > toolbar > format > paragraph section
 ["ParagraphSection"]
-# MarkdownCode > components > body
-["Body", "Outline", "ResultsView", "Editor", "HorizontalSplitter", "VerticalSplitter"]
 # MarkdownCode > components > body > editor
 ["Editor", "MonacoEditor"]
 # MarkdownCode > components > body > outline
@@ -35,3 +33,10 @@
 ["StyleSection", "ParagraphStyle"]
 # MarkdownCode > components > toolbar > home
 ["HomeTab", "FileSection", "EditSection", "UndoSection", "BuildSection"]
+
+# MarkdownCode > components > body
+["Body", "HorizontalSplitter", "Outline", "VerticalSplitter", "Editor", "ResultsView"]
+# MarkdownCode > components > body > horizontal splitter
+["HorizontalSplitter"]
+# MarkdownCode > components > body > vertical splitter
+["VerticalSplitter"]

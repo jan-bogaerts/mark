@@ -1,7 +1,4 @@
-# MarkdownCode > services > Theme service
-[
-    "ThemeService"
-]
+
 # MarkdownCode > services > project service
 [
   "ProjectService"
@@ -42,4 +39,8 @@
 # MarkdownCode > services > dialog service
 [
     "DialogService"
+]
+# MarkdownCode > services > Theme service
+[
+    "ThemeService"
 ]

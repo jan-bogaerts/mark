@@ -173,18 +173,38 @@ the following tabs are available:
 
 ### body
 - the body component represents the main body of the application.
-- it consists out of the following areas:
-  - an outline: this component is aligned to the left of the body
-  - a results view: this component is located at the bottom of the body.
-  - an editor: this component fills the remainder of the space.
-- These areas can be resized using a horizontal or vertical splitter. 
-  - So there is a vertical splitter between the outline and the rest
-  - a horizontal splitter between the results-view and the editor.
+- it's entire area is filled with a horizontal splitter component.
+  - on the left of the horizontal splitter is an outline component.
+  - to the right is a vertical splitter component.  
+    - at the top of the vertical splitter component is an editor component
+    - at the bottom of the vertical splitter component is a results view component
+- The body component has an event handler for the 'onPositionChanged' callback of both the horizontal and vertical splitter that will store the new value for it's position.
+- When the body component is unloaded, the last position of the horizontal and vertical splitters are stored in the local storage.
+- When te body component is loaded, the last position of the horizontal and vertical splitters are restored from the local storage, but only if the previous value fits in the current size of the component, otherwise 1/3 of the width for the vertical splitter is used and 1/3 of the component's height is used for the horizontal splitter.
+
+#### horizontal splitter
+- The horizontal splitter is a component that is responsible for managing the layout of 2 child components so that users can increase the size of the panel above the splitter while simultaneously decreasing the size of the panel below it, or vice versa.
+- The horizontal-splitter component has the following properties:
+  - top: the component that should be placed at the top
+  - bottom: the component that should be placed at the bottom
+  - position: the height assigned to the bottom component
+  - onPositionChanged: a callback function, called when the position value should be updated. This callback has 1 parameter: the new value for position (number)
+- between the bottom and top component, the splitter puts a div component of 8 pixels high. When the user drags this bar up or down, the onPositionChanged callback is called (when provided) with the new position value.
+
+#### vertical splitter
+- The vertical splitter is a component that is responsible for managing the layout of 2 child components so that users can increase the width of the panel to the left of the splitter while simultaneously decreasing the size of the panel right of it, or vice versa.
+- The vertical-splitter component has the following properties:
+  - left: the component that should be placed to the left
+  - right: the component that should be placed to the right
+  - position: the width assigned to the left component
+  - onPositionChanged: a callback function, called when the position value should be updated. This callback has 1 parameter: the new value for position (number)
+- between the left and right component, the splitter puts a div component of 8 pixels wide. When the user drags this bar left or right, the onPositionChanged callback is called (when provided) with the new position value.
 
 #### editor
-- the first and primary view in the body, is the editor component which displays the markdown text of the currently loaded project.
+- The editor component displays the markdown text of the currently loaded project.
 - to display the markdown text, the monaco editor npm package is used.
 - when the user moves the cursor to another line, the editor asks the position-tracking service to update the currently selected line
+- when the user changes the text in the monaco editor, the new text is saved into the project.
 
 #### outline
 - the outline component is positioned to the left of the editor
@@ -237,9 +257,9 @@ the following tabs are available:
 - all actions or functions that the user can trigger from a component, should be wrapped in a proper error handler so that when an error occurs, an electron dialog box is shown to the user with details on the error. 
 
 ### Theme service
-- The theme service is responsible for managing the currently selected theme.
+- The theme service is responsible for managing the currently selected theme: when the selected theme is changed, the new value is saved to the local storage. When the service is created, the value previously stored in local storage, is retrieved.
 - The service allows for a selection between a light or dark theme.
-- Every component uses this service to retrieve the currently selected theme so it can apply this.
+- Every component uses this service to retrieve the currently selected theme so it can apply this. Components don't need to subscribe for changes to the selected theme value, they only need to retrieve this value from the theme service and use the styling names, based on the selected. theme.
 - The main window refreshes it's entire content when the selected theme is updated.
 
 ### project service

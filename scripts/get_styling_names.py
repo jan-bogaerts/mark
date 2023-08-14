@@ -10,7 +10,7 @@ import result_loader
 import openai
 import tiktoken
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """extract all the styling names found in the following code
 return as a json list, only return the list, no introduction or explanation."""

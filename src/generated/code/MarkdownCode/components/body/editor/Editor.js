@@ -1,62 +1,60 @@
 
 import React, { useEffect, useState } from 'react';
-import { Layout } from 'antd';
-import MonacoEditor from 'MarkdownCode/components/body/editor/MonacoEditor';
-import ProjectService from 'MarkdownCode/services/project service/ProjectService';
-import SelectionService from 'MarkdownCode/services/Selection service/SelectionService';
-import PositionTrackingService from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
-import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
-import DialogService from 'MarkdownCode/services/dialog service/DialogService';
-
-const { Content } = Layout;
+import { useTheme } from 'styled-components';
+import { MonacoEditor } from 'MarkdownCode/components/body/editor/MonacoEditor';
+import { ProjectService } from 'MarkdownCode/services/project service/ProjectService';
+import { SelectionService } from 'MarkdownCode/services/Selection service/SelectionService';
+import { PositionTrackingService } from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
+import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
+import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
 
 /**
  * Editor component
- * Displays the markdown text of the currently loaded project
- * Uses Monaco Editor for text display and editing
+ * @component
  */
-const Editor = () => {
+function Editor() {
   const [theme, setTheme] = useState(ThemeService.getCurrentTheme());
-  const [project, setProject] = useState(ProjectService.getCurrentProject());
-  const [selectedLine, setSelectedLine] = useState(SelectionService.getSelectedLine());
+  const [selectedLine, setSelectedLine] = useState(null);
+  const [markdownText, setMarkdownText] = useState('');
 
   useEffect(() => {
     ThemeService.subscribe(setTheme);
-    ProjectService.subscribe(setProject);
-    SelectionService.subscribe(setSelectedLine);
+    PositionTrackingService.subscribe(setSelectedLine);
+    setMarkdownText(ProjectService.getProjectMarkdown());
+
     return () => {
       ThemeService.unsubscribe(setTheme);
-      ProjectService.unsubscribe(setProject);
-      SelectionService.unsubscribe(setSelectedLine);
+      PositionTrackingService.unsubscribe(setSelectedLine);
     };
   }, []);
 
-  const handleEditorChange = (newValue, e) => {
+  const handleEditorChange = (value) => {
     try {
-      ProjectService.updateProject({ ...project, text: newValue });
+      ProjectService.updateProjectMarkdown(value);
+      setMarkdownText(value);
     } catch (error) {
-      DialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error updating markdown text', error);
     }
   };
 
-  const handleEditorSelectionChange = (selection) => {
+  const handleCursorChange = (lineNumber) => {
     try {
-      PositionTrackingService.updateSelectedLine(selection.endLineNumber);
+      SelectionService.updateSelectedLine(lineNumber);
+      setSelectedLine(lineNumber);
     } catch (error) {
-      DialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error updating selected line', error);
     }
   };
 
   return (
-    <Content className={`editor ${theme}`}>
-      <MonacoEditor
-        value={project.text}
-        onChange={handleEditorChange}
-        onSelectionChange={handleEditorSelectionChange}
-        theme={theme}
-      />
-    </Content>
+    <MonacoEditor
+      theme={theme}
+      value={markdownText}
+      onChange={handleEditorChange}
+      onCursorChange={handleCursorChange}
+      className={`editor-${theme}`}
+    />
   );
-};
+}
 
 export default Editor;

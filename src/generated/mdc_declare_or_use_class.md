@@ -1,7 +1,5 @@
 # MarkdownCode > services > dialog service
 {"DialogService": "declare"}
-# MarkdownCode > services > Theme service
-{"ThemeService": "declare"}
 # MarkdownCode > services > project service
 {"ProjectService": "declare"}
 # MarkdownCode > services > Selection service
@@ -20,3 +18,5 @@
 {"BuildService": "declare"}
 # MarkdownCode > services > compress service
 {"CompressService": "declare", "ResultCacheService": "MarkdownCode > services > result-cache service"}
+# MarkdownCode > services > Theme service
+{"ThemeService": "declare"}

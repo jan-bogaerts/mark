@@ -1,3 +1,5 @@
+# note: this converter should be improved by checking if the inpt prompt is too long for the model, if so, split up into multiple prompts, each
+# asking if the component is declared in one of the titles. This way, we can process inputs of any size.
 import sys
 import os
 from time import sleep
@@ -8,6 +10,7 @@ import component_lister
 import primary_component
 import component_descriptions
 import result_loader
+import double_compress
 import json
 
 import openai
@@ -105,10 +108,18 @@ def collect_response(title, response, result, writer):
     add_result(response, result, writer)
 
 
+def get_other_titles(title):
+    result = ''
+    for fragment in component_lister.text_fragments:
+        fragment_title = fragment.full_title.split('#')[-1].strip()
+        if fragment_title != title:
+            description = double_compress.get_fragment(fragment.full_title)
+            result += f'- {fragment_title}:\n{description.content}\n'
+    return result
+
+
 def process_data(writer):
     result = []
-
-    titles = [fragment.full_title.split('#')[-1].strip() for fragment in component_lister.text_fragments]
 
     for fragment in project.fragments:
         if ONLY_MISSING and has_fragment(fragment.full_title):
@@ -123,7 +134,7 @@ def process_data(writer):
                     response = 'declare'
                 else:
                     description = component_descriptions.get_description(fragment.full_title, component)
-                    other_titles = [title for title in titles if title != fragment_title]
+                    other_titles = get_other_titles(fragment_title)
                     params = {
                         'comp_description': description,
                         'component': component,
@@ -144,7 +155,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, components_list, primary_list, comp_descr, file=None):
+def main(prompt, components_list, primary_list, comp_descr, double_comp, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -157,6 +168,7 @@ def main(prompt, components_list, primary_list, comp_descr, file=None):
     component_lister.load_results(components_list)
     primary_component.load_results(primary_list)
     component_descriptions.load_results(comp_descr)
+    double_compress.load_results(double_comp)
 
     # save there result to a file while rendering.
     if file is None:
@@ -252,7 +264,7 @@ def has_fragment(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 6:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -261,9 +273,10 @@ if __name__ == "__main__":
         components_list = sys.argv[2]
         primary_list = sys.argv[3]
         comp_descr = sys.argv[4]
+        double_comp = sys.argv[5] 
 
     # Pull everything else as normal
-    file = sys.argv[5] if len(sys.argv) > 5 else None
+    file = sys.argv[6] if len(sys.argv) > 6 else None
 
     # Run the main function
-    main(prompt, components_list, primary_list, comp_descr, file)
+    main(prompt, components_list, primary_list, comp_descr, double_comp, file)

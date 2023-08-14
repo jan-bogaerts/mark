@@ -6,77 +6,56 @@ import SelectionService from 'MarkdownCode/services/Selection service/SelectionS
 import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
 import DialogService from 'MarkdownCode/services/dialog service/DialogService';
 
-const selectionService = new SelectionService();
-const themeService = new ThemeService();
-const dialogService = new DialogService();
+const BOLD = 'bold';
+const ITALIC = 'italic';
+const UNDERLINE = 'underline';
+const STRIKETHROUGH = 'strikethrough';
 
 class FontSection extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      bold: false,
-      italic: false,
-      underline: false,
-      strikeThrough: false,
+      [BOLD]: false,
+      [ITALIC]: false,
+      [UNDERLINE]: false,
+      [STRIKETHROUGH]: false,
     };
   }
 
   componentDidMount() {
-    themeService.subscribe(this.handleThemeChange);
-    selectionService.subscribe(this.handleSelectionChange);
+    SelectionService.on('selection-changed', this.updateButtonStates);
   }
 
   componentWillUnmount() {
-    themeService.unsubscribe(this.handleThemeChange);
-    selectionService.unsubscribe(this.handleSelectionChange);
+    SelectionService.off('selection-changed', this.updateButtonStates);
   }
 
-  handleThemeChange = (theme) => {
-    this.setState({ theme });
-  }
-
-  handleSelectionChange = (selection) => {
-    this.setState({
-      bold: selection.bold,
-      italic: selection.italic,
-      underline: selection.underline,
-      strikeThrough: selection.strikeThrough,
-    });
-  }
-
-  toggleBold = () => {
-    this.toggleFormat('bold');
-  }
-
-  toggleItalic = () => {
-    this.toggleFormat('italic');
-  }
-
-  toggleUnderline = () => {
-    this.toggleFormat('underline');
-  }
-
-  toggleStrikeThrough = () => {
-    this.toggleFormat('strikeThrough');
-  }
-
-  toggleFormat = (format) => {
+  updateButtonStates = () => {
     try {
-      selectionService.toggleFormat(format);
-      this.setState(prevState => ({ [format]: !prevState[format] }));
+      const { bold, italic, underline, strikethrough } = SelectionService.getSelectionStyles();
+      this.setState({ [BOLD]: bold, [ITALIC]: italic, [UNDERLINE]: underline, [STRIKETHROUGH]: strikethrough });
     } catch (error) {
-      dialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error updating button states', error);
+    }
+  }
+
+  toggleStyle = (style) => {
+    try {
+      SelectionService.toggleStyle(style);
+      this.updateButtonStates();
+    } catch (error) {
+      DialogService.showErrorDialog(`Error toggling ${style}`, error);
     }
   }
 
   render() {
-    const { bold, italic, underline, strikeThrough } = this.state;
+    const theme = ThemeService.getCurrentTheme();
     return (
-      <div className="font-section">
-        <Button icon={<BoldOutlined />} onClick={this.toggleBold} className={bold ? 'active' : ''} />
-        <Button icon={<ItalicOutlined />} onClick={this.toggleItalic} className={italic ? 'active' : ''} />
-        <Button icon={<UnderlineOutlined />} onClick={this.toggleUnderline} className={underline ? 'active' : ''} />
-        <Button icon={<StrikethroughOutlined />} onClick={this.toggleStrikeThrough} className={strikeThrough ? 'active' : ''} />
+      <div className={`font-section ${theme}`}>
+        <Button icon={<BoldOutlined />} className={`btn-${BOLD}`} onClick={() => this.toggleStyle(BOLD)} />
+        <Button icon={<ItalicOutlined />} className={`btn-${ITALIC}`} onClick={() => this.toggleStyle(ITALIC)} />
+        <Button icon={<UnderlineOutlined />} className={`btn-${UNDERLINE}`} onClick={() => this.toggleStyle(UNDERLINE)} />
+        <Button icon={<StrikethroughOutlined />} className={`btn-${STRIKETHROUGH}`} onClick={() => this.toggleStyle(STRIKETHROUGH)} />
       </div>
     );
   }

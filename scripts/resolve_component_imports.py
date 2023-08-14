@@ -124,7 +124,7 @@ def get_service_imports(full_title):
                 if not service in imported:
                     imported[service] = True
                     service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
-                    results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
+                    results.append({'service': service, 'path': service_path, 'service_loc': service_path})
     return results  
 
 

@@ -18,51 +18,54 @@ const BuildSection = () => {
   const [isCodeForActiveTopicEnabled, setIsCodeForActiveTopicEnabled] = useState(false);
   const [isActiveTopicInActivePromptEnabled, setIsActiveTopicInActivePromptEnabled] = useState(false);
 
-  // Update theme when it changes
   useEffect(() => {
-    const unsubscribe = ThemeService.subscribe(setTheme);
-    return () => unsubscribe();
+    checkAllButtonStatus();
+    checkCodeForActiveTopicButtonStatus();
+    checkActiveTopicInActivePromptButtonStatus();
   }, []);
 
-  // Check if buttons should be enabled
-  useEffect(() => {
-    const checkButtonStatus = async () => {
-      try {
-        const isAnyOutOfDate = await GptService.isAnyResultOutOfDate();
-        setIsAllEnabled(isAnyOutOfDate);
-        const isActiveFragmentOutOfDate = await GptService.isResultOutOfDate(ProjectService.getActiveFragment());
-        setIsCodeForActiveTopicEnabled(isActiveFragmentOutOfDate);
-        const isActiveFragmentInActiveServiceOutOfDate = await GptService.isResultOutOfDate(ProjectService.getActiveFragment(), ProjectService.getActiveService());
-        setIsActiveTopicInActivePromptEnabled(isActiveFragmentInActiveServiceOutOfDate);
-      } catch (error) {
-        DialogService.showErrorDialog('Error checking button status', error);
-      }
-    };
-    checkButtonStatus();
-  }, []);
+  const checkAllButtonStatus = () => {
+    const isOutOfDate = GptService.getList().some(service => service.resultCache.isOutOfDate());
+    setIsAllEnabled(isOutOfDate);
+  };
 
-  // Button click handlers
+  const checkCodeForActiveTopicButtonStatus = () => {
+    const activeFragment = ProjectService.getActiveFragment();
+    const isOutOfDate = GptService.getList().some(service => service.resultCache.isOutOfDateFor(activeFragment));
+    setIsCodeForActiveTopicEnabled(isOutOfDate);
+  };
+
+  const checkActiveTopicInActivePromptButtonStatus = () => {
+    const activeFragment = ProjectService.getActiveFragment();
+    const activeService = GptService.getActiveService();
+    const isOutOfDate = activeService.resultCache.isOutOfDateFor(activeFragment);
+    setIsActiveTopicInActivePromptEnabled(isOutOfDate);
+  };
+
   const handleAllClick = () => {
     try {
       BuildService.buildAll();
     } catch (error) {
-      DialogService.showErrorDialog('Error building all', error);
+      DialogService.showErrorDialog(error);
     }
   };
 
   const handleCodeForActiveTopicClick = () => {
     try {
-      BuildService.buildForActiveFragment();
+      const activeFragment = ProjectService.getActiveFragment();
+      BuildService.buildFor(activeFragment);
     } catch (error) {
-      DialogService.showErrorDialog('Error building for active fragment', error);
+      DialogService.showErrorDialog(error);
     }
   };
 
   const handleActiveTopicInActivePromptClick = () => {
     try {
-      BuildService.buildForActiveFragmentInActiveService();
+      const activeFragment = ProjectService.getActiveFragment();
+      const activeService = GptService.getActiveService();
+      BuildService.buildFor(activeFragment, activeService);
     } catch (error) {
-      DialogService.showErrorDialog('Error building for active fragment in active service', error);
+      DialogService.showErrorDialog(error);
     }
   };
 

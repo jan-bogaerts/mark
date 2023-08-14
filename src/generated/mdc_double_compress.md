@@ -45,8 +45,7 @@ The font-section component handles markdown formatting actions for text, includi
 - User can copy current text to clipboard
 - View monitors changes in selected text fragment from position-tracking service
   - Updates active tab content with fragment title
-# MarkdownCode > services > Theme service
-The theme service manages the selected theme, allowing for light or dark themes. Components use the service to apply the theme, and the main window refreshes when the theme is updated.
+
 # MarkdownCode > services > project service
 The project service creates and manages projects by clearing data, recreating cache objects, and notifying components of data changes. It opens existing projects by reading and parsing files, recreating cache objects, and notifying the project editor. It saves projects by writing parsed objects to a file, resetting the change indicator, and enabling auto-save. It updates the data list when the user makes changes in the markdown editor. It manages user configurations such as auto-save settings and code style for rendering source code.
 # MarkdownCode > services > Selection service
@@ -102,8 +101,6 @@ The compress service uses the gpt service to shorten a text fragment. The get-re
 The GPT-section component configures the GPT service. It has actions for entering the API key and selecting the default model from a list provided by the GPT service.
 # MarkdownCode > components > toolbar > preferences > view section:
 The view-section component configures the application's appearance. It supports actions for selecting the theme (light or dark mode), font, and font size for the monaco editor and markdown viewer.
-# MarkdownCode > components > body
-The body component is the main part of the application, consisting of an outline component on the left, a results view at the bottom, and an editor filling the remaining space. The areas can be resized using horizontal and vertical splitters.
 # MarkdownCode > components > body > editor
 - The app's main view is the editor component, displaying markdown text.
 - The monaco editor npm package is used for this purpose.
@@ -123,3 +120,11 @@ The format-tab component arranges children horizontally and includes Style, Para
 The preferences-tab component arranges its children in a row and includes the GPT and View sections on the toolbar.
 # MarkdownCode > components > toolbar > home
 The home-tab component arranges its children in a row and includes the following child components: File, Edit, Undo, and Build sections.
+# MarkdownCode > services > Theme service
+The theme service saves and retrieves the selected theme using local storage. It allows for selecting a light or dark theme. Components use the service to apply the selected theme without needing to subscribe for changes. The main window refreshes when the theme is updated.
+# MarkdownCode > components > body
+The application's main body is represented by the body component, which includes a horizontal splitter that fills the entire area. On the left side of the splitter is an outline component, and on the right side is a vertical splitter. The vertical splitter has an editor component on top and a results view component on the bottom. The body component has an event handler for the 'onPositionChanged' callback of both splitters, which stores the new position values. When the body component is unloaded, the last positions of the splitters are saved in local storage. When the body component is loaded, the last positions are retrieved from local storage, but only if they fit within the current size of the component. If not, the vertical splitter uses 1/3 of the width and the horizontal splitter uses 1/3 of the height.
+# MarkdownCode > components > body > horizontal splitter
+The horizontal splitter manages the layout of 2 child components, allowing users to resize the panels above and below it. It has properties for the top and bottom components, the position of the bottom component, and a callback function for when the position value needs to be updated. The splitter includes a div component for dragging and triggering the callback.
+# MarkdownCode > components > body > vertical splitter
+The vertical splitter manages the layout of two child components, allowing users to adjust the width of the left panel while changing the size of the right panel. It has properties for the left and right components, position, and onPositionChanged callback. The splitter includes a div component for dragging and triggering the onPositionChanged callback.

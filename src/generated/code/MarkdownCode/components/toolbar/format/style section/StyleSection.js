@@ -1,82 +1,63 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button, Tooltip } from 'antd';
+// Importing required services and components
+import { SelectionService } from 'MarkdownCode/services/SelectionService';
+import { ThemeService } from 'MarkdownCode/services/ThemeService';
+import { DialogService } from 'MarkdownCode/services/DialogService';
 import { ParagraphStyle } from 'MarkdownCode/components/toolbar/format/style section/ParagraphStyle';
-import { SelectionService } from 'MarkdownCode/services/Selection service/SelectionService';
-import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
-import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
 
-const styles = [
-  'heading 1',
-  'heading 2',
-  'heading 3',
-  'heading 4',
-  'heading 5',
-  'heading 6',
-  'paragraph',
-  'quote',
-  'code',
-];
+// Constants for markdown styles
+const MARKDOWN_STYLES = {
+  HEADING1: 'heading1',
+  HEADING2: 'heading2',
+  HEADING3: 'heading3',
+  HEADING4: 'heading4',
+  HEADING5: 'heading5',
+  HEADING6: 'heading6',
+  PARAGRAPH: 'paragraph',
+  QUOTE: 'quote',
+  CODE: 'code'
+};
 
 /**
  * StyleSection component
- * Contains actions related to the markup used in the text for applying markdown formatting.
+ * This component allows users to apply markdown formatting to text.
  */
-const StyleSection = () => {
-  const [selectedStyle, setSelectedStyle] = useState('paragraph');
-  const themeService = new ThemeService();
-  const dialogService = new DialogService();
-  const selectionService = new SelectionService();
-
-  useEffect(() => {
-    selectionService.on('selectionChanged', updateStyle);
-    themeService.on('themeChanged', updateTheme);
-    return () => {
-      selectionService.off('selectionChanged', updateStyle);
-      themeService.off('themeChanged', updateTheme);
+class StyleSection extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedStyle: MARKDOWN_STYLES.PARAGRAPH
     };
-  }, []);
+  }
 
-  const updateStyle = () => {
+  /**
+   * Function to handle style selection
+   * @param {string} style - The selected style
+   */
+  handleStyleSelection = (style) => {
     try {
-      const style = selectionService.getStyle();
-      setSelectedStyle(style);
+      this.setState({ selectedStyle: style });
+      SelectionService.applyMarkdownStyle(style);
     } catch (error) {
-      dialogService.showError('Error updating style', error);
+      DialogService.showErrorDialog('Error applying markdown style', error);
     }
-  };
+  }
 
-  const updateTheme = () => {
-    try {
-      const theme = themeService.getTheme();
-      // Apply the theme to the component
-    } catch (error) {
-      dialogService.showError('Error updating theme', error);
-    }
-  };
-
-  const handleStyleChange = (style) => {
-    try {
-      selectionService.setStyle(style);
-      setSelectedStyle(style);
-    } catch (error) {
-      dialogService.showError('Error changing style', error);
-    }
-  };
-
-  return (
-    <div className="style-section">
-      {styles.map((style) => (
-        <Tooltip title={style} key={style}>
-          <Button
-            type={selectedStyle === style ? 'primary' : 'default'}
-            icon={<ParagraphStyle style={style} />}
-            onClick={() => handleStyleChange(style)}
-          />
-        </Tooltip>
-      ))}
-    </div>
-  );
-};
+  /**
+   * Function to render the component
+   */
+  render() {
+    const theme = ThemeService.getCurrentTheme();
+    return (
+      <div className={`style-section ${theme}`}>
+        <ParagraphStyle
+          styles={MARKDOWN_STYLES}
+          selectedStyle={this.state.selectedStyle}
+          onStyleSelect={this.handleStyleSelection}
+        />
+      </div>
+    );
+  }
+}
 
 export default StyleSection;

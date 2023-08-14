@@ -1,112 +1,59 @@
 
-import React, { Component } from 'react';
-import { Select } from 'antd';
-import MonacoEditor from 'react-monaco-editor';
-import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
-import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
-import { PositionTrackingService } from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
+import React, { useEffect, useRef } from 'react';
+import { Editor } from 'MarkdownCode/components/body/editor/Editor';
 import { ProjectService } from 'MarkdownCode/services/project service/ProjectService';
 import { SelectionService } from 'MarkdownCode/services/Selection service/SelectionService';
+import { PositionTrackingService } from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
+import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
+import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
+import { MonacoEditor as Monaco } from 'react-monaco-editor';
+import { useTheme } from 'antd';
 
-const { Option } = Select;
+/**
+ * MonacoEditor component
+ * This component is used as the main view of the app. It displays markdown text and utilizes the monaco editor npm package for its functionality.
+ * It interacts with a position-tracking service to update the selected line based on the user's cursor movement.
+ */
+const MonacoEditor = () => {
+  const editorRef = useRef(null);
+  const theme = useTheme();
 
-class Editor extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      theme: ThemeService.getCurrentTheme(),
-      fontSize: 14,
-      fontFamily: 'Courier New',
-      code: '',
-      isOutdated: false,
-      isOverwritten: false,
-    };
-  }
+  useEffect(() => {
+    const themeService = new ThemeService();
+    const selectedTheme = themeService.getSelectedTheme();
+    editorRef.current.editor.updateOptions({ theme: selectedTheme });
+  }, [theme]);
 
-  componentDidMount() {
-    this.updateCodeFromProjectService();
-    this.updatePositionFromSelectionService();
-  }
+  const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor;
+    editor.onDidChangeCursorPosition(e => {
+      const positionTrackingService = new PositionTrackingService();
+      positionTrackingService.updateSelectedLine(e.position.lineNumber);
+    });
+  };
 
-  updateCodeFromProjectService() {
+  const handleEditorChange = (value, event) => {
     try {
-      const code = ProjectService.getCurrentProjectMarkdown();
-      this.setState({ code });
+      const projectService = new ProjectService();
+      projectService.updateMarkdownText(value);
     } catch (error) {
-      DialogService.showErrorDialog('Error loading project markdown', error);
+      const dialogService = new DialogService();
+      dialogService.showErrorDialog(error);
     }
-  }
+  };
 
-  updatePositionFromSelectionService() {
-    try {
-      const position = SelectionService.getCurrentPosition();
-      this.editor.setPosition(position);
-    } catch (error) {
-      DialogService.showErrorDialog('Error setting editor position', error);
-    }
-  }
+  return (
+    <Monaco
+      width="100%"
+      height="100%"
+      language="markdown"
+      theme={theme}
+      value={SelectionService.getMarkdownText()}
+      editorDidMount={handleEditorDidMount}
+      onChange={handleEditorChange}
+      options={{ selectOnLineNumbers: true }}
+    />
+  );
+};
 
-  onCursorPositionChange(e) {
-    PositionTrackingService.updateCurrentLine(e.position.lineNumber);
-  }
-
-  onThemeChange(value) {
-    this.setState({ theme: value });
-    ThemeService.setCurrentTheme(value);
-  }
-
-  onFontSizeChange(value) {
-    this.setState({ fontSize: value });
-  }
-
-  onFontFamilyChange(value) {
-    this.setState({ fontFamily: value });
-  }
-
-  render() {
-    const { theme, fontSize, fontFamily, code } = this.state;
-    const options = {
-      selectOnLineNumbers: true,
-      roundedSelection: false,
-      readOnly: false,
-      cursorStyle: 'line',
-      automaticLayout: false,
-      fontFamily,
-      fontSize,
-    };
-
-    return (
-      <div className="editor-container">
-        <div className="editor-settings">
-          <Select defaultValue={theme} style={{ width: 120 }} onChange={this.onThemeChange.bind(this)}>
-            <Option value="vs-dark">Dark</Option>
-            <Option value="vs-light">Light</Option>
-          </Select>
-          <Select defaultValue={fontSize} style={{ width: 120 }} onChange={this.onFontSizeChange.bind(this)}>
-            <Option value={14}>14</Option>
-            <Option value={16}>16</Option>
-            <Option value={18}>18</Option>
-          </Select>
-          <Select defaultValue={fontFamily} style={{ width: 120 }} onChange={this.onFontFamilyChange.bind(this)}>
-            <Option value="Courier New">Courier New</Option>
-            <Option value="Arial">Arial</Option>
-            <Option value="Times New Roman">Times New Roman</Option>
-          </Select>
-        </div>
-        <MonacoEditor
-          width="800"
-          height="600"
-          language="markdown"
-          theme={theme}
-          value={code}
-          options={options}
-          onChange={this.onChange}
-          editorDidMount={this.editorDidMount}
-          className="monaco-editor"
-        />
-      </div>
-    );
-  }
-}
-
-export default Editor;
+export default MonacoEditor;

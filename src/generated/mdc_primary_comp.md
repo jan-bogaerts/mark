@@ -26,11 +26,15 @@ PreferencesTab
 GptSection
 # MarkdownCode > components > toolbar > preferences > view section:
 ViewSection
-# MarkdownCode > components > body
-Body
 # MarkdownCode > components > body > editor
 Editor
 # MarkdownCode > components > body > outline
 Outline
 # MarkdownCode > components > body > results view
 ResultsView
+# MarkdownCode > components > body
+Body
+# MarkdownCode > components > body > horizontal splitter
+HorizontalSplitter
+# MarkdownCode > components > body > vertical splitter
+VerticalSplitter

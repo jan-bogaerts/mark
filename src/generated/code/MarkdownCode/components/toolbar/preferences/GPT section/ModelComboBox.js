@@ -1,58 +1,55 @@
 
-import React, { useEffect, useState } from 'react';
-import { Select, Button } from 'antd';
-import { KeyButton } from 'MarkdownCode/components/toolbar/preferences/GPT section/KeyButton';
-import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
-import { SelectionService } from 'MarkdownCode/services/Selection service/SelectionService';
-import { GptService } from 'MarkdownCode/services/gpt service/GptService';
-import { CompressService } from 'MarkdownCode/services/compress service/CompressService';
-import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
+import React, { useState, useEffect } from 'react';
+import { Select } from 'antd';
+import GPTSection from 'MarkdownCode/components/toolbar/preferences/GPT section/GPTSection';
+import KeyButton from 'MarkdownCode/components/toolbar/preferences/GPT section/KeyButton';
+import DialogService from 'MarkdownCode/services/dialog service/DialogService';
+import SelectionService from 'MarkdownCode/services/Selection service/SelectionService';
+import GptService from 'MarkdownCode/services/gpt service/GptService';
+import CompressService from 'MarkdownCode/services/compress service/CompressService';
+import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
 
 /**
  * ModelComboBox component
- * This component is responsible for selecting the default model for open-ai requests.
+ * This component allows users to select the default model from a list provided by the GPT service.
  */
 const ModelComboBox = () => {
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
-  const theme = ThemeService.getCurrentTheme();
+  const themeService = new ThemeService();
+  const dialogService = new DialogService();
+  const gptService = new GptService();
 
   useEffect(() => {
     fetchModels();
   }, []);
 
   /**
-   * Fetch models from the GptService
+   * Fetch models from GPT service
    */
   const fetchModels = async () => {
     try {
-      const models = await GptService.getModels();
+      const models = await gptService.getModels();
       setModels(models);
     } catch (error) {
-      DialogService.showErrorDialog('Error fetching models', error);
+      dialogService.showErrorDialog('Error fetching models', error.message);
     }
   };
 
   /**
    * Handle model selection
-   * @param {string} model - The selected model
+   * @param {string} model - Selected model
    */
   const handleModelSelect = (model) => {
-    try {
-      setSelectedModel(model);
-      SelectionService.setSelectedModel(model);
-    } catch (error) {
-      DialogService.showErrorDialog('Error selecting model', error);
-    }
+    setSelectedModel(model);
   };
 
   return (
-    <div className={`model-combo-box ${theme}`}>
-      <KeyButton />
+    <GPTSection>
       <Select
+        className={`model-combo-box ${themeService.getCurrentTheme()}`}
         value={selectedModel}
         onChange={handleModelSelect}
-        className="model-select"
       >
         {models.map((model) => (
           <Select.Option key={model} value={model}>
@@ -60,7 +57,8 @@ const ModelComboBox = () => {
           </Select.Option>
         ))}
       </Select>
-    </div>
+      <KeyButton onClick={() => dialogService.showInfoDialog('Selected Model', selectedModel)} />
+    </GPTSection>
   );
 };
 

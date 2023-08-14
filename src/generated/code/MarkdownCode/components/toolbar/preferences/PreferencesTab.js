@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { Row } from 'antd';
-import GPT from 'MarkdownCode/components/toolbar/preferences/GPT';
-import View from 'MarkdownCode/components/toolbar/preferences/View';
-import ThemeService from 'MarkdownCode/services/ThemeService';
-import DialogService from 'MarkdownCode/services/DialogService';
+import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
+import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
+import GPT from 'GptSection';
+import View from 'ViewSection';
 
 /**
  * PreferencesTab component
@@ -19,58 +19,35 @@ class PreferencesTab extends React.Component {
   }
 
   componentDidMount() {
-    ThemeService.subscribe(this.handleThemeChange);
-  }
-
-  componentWillUnmount() {
-    ThemeService.unsubscribe(this.handleThemeChange);
+    this.updateTheme();
   }
 
   /**
-   * Handle theme change
-   * Refresh the component when the selected theme is updated.
+   * Update the theme of the component
    */
-  handleThemeChange = (newTheme) => {
-    this.setState({ theme: newTheme });
+  updateTheme() {
+    const theme = ThemeService.getCurrentTheme();
+    this.setState({ theme });
   }
 
   /**
-   * Render the component
-   * Apply the current theme and display the child components in a row.
+   * Handle errors by displaying a dialog box with detailed information about the error
+   * @param {Error} error - The error to handle
    */
+  handleError(error) {
+    DialogService.showErrorDialog(error);
+  }
+
   render() {
     const { theme } = this.state;
 
     return (
       <Row className={`preferences-tab ${theme}`}>
-        <GPT />
-        <View />
+        <GPT onError={this.handleError} />
+        <View onError={this.handleError} />
       </Row>
     );
   }
 }
 
 export default PreferencesTab;
-```
-
-```javascript
-/**
- * Error handler
- * Wrap all user-triggered actions or functions within a component in this error handler.
- * In case of an error, display an electron dialog box to the user with detailed information about the error.
- */
-export function withErrorHandler(WrappedComponent) {
-  return class extends React.Component {
-    componentDidCatch(error, info) {
-      DialogService.showErrorDialog({
-        title: 'An error occurred',
-        message: error.message,
-        detail: info.componentStack,
-      });
-    }
-
-    render() {
-      return <WrappedComponent {...this.props} />;
-    }
-  };
-}

@@ -95,11 +95,7 @@
 - User can copy the current text in the center to the clipboard
 - View monitors changes in the currently selected text fragment from the position-tracking service
   - Updates the content of the active tab by setting the selected value of the first combobox to the header title of the text fragment.
-# MarkdownCode > services > Theme service
-- The theme service manages the currently selected theme.
-- It allows for selecting a light or dark theme.
-- Components use this service to apply the selected theme.
-- The main window refreshes its content when the theme is updated.
+
 # MarkdownCode > services > project service
 - The project service is responsible for:
   - Creating a new project:
@@ -213,15 +209,6 @@
   - Theme: A combobox for selecting the preferred color mode (light or dark mode), which corresponds to the theme used by the monaco editor.
   - Font: A combobox for selecting the font used by the monaco editor and markdown viewer.
   - Font-size: A combobox for selecting the font size in the monaco editor and markdown viewer.
-# MarkdownCode > components > body
-- The body component is the main part of the application.
-- It includes the following areas:
-  - An outline component aligned to the left of the body.
-  - A results view component located at the bottom of the body.
-  - An editor component that fills the remaining space.
-- The areas can be resized using horizontal or vertical splitters.
-  - There is a vertical splitter between the outline and the rest.
-  - There is a horizontal splitter between the results view and the editor.
 # MarkdownCode > components > body > editor
 - The main view in the application is the editor component, which shows the markdown text of the project.
 - The monaco editor npm package is used to display the markdown text.
@@ -261,3 +248,34 @@
   - Edit section
   - Undo section
   - Build section
+# MarkdownCode > services > Theme service
+- The theme service manages the currently selected theme by saving the new value to local storage when it is changed. It retrieves the previously stored value from local storage when the service is created.
+- The service allows for selecting between a light or dark theme.
+- Components use this service to retrieve the currently selected theme and apply it. They do not need to subscribe for changes to the selected theme value, they only need to retrieve the value from the theme service and use the corresponding styling names.
+- The main window refreshes its content when the selected theme is updated.
+# MarkdownCode > components > body
+- The main body of the application is represented by the body component.
+- The body component contains a horizontal splitter component that fills its entire area.
+  - On the left side of the horizontal splitter is an outline component.
+  - On the right side is a vertical splitter component.
+    - The top part of the vertical splitter component is an editor component.
+    - The bottom part of the vertical splitter component is a results view component.
+- The body component has an event handler for the 'onPositionChanged' callback of both the horizontal and vertical splitters. This handler stores the new position values.
+- When the body component is unloaded, the last positions of the horizontal and vertical splitters are saved in the local storage.
+- When the body component is loaded, the last positions of the horizontal and vertical splitters are retrieved from the local storage. However, this only happens if the previous values fit within the current size of the component. If not, the vertical splitter uses 1/3 of the width and the horizontal splitter uses 1/3 of the component's height.
+# MarkdownCode > components > body > horizontal splitter
+- The horizontal splitter manages the layout of 2 child components, allowing users to resize the panels above and below it.
+- The horizontal-splitter component has the following properties:
+  - top: the component placed at the top
+  - bottom: the component placed at the bottom
+  - position: the height assigned to the bottom component
+  - onPositionChanged: a callback function called when the position value needs to be updated. It takes one parameter: the new value for position (number)
+- The splitter includes a div component of 8 pixels height between the top and bottom components. When the user drags this bar, the onPositionChanged callback is triggered (if provided) with the new position value.
+# MarkdownCode > components > body > vertical splitter
+- The vertical splitter manages the layout of two child components, allowing users to adjust the width of the left panel while simultaneously changing the size of the right panel.
+- The vertical-splitter component has the following properties:
+  - left: the component placed on the left side
+  - right: the component placed on the right side
+  - position: the width assigned to the left component
+  - onPositionChanged: a callback function that updates the position value. It takes one parameter: the new position value (number)
+- The splitter includes a div component of 8 pixels width between the left and right components. When the user drags this bar, the onPositionChanged callback is triggered (if provided) with the new position value.

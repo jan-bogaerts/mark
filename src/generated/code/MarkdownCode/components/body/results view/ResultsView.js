@@ -1,87 +1,74 @@
 
-import React, { useState, useEffect } from 'react';
-import { Tabs, Button, Menu, Dropdown } from 'antd';
-import MonacoEditor from 'react-monaco-editor';
-import { ThemeService, DialogService, ProjectService, SelectionService, UndoService, LineParser, PositionTrackingService, ResultCacheService, BuildService, CompressService } from 'MarkdownCode/services';
-import { Tab, ContextMenu, MenuItem } from 'MarkdownCode/components/body/results view';
+import DialogService from 'MarkdownCode/services/dialog service/DialogService';
+import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
+import ProjectService from 'MarkdownCode/services/project service/ProjectService';
+import SelectionService from 'MarkdownCode/services/Selection service/SelectionService';
+import UndoService from 'MarkdownCode/services/Undo service/UndoService';
+import LineParser from 'MarkdownCode/services/line parser/LineParser';
+import PositionTrackingService from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
+import ResultCacheService from 'MarkdownCode/services/result-cache service/ResultCacheService';
+import BuildService from 'MarkdownCode/services/build service/BuildService';
+import CompressService from 'MarkdownCode/services/compress service/CompressService';
+import Tab from 'MarkdownCode/components/body/results view/Tab';
+import MonacoEditor from 'MarkdownCode/components/body/results view/MonacoEditor';
+import ContextMenu from 'MarkdownCode/components/body/results view/ContextMenu';
+import MenuItem from 'MarkdownCode/components/body/results view/MenuItem';
+import Button from 'MarkdownCode/components/body/results view/Button';
 
-const { TabPane } = Tabs;
+/**
+ * ResultsView component
+ * This component is responsible for displaying the results based on the selected text block.
+ */
+class ResultsView extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeTab: null,
+      results: [],
+      theme: ThemeService.getCurrentTheme(),
+    };
+  }
 
-const ResultsView = () => {
-  const [services, setServices] = useState([]);
-  const [activeTab, setActiveTab] = useState('');
-  const [editorContent, setEditorContent] = useState('');
-  const [isOutdated, setIsOutdated] = useState(false);
-  const [isOverwritten, setIsOverwritten] = useState(false);
-  const [models, setModels] = useState([]);
-  const [selectedModel, setSelectedModel] = useState('');
+  componentDidMount() {
+    PositionTrackingService.subscribe(this.updateActiveTab);
+    ThemeService.subscribe(this.updateTheme);
+  }
 
-  useEffect(() => {
-    // Fetch services and models from gpt-service
-    // This is a placeholder, replace with actual implementation
-    setServices(['service1', 'service2']);
-    setModels(['model1', 'model2']);
-  }, []);
+  componentWillUnmount() {
+    PositionTrackingService.unsubscribe(this.updateActiveTab);
+    ThemeService.unsubscribe(this.updateTheme);
+  }
 
-  const handleTabChange = (key) => {
-    setActiveTab(key);
-    // Fetch result from result-cache of the service
-    // This is a placeholder, replace with actual implementation
-    setEditorContent('result');
-  };
+  updateActiveTab = (newTab) => {
+    this.setState({ activeTab: newTab });
+  }
 
-  const handleEditorChange = (value) => {
-    setEditorContent(value);
-    // Store changes back in the result-cache of the service, marked as 'overwritten'
-    // This is a placeholder, replace with actual implementation
-  };
+  updateTheme = (newTheme) => {
+    this.setState({ theme: newTheme });
+  }
 
-  const handleModelChange = (model) => {
-    setSelectedModel(model);
-    // Ask the gpt-service to update the model-name for the name of the service related to the results-view
-    // This is a placeholder, replace with actual implementation
-  };
+  handleRefresh = () => {
+    const result = ResultCacheService.refreshResult(this.state.activeTab);
+    this.setState({ results: [...this.state.results, result] });
+  }
 
-  const handleRefresh = () => {
-    // Update the result
-    // This is a placeholder, replace with actual implementation
-  };
+  handleMore = () => {
+    DialogService.showContextMenu();
+  }
 
-  const menu = (
-    <Menu>
-      {models.map((model) => (
-        <Menu.Item key={model} onClick={() => handleModelChange(model)}>
-          {model === selectedModel ? <CheckOutlined /> : null}
-          {model}
-        </Menu.Item>
-      ))}
-    </Menu>
-  );
-
-  return (
-    <div className="results-view">
-      <Tabs onChange={handleTabChange} activeKey={activeTab}>
-        {services.map((service) => (
-          <TabPane tab={service} key={service}>
-            <MonacoEditor
-              value={editorContent}
-              onChange={handleEditorChange}
-              options={{
-                readOnly: isOutdated,
-                theme: isOverwritten ? 'vs-dark' : 'vs-light',
-              }}
-            />
-            <div className="tab-actions">
-              <Dropdown overlay={menu} trigger={['click']}>
-                <Button>Model</Button>
-              </Dropdown>
-              <Button onClick={handleRefresh}>Refresh</Button>
-            </div>
-          </TabPane>
+  render() {
+    const { activeTab, results, theme } = this.state;
+    return (
+      <div className={`results-view ${theme}`}>
+        <Tab activeTab={activeTab} />
+        {results.map((result, index) => (
+          <MonacoEditor key={index} result={result} theme={theme} />
         ))}
-      </Tabs>
-    </div>
-  );
-};
+        <Button onClick={this.handleRefresh} className="refresh-button">Refresh</Button>
+        <Button onClick={this.handleMore} className="more-button">More</Button>
+      </div>
+    );
+  }
+}
 
 export default ResultsView;

@@ -1,67 +1,59 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button, Tooltip } from 'antd';
+import React from 'react';
+import { Button } from 'antd';
 import { StyleSection } from 'MarkdownCode/components/toolbar/format/style section/StyleSection';
 import { SelectionService } from 'MarkdownCode/services/Selection service/SelectionService';
 import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
 import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
 
-const styles = [
-  'heading 1',
-  'heading 2',
-  'heading 3',
-  'heading 4',
-  'heading 5',
-  'heading 6',
-  'paragraph',
-  'quote',
-  'code'
-];
+const STYLES = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'quote', 'code'];
 
 /**
  * ParagraphStyle component
- * This component is responsible for applying markdown formatting to the selected text.
+ * UI element that allows users to apply different styles to paragraphs of text.
  */
-const ParagraphStyle = () => {
-  const [selectedStyle, setSelectedStyle] = useState('paragraph');
-  const theme = ThemeService.getCurrentTheme();
-
-  useEffect(() => {
-    const updateStyle = () => {
-      try {
-        const currentStyle = SelectionService.getCurrentStyle();
-        setSelectedStyle(currentStyle);
-      } catch (error) {
-        DialogService.showErrorDialog('Error while updating style', error);
-      }
+class ParagraphStyle extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedStyle: 'p',
     };
+  }
 
-    SelectionService.subscribe(updateStyle);
-    return () => SelectionService.unsubscribe(updateStyle);
-  }, []);
-
-  const applyStyle = (style) => {
+  /**
+   * Apply the selected style as markdown to the selected text.
+   * @param {string} style - The style to apply.
+   */
+  applyStyle(style) {
     try {
-      SelectionService.applyStyle(style);
-      setSelectedStyle(style);
+      const selectedText = SelectionService.getSelectedText();
+      const styledText = StyleSection.applyStyle(style, selectedText);
+      SelectionService.replaceSelectionWith(styledText);
+      this.setState({ selectedStyle: style });
     } catch (error) {
-      DialogService.showErrorDialog('Error while applying style', error);
+      DialogService.showErrorDialog(`Failed to apply style: ${error.message}`);
     }
-  };
+  }
 
-  return (
-    <StyleSection theme={theme}>
-      {styles.map((style) => (
-        <Tooltip key={style} title={style}>
+  /**
+   * Render the component.
+   */
+  render() {
+    const theme = ThemeService.getCurrentTheme();
+    return (
+      <div className={`paragraph-style ${theme}`}>
+        {STYLES.map((style) => (
           <Button
-            type={selectedStyle === style ? 'primary' : 'default'}
-            icon={style}
-            onClick={() => applyStyle(style)}
-          />
-        </Tooltip>
-      ))}
-    </StyleSection>
-  );
-};
+            key={style}
+            className={`style-button ${style === this.state.selectedStyle ? 'selected' : ''}`}
+            onClick={() => this.applyStyle(style)}
+          >
+            {style}
+          </Button>
+        ))}
+      </div>
+    );
+  }
+}
 
 export default ParagraphStyle;

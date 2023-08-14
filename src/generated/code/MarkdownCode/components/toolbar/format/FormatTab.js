@@ -1,47 +1,45 @@
 
 import React from 'react';
 import { Row } from 'antd';
-import Style from 'MarkdownCode/components/toolbar/format/style section/Style';
-import Paragraph from 'MarkdownCode/components/toolbar/format/paragraph section/Paragraph';
-import Font from 'MarkdownCode/components/toolbar/format/font section/Font';
-import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
-import DialogService from 'MarkdownCode/services/dialog service/DialogService';
+import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
+import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
+import Style from 'StyleSection';
+import Paragraph from 'MarkdownCode/components/toolbar/format/paragraph section/ParagraphSection';
+import Font from 'FontSection';
 
 /**
  * FormatTab component
  * This component is a wrapper that displays its children in a row.
- * It contains the Style, Paragraph, and Font components.
+ * It contains Style, Paragraph, and Font components as its children.
  */
 class FormatTab extends React.Component {
   constructor(props) {
     super(props);
-    this.themeService = new ThemeService();
-    this.dialogService = new DialogService();
+    this.state = {
+      theme: ThemeService.getCurrentTheme(),
+    };
   }
 
   componentDidMount() {
-    this.themeService.subscribe(this.updateTheme);
-  }
-
-  componentWillUnmount() {
-    this.themeService.unsubscribe(this.updateTheme);
+    this.updateTheme();
   }
 
   /**
-   * Update the theme of the component
+   * Retrieves the current theme from the ThemeService and updates the state.
    */
-  updateTheme = () => {
+  updateTheme() {
     try {
-      const theme = this.themeService.getCurrentTheme();
+      const theme = ThemeService.getCurrentTheme();
       this.setState({ theme });
     } catch (error) {
-      this.dialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error retrieving theme', error.message);
     }
   }
 
   render() {
+    const { theme } = this.state;
     return (
-      <Row className={`format-tab ${this.state.theme}`}>
+      <Row className={`format-tab ${theme}`}>
         <Style />
         <Paragraph />
         <Font />

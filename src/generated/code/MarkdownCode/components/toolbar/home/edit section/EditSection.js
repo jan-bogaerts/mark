@@ -1,64 +1,110 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { Component } from 'react';
 import { Button, Tooltip } from 'antd';
 import { CutOutlined, CopyOutlined, PasteOutlined, DeleteOutlined, SelectOutlined, ClearOutlined } from '@ant-design/icons';
 import SelectionService from 'MarkdownCode/services/Selection service/SelectionService';
 import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
 import DialogService from 'MarkdownCode/services/dialog service/DialogService';
 
-/**
- * EditSection component
- * Contains actions related to the clipboard and the currently selected data.
- */
-const EditSection = () => {
-  const [selection, setSelection] = useState(false);
-  const [clipboardData, setClipboardData] = useState(false);
+const selectionService = new SelectionService();
+const themeService = new ThemeService();
+const dialogService = new DialogService();
 
-  useEffect(() => {
-    const updateSelection = () => setSelection(SelectionService.hasSelection());
-    const updateClipboard = () => setClipboardData(SelectionService.hasClipboardData());
+class EditSection extends Component {
+  state = {
+    isDataSelected: false,
+    isClipboardNotEmpty: false,
+  };
 
-    SelectionService.on('selectionChanged', updateSelection);
-    SelectionService.on('clipboardChanged', updateClipboard);
+  componentDidMount() {
+    this.checkSelectionStatus();
+    this.checkClipboardStatus();
+  }
 
-    return () => {
-      SelectionService.off('selectionChanged', updateSelection);
-      SelectionService.off('clipboardChanged', updateClipboard);
-    };
-  }, []);
+  checkSelectionStatus = () => {
+    const isDataSelected = selectionService.hasSelectedData();
+    this.setState({ isDataSelected });
+  };
 
-  const handleAction = (action) => {
+  checkClipboardStatus = () => {
+    const isClipboardNotEmpty = selectionService.isClipboardNotEmpty();
+    this.setState({ isClipboardNotEmpty });
+  };
+
+  handleCut = () => {
     try {
-      SelectionService[action]();
+      selectionService.cut();
+      this.checkSelectionStatus();
+      this.checkClipboardStatus();
     } catch (error) {
-      DialogService.showErrorDialog(error);
+      dialogService.showErrorDialog(error);
     }
   };
 
-  const theme = ThemeService.getCurrentTheme();
+  handleCopy = () => {
+    try {
+      selectionService.copy();
+      this.checkClipboardStatus();
+    } catch (error) {
+      dialogService.showErrorDialog(error);
+    }
+  };
 
-  return (
-    <div className={`edit-section ${theme}`}>
-      <Tooltip title="Cut">
-        <Button icon={<CutOutlined />} onClick={() => handleAction('cut')} disabled={!selection} />
-      </Tooltip>
-      <Tooltip title="Copy">
-        <Button icon={<CopyOutlined />} onClick={() => handleAction('copy')} disabled={!selection} />
-      </Tooltip>
-      <Tooltip title="Paste">
-        <Button icon={<PasteOutlined />} onClick={() => handleAction('paste')} disabled={!clipboardData} />
-      </Tooltip>
-      <Tooltip title="Delete">
-        <Button icon={<DeleteOutlined />} onClick={() => handleAction('delete')} disabled={!selection} />
-      </Tooltip>
-      <Tooltip title="Select All">
-        <Button icon={<SelectOutlined />} onClick={() => handleAction('selectAll')} />
-      </Tooltip>
-      <Tooltip title="Clear Selection">
-        <Button icon={<ClearOutlined />} onClick={() => handleAction('clearSelection')} disabled={!selection} />
-      </Tooltip>
-    </div>
-  );
-};
+  handlePaste = () => {
+    try {
+      selectionService.paste();
+      this.checkSelectionStatus();
+    } catch (error) {
+      dialogService.showErrorDialog(error);
+    }
+  };
+
+  handleDelete = () => {
+    try {
+      selectionService.delete();
+      this.checkSelectionStatus();
+    } catch (error) {
+      dialogService.showErrorDialog(error);
+    }
+  };
+
+  handleSelectAll = () => {
+    selectionService.selectAll();
+    this.checkSelectionStatus();
+  };
+
+  handleClearSelection = () => {
+    selectionService.clearSelection();
+    this.checkSelectionStatus();
+  };
+
+  render() {
+    const { isDataSelected, isClipboardNotEmpty } = this.state;
+    const theme = themeService.getCurrentTheme();
+
+    return (
+      <div className={`edit-section ${theme}`}>
+        <Tooltip title="Cut">
+          <Button icon={<CutOutlined />} onClick={this.handleCut} disabled={!isDataSelected} />
+        </Tooltip>
+        <Tooltip title="Copy">
+          <Button icon={<CopyOutlined />} onClick={this.handleCopy} disabled={!isDataSelected} />
+        </Tooltip>
+        <Tooltip title="Paste">
+          <Button icon={<PasteOutlined />} onClick={this.handlePaste} disabled={!isClipboardNotEmpty} />
+        </Tooltip>
+        <Tooltip title="Delete">
+          <Button icon={<DeleteOutlined />} onClick={this.handleDelete} disabled={!isDataSelected} />
+        </Tooltip>
+        <Tooltip title="Select All">
+          <Button icon={<SelectOutlined />} onClick={this.handleSelectAll} />
+        </Tooltip>
+        <Tooltip title="Clear Selection">
+          <Button icon={<ClearOutlined />} onClick={this.handleClearSelection} disabled={!isDataSelected} />
+        </Tooltip>
+      </div>
+    );
+  }
+}
 
 export default EditSection;

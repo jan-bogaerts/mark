@@ -1,75 +1,57 @@
 
 import React, { useEffect, useState } from 'react';
 import { Tree } from 'antd';
-import { useTheme } from 'MarkdownCode/services/Theme service/ThemeService';
-import { useDialog } from 'MarkdownCode/services/dialog service/DialogService';
-import { useSelection } from 'MarkdownCode/services/Selection service/SelectionService';
-import { usePositionTracking } from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
-import { parseLine } from 'MarkdownCode/services/line parser/LineParser';
+import { useTheme } from 'styled-components';
+import { PositionTrackingService } from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
+import { LineParser } from 'MarkdownCode/services/line parser/LineParser';
+import { SelectionService } from 'MarkdownCode/services/Selection service/SelectionService';
+import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
+import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
 
 /**
  * Outline component
- * Displays a tree structure of the markdown document headings
+ * @component
  */
-const Outline = () => {
-  const [treeData, setTreeData] = useState([]);
-  const { theme } = useTheme();
-  const { showError } = useDialog();
-  const { getSelection } = useSelection();
-  const { subscribeToPositionChanges } = usePositionTracking();
+function Outline() {
+  const [outline, setOutline] = useState([]);
+  const [selectedKey, setSelectedKey] = useState(null);
+  const theme = useTheme();
 
   useEffect(() => {
-    try {
-      const selection = getSelection();
-      const parsedData = parseLine(selection);
-      setTreeData(parsedData);
-    } catch (error) {
-      showError('Error parsing selection', error.message);
-    }
-
-    const unsubscribe = subscribeToPositionChanges((newPosition) => {
-      try {
-        const parsedData = parseLine(newPosition);
-        setTreeData(parsedData);
-      } catch (error) {
-        showError('Error parsing new position', error.message);
-      }
+    const subscription = PositionTrackingService.subscribe((position) => {
+      setSelectedKey(position.key);
     });
 
-    return () => unsubscribe();
-  }, [getSelection, showError, subscribeToPositionChanges]);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
-  const onSelect = (selectedKeys, info) => {
-    // Scroll the selected text into view
+  useEffect(() => {
+    const markdown = SelectionService.getActiveProject();
+    if (markdown) {
+      try {
+        const parsedOutline = LineParser.parse(markdown);
+        setOutline(parsedOutline);
+      } catch (error) {
+        DialogService.showErrorDialog('Error parsing markdown', error);
+      }
+    }
+  }, []);
+
+  const onSelect = (selectedKeys) => {
+    const key = selectedKeys[0];
+    SelectionService.scrollTo(key);
   };
 
   return (
-    <div className={`outline ${theme}`}>
-      <Tree
-        treeData={treeData}
-        onSelect={onSelect}
-      />
-    </div>
+    <Tree
+      className={`outline-tree ${theme}`}
+      treeData={outline}
+      selectedKeys={[selectedKey]}
+      onSelect={onSelect}
+    />
   );
-};
+}
 
 export default Outline;
-```
-
-```css
-.outline {
-  position: absolute;
-  left: 0;
-  width: 300px;
-  overflow: auto;
-}
-
-.outline.light {
-  background-color: #fff;
-  color: #000;
-}
-
-.outline.dark {
-  background-color: #000;
-  color: #fff;
-}

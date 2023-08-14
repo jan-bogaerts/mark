@@ -1,20 +1,11 @@
 
-const electron = require('electron');
-const React = require('react');
-const { Layout } = require('antd');
-const { Header, Content } = Layout;
-const ThemeService = require('./services/ThemeService');
-const DialogService = require('./services/DialogService');
-const Toolbar = require('./components/Toolbar');
-const Body = require('./components/Body');
+// Importing required services and components
+import ThemeService from 'MarkdownCode/services/ThemeService/ThemeService';
+import DialogService from 'MarkdownCode/services/DialogService/DialogService';
+import Toolbar from 'MarkdownCode/components/Toolbar/Toolbar';
+import Body from 'MarkdownCode/components/Body/Body';
 
-/**
- * MainWindow component
- * This is the main window of the application.
- * It contains a toolbar and a body.
- * It uses the ThemeService to apply the selected theme and refresh its content when the theme is updated.
- * It uses the DialogService to display dialog boxes.
- */
+// MainWindow component
 class MainWindow extends React.Component {
   constructor(props) {
     super(props);
@@ -23,40 +14,42 @@ class MainWindow extends React.Component {
     };
   }
 
+  // Function to handle theme change
+  handleThemeChange = () => {
+    this.setState({ theme: ThemeService.getCurrentTheme() });
+  }
+
+  // Function to handle errors
+  handleError = (error) => {
+    DialogService.showErrorDialog(error);
+  }
+
   componentDidMount() {
-    this.themeChangeSubscription = ThemeService.subscribe(this.handleThemeChange);
+    // Subscribe to theme change
+    ThemeService.subscribe(this.handleThemeChange);
+
+    // Handle errors
+    window.addEventListener('error', this.handleError);
   }
 
   componentWillUnmount() {
-    this.themeChangeSubscription.unsubscribe();
+    // Unsubscribe from theme change
+    ThemeService.unsubscribe(this.handleThemeChange);
+
+    // Remove error handler
+    window.removeEventListener('error', this.handleError);
   }
 
-  /**
-   * Handle theme change
-   * Refresh the entire content of the main window when the selected theme is updated.
-   */
-  handleThemeChange = (newTheme) => {
-    this.setState({ theme: newTheme });
-  }
-
-  /**
-   * Render the main window
-   * The main window contains a toolbar and a body.
-   * The toolbar is located at the top of the window.
-   * The body occupies all of the remaining space in the window.
-   */
   render() {
+    const { theme } = this.state;
+
     return (
-      <Layout className={`main-window ${this.state.theme}`}>
-        <Header className="main-window-toolbar">
-          <Toolbar />
-        </Header>
-        <Content className="main-window-body">
-          <Body />
-        </Content>
-      </Layout>
+      <div className={`main-window ${theme}`}>
+        <Toolbar />
+        <Body />
+      </div>
     );
   }
 }
 
-module.exports = MainWindow;
+export default MainWindow;

@@ -1,71 +1,68 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Tooltip } from 'antd';
-import { FileAddOutlined, FolderOpenOutlined, SaveOutlined, CopyOutlined, SyncOutlined } from '@ant-design/icons';
-import { remote } from 'electron';
+import { FileAddOutlined, FolderOpenOutlined, SaveOutlined, FileOutlined, SyncOutlined } from '@ant-design/icons';
 import DialogService from 'MarkdownCode/services/dialog service/DialogService';
 import ProjectService from 'MarkdownCode/services/project service/ProjectService';
 import UndoService from 'MarkdownCode/services/Undo service/UndoService';
 import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
 
+/**
+ * FileSection component
+ * Contains actions related to the project and file management.
+ */
 const FileSection = () => {
-  const [autoSave, setAutoSave] = useState(false);
-  const [theme, setTheme] = useState(ThemeService.getCurrentTheme());
+  const [autoSave, setAutoSave] = useState(ProjectService.autoSave);
 
   useEffect(() => {
-    ThemeService.subscribe(setTheme);
-    return () => ThemeService.unsubscribe(setTheme);
+    ProjectService.onAutoSaveChange(setAutoSave);
+    return () => ProjectService.offAutoSaveChange(setAutoSave);
   }, []);
 
   const newProject = async () => {
     if (UndoService.hasUndoData()) {
       const save = await DialogService.confirm('Save changes before creating a new project?');
-      if (save) await saveProject();
+      if (save) await ProjectService.save();
     }
-    ProjectService.clearProject();
+    ProjectService.newProject();
   };
 
   const openProject = async () => {
     try {
-      const { filePaths } = await remote.dialog.showOpenDialog({ properties: ['openFile'] });
-      if (filePaths.length) {
-        await ProjectService.loadProject(filePaths[0]);
-      }
+      const file = await DialogService.openFileDialog();
+      if (file) await ProjectService.load(file);
     } catch (error) {
-      DialogService.showError('Error opening project', error);
+      DialogService.showErrorDialog(error);
     }
   };
 
   const saveProject = async () => {
     try {
-      let filename = ProjectService.getFilename();
+      let filename = ProjectService.filename;
       if (!filename) {
-        const { filePath } = await remote.dialog.showSaveDialog({});
-        if (!filePath) return;
-        filename = filePath;
+        filename = await DialogService.saveFileDialog();
+        if (!filename) return;
       }
-      await ProjectService.saveProject(filename);
+      await ProjectService.save(filename);
     } catch (error) {
-      DialogService.showError('Error saving project', error);
+      DialogService.showErrorDialog(error);
     }
   };
 
   const saveProjectAs = async () => {
     try {
-      const { filePath } = await remote.dialog.showSaveDialog({});
-      if (filePath) {
-        await ProjectService.saveProject(filePath);
-      }
+      const filename = await DialogService.saveFileDialog();
+      if (filename) await ProjectService.save(filename);
     } catch (error) {
-      DialogService.showError('Error saving project as', error);
+      DialogService.showErrorDialog(error);
     }
   };
 
   const toggleAutoSave = () => {
-    const newAutoSave = !autoSave;
-    setAutoSave(newAutoSave);
-    ProjectService.setAutoSave(newAutoSave);
+    ProjectService.autoSave = !ProjectService.autoSave;
   };
+
+  const theme = ThemeService.getTheme();
 
   return (
     <div className={`file-section ${theme}`}>
@@ -76,10 +73,10 @@ const FileSection = () => {
         <Button icon={<FolderOpenOutlined />} onClick={openProject} />
       </Tooltip>
       <Tooltip title="Save Project">
-        <Button icon={<SaveOutlined />} onClick={saveProject} disabled={!ProjectService.hasFilename() || !UndoService.hasUndoData()} />
+        <Button icon={<SaveOutlined />} onClick={saveProject} disabled={!ProjectService.filename || !UndoService.hasUndoData()} />
       </Tooltip>
       <Tooltip title="Save Project As">
-        <Button icon={<CopyOutlined />} onClick={saveProjectAs} disabled={!UndoService.hasUndoData()} />
+        <Button icon={<FileOutlined />} onClick={saveProjectAs} disabled={!UndoService.hasUndoData()} />
       </Tooltip>
       <Tooltip title="Toggle Auto Save">
         <Button icon={<SyncOutlined />} onClick={toggleAutoSave} type={autoSave ? 'primary' : 'default'} />

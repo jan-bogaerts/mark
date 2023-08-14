@@ -1,80 +1,50 @@
 
-import React from 'react';
-import { Select, Button } from 'antd';
-import { ThemeService } from 'MarkdownCode/services/ThemeService/ThemeService';
-import { DialogService } from 'MarkdownCode/services/DialogService/DialogService';
+// Importing required services and components
+import ThemeService from 'MarkdownCode/services/ThemeService/ThemeService';
+import DialogService from 'MarkdownCode/services/DialogService/DialogService';
+import ThemeComboBox from 'MarkdownCode/components/toolbar/preferences/view section/ThemeComboBox';
+import FontComboBox from 'MarkdownCode/components/toolbar/preferences/view section/FontComboBox';
+import FontSizeComboBox from 'FontSizeComboBox';
 
-const { Option } = Select;
-
-const THEMES = ["light", "dark"];
-const FONTS = ["Arial", "Verdana", "Courier New", "Times New Roman"];
-const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px"];
+// Constants for styling names
+const LIGHT_THEME = 'light';
+const DARK_THEME = 'dark';
 
 /**
  * ViewSection component
- * Contains actions related to the configuration of the appearance of the application
+ * This component is responsible for configuring the appearance of the application.
+ * It allows users to select the theme (light or dark mode), font, and font size for the monaco editor and markdown viewer.
  */
 class ViewSection extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      theme: ThemeService.getTheme(),
-      font: ThemeService.getFont(),
-      fontSize: ThemeService.getFontSize(),
+      theme: ThemeService.getCurrentTheme(),
     };
   }
 
-  handleThemeChange = (value) => {
+  /**
+   * Function to handle theme change
+   * @param {string} newTheme - The new theme selected by the user
+   */
+  handleThemeChange = (newTheme) => {
     try {
-      ThemeService.setTheme(value);
-      this.setState({ theme: value });
+      ThemeService.setCurrentTheme(newTheme);
+      this.setState({ theme: newTheme });
     } catch (error) {
-      DialogService.showErrorDialog(error);
-    }
-  }
-
-  handleFontChange = (value) => {
-    try {
-      ThemeService.setFont(value);
-      this.setState({ font: value });
-    } catch (error) {
-      DialogService.showErrorDialog(error);
-    }
-  }
-
-  handleFontSizeChange = (value) => {
-    try {
-      ThemeService.setFontSize(value);
-      this.setState({ fontSize: value });
-    } catch (error) {
-      DialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error while changing theme', error);
     }
   }
 
   render() {
+    const { theme } = this.state;
+    const themeClassName = theme === LIGHT_THEME ? 'light-theme' : 'dark-theme';
+
     return (
-      <div className="view-section">
-        <Select
-          className="theme-selector"
-          value={this.state.theme}
-          onChange={this.handleThemeChange}
-        >
-          {THEMES.map(theme => <Option key={theme}>{theme}</Option>)}
-        </Select>
-        <Select
-          className="font-selector"
-          value={this.state.font}
-          onChange={this.handleFontChange}
-        >
-          {FONTS.map(font => <Option key={font}>{font}</Option>)}
-        </Select>
-        <Select
-          className="font-size-selector"
-          value={this.state.fontSize}
-          onChange={this.handleFontSizeChange}
-        >
-          {FONT_SIZES.map(size => <Option key={size}>{size}</Option>)}
-        </Select>
+      <div className={`view-section ${themeClassName}`}>
+        <ThemeComboBox onChange={this.handleThemeChange} />
+        <FontComboBox />
+        <FontSizeComboBox />
       </div>
     );
   }

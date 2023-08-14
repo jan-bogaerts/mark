@@ -1,112 +1,83 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button, Tabs, Select, Menu, Dropdown } from 'antd';
+import React from 'react';
+import { Button, Menu, Dropdown } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import { observer } from 'mobx-react';
-import { ThemeService, DialogService, ProjectService, SelectionService, UndoService, PositionTrackingService, ResultCacheService, BuildService, CompressService } from 'MarkdownCode/services';
+import { DialogService, ThemeService, ProjectService, SelectionService, UndoService, LineParser, PositionTrackingService, ResultCacheService, BuildService, CompressService } from 'MarkdownCode/services';
 import { ResultsView, Tab, ContextMenu, MenuItem } from 'MarkdownCode/components/body/results view';
 
-const MonacoEditorComponent = observer(() => {
-  const [theme, setTheme] = useState(ThemeService.currentTheme);
-  const [fontSize, setFontSize] = useState(14);
-  const [fontFamily, setFontFamily] = useState('Courier');
-  const [services, setServices] = useState([]);
-  const [activeTab, setActiveTab] = useState(null);
-  const [editorContent, setEditorContent] = useState('');
+const theme = ThemeService.getTheme();
 
-  useEffect(() => {
-    ThemeService.subscribe(setTheme);
-    ProjectService.subscribe(setServices);
-    SelectionService.subscribe(setActiveTab);
-    return () => {
-      ThemeService.unsubscribe(setTheme);
-      ProjectService.unsubscribe(setServices);
-      SelectionService.unsubscribe(setActiveTab);
+@observer
+class MonacoEditorComponent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeTab: null,
+      results: [],
+      services: [],
+      models: [],
+      overwritten: false,
+      outOfDate: false,
     };
-  }, []);
+  }
 
-  const handleTabChange = (key) => {
-    setActiveTab(key);
-    const result = ResultCacheService.getResult(key);
-    setEditorContent(result ? result.content : '');
-  };
+  componentDidMount() {
+    this.updateResults();
+    this.updateServices();
+    this.updateModels();
+  }
 
-  const handleEditorChange = (newValue) => {
-    setEditorContent(newValue);
-    ResultCacheService.updateResult(activeTab, newValue, true);
-  };
+  updateResults() {
+    // Implementation of updating results goes here
+  }
 
-  const handleRefreshClick = () => {
-    BuildService.build(activeTab);
-  };
+  updateServices() {
+    // Implementation of updating services goes here
+  }
 
-  const handleModelChange = (model) => {
-    ProjectService.updateModel(activeTab, model);
-  };
+  updateModels() {
+    // Implementation of updating models goes here
+  }
 
-  const handleThemeChange = (value) => {
-    ThemeService.setTheme(value);
-  };
+  handleTabChange(activeTab) {
+    this.setState({ activeTab });
+  }
 
-  const handleFontChange = (value) => {
-    setFontFamily(value);
-  };
+  handleEditorChange(value, event) {
+    // Implementation of handling editor changes goes here
+  }
 
-  const handleFontSizeChange = (value) => {
-    setFontSize(value);
-  };
+  handleRefreshClick() {
+    // Implementation of handling refresh click goes here
+  }
 
-  const options = {
-    selectOnLineNumbers: true,
-    roundedSelection: false,
-    readOnly: false,
-    cursorStyle: 'line',
-    automaticLayout: false,
-  };
+  handleMoreClick() {
+    // Implementation of handling more click goes here
+  }
 
-  return (
-    <ResultsView>
-      <Tabs onChange={handleTabChange} activeKey={activeTab}>
-        {services.map(service => (
-          <Tab key={service.name} tab={service.name}>
-            <MonacoEditor
-              width="100%"
-              height="100%"
-              language="markdown"
-              theme={theme}
-              value={editorContent}
-              options={options}
-              onChange={handleEditorChange}
-            />
-            <Button onClick={handleRefreshClick}>Refresh</Button>
-            <Dropdown overlay={
-              <ContextMenu>
-                {ProjectService.models.map(model => (
-                  <MenuItem key={model} onClick={() => handleModelChange(model)}>
-                    {model}
-                  </MenuItem>
-                ))}
-              </ContextMenu>
-            }>
-              <Button>More</Button>
-            </Dropdown>
-          </Tab>
-        ))}
-      </Tabs>
-      <Select defaultValue={theme} style={{ width: 120 }} onChange={handleThemeChange}>
-        <Option value="vs-dark">Dark</Option>
-        <Option value="vs-light">Light</Option>
-      </Select>
-      <Select defaultValue={fontFamily} style={{ width: 120 }} onChange={handleFontChange}>
-        <Option value="Courier">Courier</Option>
-        <Option value="Arial">Arial</Option>
-      </Select>
-      <Select defaultValue={fontSize} style={{ width: 120 }} onChange={handleFontSizeChange}>
-        <Option value={14}>14</Option>
-        <Option value={16}>16</Option>
-      </Select>
-    </ResultsView>
-  );
-});
+  render() {
+    const { activeTab, results, services, models, overwritten, outOfDate } = this.state;
+
+    return (
+      <div className={`monaco-editor ${theme}`}>
+        <ResultsView results={results} activeTab={activeTab} onTabChange={this.handleTabChange.bind(this)} />
+        <MonacoEditor
+          width="800"
+          height="600"
+          language="javascript"
+          theme={theme}
+          value={results[activeTab]}
+          options={{ readOnly: overwritten || outOfDate }}
+          onChange={this.handleEditorChange.bind(this)}
+        />
+        <Button onClick={this.handleRefreshClick.bind(this)}>Refresh</Button>
+        <Dropdown overlay={<ContextMenu services={services} models={models} />}>
+          <Button onClick={this.handleMoreClick.bind(this)}>More</Button>
+        </Dropdown>
+      </div>
+    );
+  }
+}
 
 export default MonacoEditorComponent;

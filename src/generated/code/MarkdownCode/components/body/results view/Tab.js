@@ -19,65 +19,93 @@ const { TabPane } = Tabs;
 
 /**
  * Tab component
+ * @param {Object} props - Component properties
  */
-const Tab = () => {
-  const [services, setServices] = useState([]);
-  const [activeTab, setActiveTab] = useState('');
-  const [theme, setTheme] = useState(ThemeService.getTheme());
+const Tab = (props) => {
+  const [activeKey, setActiveKey] = useState('');
+  const [editorContent, setEditorContent] = useState('');
+  const [isEditorDisabled, setIsEditorDisabled] = useState(false);
+  const [isEditorOverwritten, setIsEditorOverwritten] = useState(false);
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+  const theme = ThemeService.getCurrentTheme();
 
   useEffect(() => {
-    setServices(ProjectService.getServices());
-    setActiveTab(services[0]?.name);
-    ThemeService.subscribe(setTheme);
-    return () => ThemeService.unsubscribe(setTheme);
+    const handleSelectionChange = (newSelection) => {
+      setActiveKey(newSelection);
+      updateEditorContent(newSelection);
+    };
+
+    SelectionService.subscribe(handleSelectionChange);
+
+    return () => {
+      SelectionService.unsubscribe(handleSelectionChange);
+    };
   }, []);
 
-  const handleTabChange = key => {
-    setActiveTab(key);
+  const updateEditorContent = (key) => {
+    const result = ResultCacheService.getResult(key);
+    setEditorContent(result.content);
+    setIsEditorDisabled(result.isOutdated);
+    setIsEditorOverwritten(result.isOverwritten);
   };
 
-  const handleModelChange = (service, model) => {
-    ProjectService.updateModel(service, model);
+  const handleTabChange = (key) => {
+    setActiveKey(key);
+    updateEditorContent(key);
   };
 
-  const handleFragmentModelChange = (service, fragment, model) => {
-    ProjectService.updateFragmentModel(service, fragment, model);
+  const handleRefreshClick = () => {
+    const result = BuildService.build(activeKey);
+    ResultCacheService.updateResult(activeKey, result);
+    updateEditorContent(activeKey);
   };
 
-  const handleRefresh = service => {
-    BuildService.refresh(service);
+  const handleMoreClick = () => {
+    setContextMenuVisible(true);
   };
 
-  const handleEdit = (service, text) => {
-    ResultCacheService.update(service, text);
+  const handleContextMenuClose = () => {
+    setContextMenuVisible(false);
   };
 
-  const handleCopy = text => {
-    CompressService.copyToClipboard(text);
+  const handleMenuItemClick = (item) => {
+    if (item.key === 'copy') {
+      navigator.clipboard.writeText(editorContent);
+    } else if (item.key === 'selectModel') {
+      DialogService.showDialog({
+        title: 'Select GPT Model',
+        message: 'Please select a GPT model for this service.',
+        buttons: ['OK', 'Cancel']
+      });
+    }
   };
 
   return (
-    <Tabs onChange={handleTabChange} activeKey={activeTab} className={`tab-${theme}`}>
-      {services.map(service => (
-        <TabPane tab={service.name} key={service.name}>
-          <MonacoEditor
-            text={ResultCacheService.get(service.name)}
-            onEdit={text => handleEdit(service.name, text)}
-            onCopy={handleCopy}
-            className={`editor-${theme}`}
-          />
-          <Button onClick={() => handleRefresh(service.name)} className={`refresh-button-${theme}`}>Refresh</Button>
-          <ContextMenu>
-            <MenuItem onClick={() => handleModelChange(service.name, model)} className={`menu-item-${theme}`}>
-              Model for all
-            </MenuItem>
-            <MenuItem onClick={() => handleFragmentModelChange(service.name, SelectionService.getActiveFragment(), model)} className={`menu-item-${theme}`}>
-              Model for fragment
-            </MenuItem>
-          </ContextMenu>
-        </TabPane>
-      ))}
-    </Tabs>
+    <div className={`tab-container ${theme}`}>
+      <Tabs activeKey={activeKey} onChange={handleTabChange}>
+        {ProjectService.getServices().map((service) => (
+          <TabPane tab={service.name} key={service.id}>
+            <MonacoEditor
+              value={editorContent}
+              readOnly={isEditorDisabled}
+              className={isEditorOverwritten ? 'overwritten' : ''}
+            />
+            <Button onClick={handleRefreshClick}>Refresh</Button>
+            <Button onClick={handleMoreClick}>More</Button>
+            {contextMenuVisible && (
+              <ContextMenu onClose={handleContextMenuClose}>
+                <MenuItem key="copy" onClick={handleMenuItemClick}>
+                  Copy
+                </MenuItem>
+                <MenuItem key="selectModel" onClick={handleMenuItemClick}>
+                  Select GPT Model
+                </MenuItem>
+              </ContextMenu>
+            )}
+          </TabPane>
+        ))}
+      </Tabs>
+    </div>
   );
 };
 

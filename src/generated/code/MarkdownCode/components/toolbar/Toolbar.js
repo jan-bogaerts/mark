@@ -1,75 +1,69 @@
 
-import React, { useEffect, useState } from 'react';
-import { Tooltip, Tabs } from 'antd';
-import HomeTab from 'MarkdownCode/components/toolbar/home/HomeTab';
-import FormatTab from 'MarkdownCode/components/toolbar/format/FormatTab';
-import PreferencesTab from 'MarkdownCode/components/toolbar/preferences/PreferencesTab';
-import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
-import DialogService from 'MarkdownCode/services/dialog service/DialogService';
+import React from 'react';
+import { Tabs, Tooltip } from 'antd';
+import { ThemeService } from 'MarkdownCode/services/ThemeService/ThemeService';
+import { DialogService } from 'MarkdownCode/services/DialogService/DialogService';
+import { HomeTab } from 'MarkdownCode/components/toolbar/home/HomeTab';
+import { FormatTab } from 'MarkdownCode/components/toolbar/format/FormatTab';
+import { PreferencesTab } from 'MarkdownCode/components/toolbar/preferences/PreferencesTab';
 
 const { TabPane } = Tabs;
 
 /**
  * Toolbar component
- * @component
+ * This component is responsible for rendering the toolbar with tabs.
  */
-function Toolbar() {
-  const [theme, setTheme] = useState(ThemeService.getCurrentTheme());
-
-  useEffect(() => {
-    const unsubscribe = ThemeService.subscribe((newTheme) => {
-      setTheme(newTheme);
-    });
-
-    return () => {
-      unsubscribe();
+class Toolbar extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeTab: 'home',
     };
-  }, []);
+  }
 
-  const errorHandler = (action) => {
-    try {
-      action();
-    } catch (error) {
-      DialogService.showErrorDialog(error);
-    }
-  };
+  /**
+   * Handle tab change
+   * @param {string} key - The key of the tab
+   */
+  handleTabChange = (key) => {
+    this.setState({ activeTab: key });
+  }
 
-  return (
-    <div className={`toolbar ${theme}`}>
-      <Tabs defaultActiveKey="1">
-        <TabPane
-          tab={
-            <Tooltip title="Home tab">
-              <span>Home</span>
-            </Tooltip>
-          }
-          key="1"
-        >
-          <HomeTab errorHandler={errorHandler} />
-        </TabPane>
-        <TabPane
-          tab={
-            <Tooltip title="Format tab">
-              <span>Format</span>
-            </Tooltip>
-          }
-          key="2"
-        >
-          <FormatTab errorHandler={errorHandler} />
-        </TabPane>
-        <TabPane
-          tab={
-            <Tooltip title="Preferences tab">
-              <span>Preferences</span>
-            </Tooltip>
-          }
-          key="3"
-        >
-          <PreferencesTab errorHandler={errorHandler} />
-        </TabPane>
+  /**
+   * Render tab pane
+   * @param {string} key - The key of the tab
+   * @param {string} tab - The name of the tab
+   * @param {React.Component} component - The component to be rendered in the tab
+   */
+  renderTabPane = (key, tab, component) => {
+    return (
+      <TabPane 
+        tab={
+          <Tooltip title={tab}>
+            <span>{tab}</span>
+          </Tooltip>
+        } 
+        key={key}
+      >
+        {component}
+      </TabPane>
+    );
+  }
+
+  render() {
+    const theme = ThemeService.getCurrentTheme();
+    return (
+      <Tabs 
+        defaultActiveKey={this.state.activeTab} 
+        onChange={this.handleTabChange} 
+        className={theme}
+      >
+        {this.renderTabPane('home', 'Home', <HomeTab />)}
+        {this.renderTabPane('format', 'Format', <FormatTab />)}
+        {this.renderTabPane('preferences', 'Preferences', <PreferencesTab />)}
       </Tabs>
-    </div>
-  );
+    );
+  }
 }
 
 export default Toolbar;

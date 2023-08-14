@@ -113,43 +113,51 @@ def process_data(writer):
     result = []
 
     for to_check in project.fragments[2:]:  # skip the first two fragments cause that's the description and dev stack
-        if to_check.content == '':
-            continue
-        if ONLY_MISSING and has_fragment(to_check.full_title):
-            continue
-        results = {}
-        if to_check.full_title.startswith('# '):
-            to_check_title = to_check.full_title
+        is_existing = ONLY_MISSING and has_fragment(to_check.full_title)
+        if is_existing:
+            results = get_data(to_check.full_title)
         else:
-            to_check_title = '# ' + to_check.full_title
-        for check_against in declare_or_use_class_classifier.text_fragments:
-            if check_against.content == '':
-                continue
-            if check_against.full_title == to_check_title:
-                continue
-            classes = check_against.data
-            if not classes:
-                continue
-            fragment_results = {}
-            for class_name, value in classes.items():
-                description = class_descriptions.get_description(check_against.full_title, class_name)
-                if value == 'declare':
-                    params = {
-                        'class_name': class_name,
-                        'feature_description': to_check.content,
-                        'class_description': description
-                    }
-                    response = generate_response(params, to_check.full_title)
-                    if response:
-                        try:
-                            fragment_results[class_name] = response
-                        except Exception as e:
-                            print("Failed to parse response: ", e)
-                            print("Response: ", response)
-            if fragment_results:
-                results[check_against.title] = fragment_results
-        if results:
-            collect_response(to_check.full_title, json.dumps(results), result, writer)
+            results = {}
+        if to_check.content:
+            if to_check.full_title.startswith('# '):
+                to_check_title = to_check.full_title
+            else:
+                to_check_title = '# ' + to_check.full_title
+            for check_against in declare_or_use_class_classifier.text_fragments:
+                if check_against.content == '':
+                    continue
+                if check_against.full_title == to_check_title:
+                    continue
+                classes = check_against.data
+                if not classes:
+                    continue
+                if is_existing:
+                    old_fragment_results = results.get(check_against.title, {})
+                else:
+                    old_fragment_results = None
+                fragment_results = {}
+                for class_name, value in classes.items():
+                    if is_existing and old_fragment_results and class_name in old_fragment_results:
+                        fragment_results[class_name] = old_fragment_results[class_name]
+                        del old_fragment_results[class_name] # remove it, so we know which components were deleted
+                        continue
+                    description = class_descriptions.get_description(check_against.full_title, class_name)
+                    if value == 'declare':
+                        params = {
+                            'class_name': class_name,
+                            'feature_description': to_check.content,
+                            'class_description': description
+                        }
+                        response = generate_response(params, to_check.full_title)
+                        if response:
+                            try:
+                                fragment_results[class_name] = response
+                            except Exception as e:
+                                print("Failed to parse response: ", e)
+                                print("Response: ", response)
+                if fragment_results:
+                    results[check_against.title] = fragment_results
+        collect_response(to_check.full_title, json.dumps(results), result, writer)
     return result
                     
 
@@ -175,7 +183,7 @@ def main(prompt, class_list, descriptions, file=None):
     open_mode = 'w'
     if ONLY_MISSING:
         load_results(file_name)
-        open_mode = 'a'
+        # open_mode = 'a' every fragment is processed cause of sub items
 
     print("rendering results")
     with open(file_name, open_mode) as writer:

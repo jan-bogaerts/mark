@@ -2,15 +2,15 @@
 import React, { Component } from 'react';
 import { Button, Tooltip } from 'antd';
 import { BulbOutlined, NumberOutlined, RightOutlined, LeftOutlined } from '@ant-design/icons';
-import SelectionService from 'MarkdownCode/services/SelectionService/SelectionService';
-import UndoService from 'MarkdownCode/services/UndoService/UndoService';
-import ThemeService from 'MarkdownCode/services/ThemeService/ThemeService';
-import DialogService from 'MarkdownCode/services/DialogService/DialogService';
+import SelectionService from 'MarkdownCode/services/SelectionService';
+import UndoService from 'MarkdownCode/services/UndoService';
+import ThemeService from 'MarkdownCode/services/ThemeService';
+import DialogService from 'MarkdownCode/services/DialogService';
 
-const bulletListIcon = <BulbOutlined />;
-const numberListIcon = <NumberOutlined />;
-const indentIcon = <RightOutlined />;
-const unindentIcon = <LeftOutlined />;
+const BULLET_LIST = 'bullet-list';
+const NUMBERED_LIST = 'numbered-list';
+const INDENT = 'indent';
+const UNINDENT = 'unindent';
 
 /**
  * ParagraphSection component
@@ -20,88 +20,63 @@ class ParagraphSection extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      bulletListActive: false,
-      numberListActive: false,
+      selection: null,
+      theme: ThemeService.getCurrentTheme(),
     };
-    this.selectionService = new SelectionService();
-    this.undoService = new UndoService();
-    this.themeService = new ThemeService();
-    this.dialogService = new DialogService();
   }
 
   componentDidMount() {
-    this.themeService.subscribe(this.handleThemeChange);
+    document.addEventListener('selectionchange', this.handleSelectionChange);
   }
 
   componentWillUnmount() {
-    this.themeService.unsubscribe(this.handleThemeChange);
+    document.removeEventListener('selectionchange', this.handleSelectionChange);
   }
 
-  handleThemeChange = (theme) => {
-    this.setState({ theme });
-  }
+  handleSelectionChange = () => {
+    const selection = SelectionService.getSelection();
+    this.setState({ selection });
+  };
 
-  handleBulletListToggle = () => {
+  handleButtonClick = (action) => {
     try {
-      this.undoService.saveState();
-      this.selectionService.toggleBulletList();
-      this.setState({ bulletListActive: !this.state.bulletListActive });
+      switch (action) {
+        case BULLET_LIST:
+          SelectionService.toggleBulletList();
+          break;
+        case NUMBERED_LIST:
+          SelectionService.toggleNumberedList();
+          break;
+        case INDENT:
+          SelectionService.increaseIndent();
+          break;
+        case UNINDENT:
+          SelectionService.decreaseIndent();
+          break;
+        default:
+          break;
+      }
+      UndoService.saveState();
     } catch (error) {
-      this.dialogService.showErrorDialog(error);
+      DialogService.showErrorDialog(error);
     }
-  }
-
-  handleNumberListToggle = () => {
-    try {
-      this.undoService.saveState();
-      this.selectionService.toggleNumberList();
-      this.setState({ numberListActive: !this.state.numberListActive });
-    } catch (error) {
-      this.dialogService.showErrorDialog(error);
-    }
-  }
-
-  handleIndent = () => {
-    try {
-      this.undoService.saveState();
-      this.selectionService.indent();
-    } catch (error) {
-      this.dialogService.showErrorDialog(error);
-    }
-  }
-
-  handleUnindent = () => {
-    try {
-      this.undoService.saveState();
-      this.selectionService.unindent();
-    } catch (error) {
-      this.dialogService.showErrorDialog(error);
-    }
-  }
+  };
 
   render() {
-    const { bulletListActive, numberListActive, theme } = this.state;
+    const { theme } = this.state;
     return (
       <div className={`paragraph-section ${theme}`}>
-        <Tooltip title="Bullet List">
-          <Button
-            icon={bulletListIcon}
-            onClick={this.handleBulletListToggle}
-            className={`toggle-button ${bulletListActive ? 'active' : ''}`}
-          />
+        <Tooltip title="Bullet list">
+          <Button icon={<BulbOutlined />} onClick={() => this.handleButtonClick(BULLET_LIST)} />
         </Tooltip>
-        <Tooltip title="Numbered List">
-          <Button
-            icon={numberListIcon}
-            onClick={this.handleNumberListToggle}
-            className={`toggle-button ${numberListActive ? 'active' : ''}`}
-          />
+        <Tooltip title="Numbered list">
+          <Button icon={<NumberOutlined />} onClick={() => this.handleButtonClick(NUMBERED_LIST)} />
         </Tooltip>
-        <Tooltip title="Indent">
-          <Button icon={indentIcon} onClick={this.handleIndent} className="action-button" />
+        <Tooltip title="Increase indent">
+          <Button icon={<RightOutlined />} onClick={() => this.handleButtonClick(INDENT)} />
         </Tooltip>
-        <Tooltip title="Unindent">
-          <Button icon={unindentIcon} onClick={this.handleUnindent} className="action-button" />
+        <Tooltip title="Decrease indent">
+          <Button icon={<LeftOutlined />} onClick={() => this.handleButtonClick(UNINDENT)} />
         </Tooltip>
       </div>
     );

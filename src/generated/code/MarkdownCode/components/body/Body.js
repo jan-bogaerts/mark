@@ -1,57 +1,63 @@
 
-import React, { Component } from 'react';
-import { Layout } from 'antd';
-import Outline from 'MarkdownCode/components/body/outline/Outline';
-import ResultsView from 'MarkdownCode/components/body/results view/ResultsView';
-import Editor from 'MarkdownCode/components/body/editor/Editor';
-import HorizontalSplitter from 'MarkdownCode/components/body/HorizontalSplitter';
-import VerticalSplitter from 'MarkdownCode/components/body/VerticalSplitter';
-import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
-import DialogService from 'MarkdownCode/services/dialog service/DialogService';
+import React, { useEffect, useState } from 'react';
+import { DialogService } from 'MarkdownCode/services/dialog service/DialogService';
+import { ThemeService } from 'MarkdownCode/services/Theme service/ThemeService';
+import { HorizontalSplitter } from 'MarkdownCode/components/body/horizontal splitter/HorizontalSplitter';
+import { Outline } from 'MarkdownCode/components/body/outline/Outline';
+import { VerticalSplitter } from 'MarkdownCode/components/body/vertical splitter/VerticalSplitter';
+import { Editor } from 'MarkdownCode/components/body/editor/Editor';
+import { ResultsView } from 'MarkdownCode/components/body/results view/ResultsView';
 
-const { Content } = Layout;
+const Body = () => {
+  const [horizontalSplitterPosition, setHorizontalSplitterPosition] = useState(null);
+  const [verticalSplitterPosition, setVerticalSplitterPosition] = useState(null);
+  const theme = ThemeService.getCurrentTheme();
 
-/**
- * Body component represents the main body of the application.
- * It consists of an Outline, ResultsView and Editor components.
- * These areas can be resized using a horizontal or vertical splitter.
- */
-class Body extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      theme: ThemeService.getCurrentTheme(),
-    };
-    this.themeServiceSubscription = null;
-  }
+  useEffect(() => {
+    const horizontalSplitterPosition = localStorage.getItem('horizontalSplitterPosition');
+    const verticalSplitterPosition = localStorage.getItem('verticalSplitterPosition');
 
-  componentDidMount() {
-    this.themeServiceSubscription = ThemeService.subscribe((newTheme) => {
-      this.setState({ theme: newTheme });
-    });
-  }
-
-  componentWillUnmount() {
-    if (this.themeServiceSubscription) {
-      this.themeServiceSubscription.unsubscribe();
+    if (horizontalSplitterPosition && verticalSplitterPosition) {
+      setHorizontalSplitterPosition(horizontalSplitterPosition);
+      setVerticalSplitterPosition(verticalSplitterPosition);
+    } else {
+      setHorizontalSplitterPosition(window.innerHeight / 3);
+      setVerticalSplitterPosition(window.innerWidth / 3);
     }
-  }
+  }, []);
 
-  render() {
-    const { theme } = this.state;
+  useEffect(() => {
+    return () => {
+      localStorage.setItem('horizontalSplitterPosition', horizontalSplitterPosition);
+      localStorage.setItem('verticalSplitterPosition', verticalSplitterPosition);
+    };
+  }, [horizontalSplitterPosition, verticalSplitterPosition]);
 
-    return (
-      <Content className={`body ${theme}`}>
-        <Outline className="outline" />
-        <VerticalSplitter className="vertical-splitter" />
-        <div className="editor-results-container">
-          <Editor className="editor" />
-          <HorizontalSplitter className="horizontal-splitter" />
-          <ResultsView className="results-view" />
-        </div>
-      </Content>
-    );
-  }
-}
+  const handleHorizontalSplitterPositionChange = (newPosition) => {
+    setHorizontalSplitterPosition(newPosition);
+  };
+
+  const handleVerticalSplitterPositionChange = (newPosition) => {
+    setVerticalSplitterPosition(newPosition);
+  };
+
+  return (
+    <div className={`body ${theme}`}>
+      <HorizontalSplitter
+        left={<Outline />}
+        right={
+          <VerticalSplitter
+            top={<Editor />}
+            bottom={<ResultsView />}
+            onPositionChanged={handleVerticalSplitterPositionChange}
+            position={verticalSplitterPosition}
+          />
+        }
+        onPositionChanged={handleHorizontalSplitterPositionChange}
+        position={horizontalSplitterPosition}
+      />
+    </div>
+  );
+};
 
 export default Body;

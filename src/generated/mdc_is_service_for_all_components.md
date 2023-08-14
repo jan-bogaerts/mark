@@ -1,5 +1,4 @@
-# MarkdownCode > services > Theme service
-{"ThemeService": "yes"}
+
 # MarkdownCode > services > project service
 {"ProjectService": "no"}
 # MarkdownCode > services > Selection service
@@ -20,3 +19,5 @@
 {"CompressService": "no"}
 # MarkdownCode > services > dialog service
 {"DialogService": "yes"}
+# MarkdownCode > services > Theme service
+{"ThemeService": "yes"}

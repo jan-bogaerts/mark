@@ -1,82 +1,100 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, Dropdown, Button } from 'antd';
-import { MonacoEditor, Tab, ResultsView, MenuItem } from 'MarkdownCode/components/body/results view';
-import { DialogService, ThemeService, ProjectService, SelectionService, UndoService, LineParser, PositionTrackingService, ResultCacheService, BuildService, CompressService } from 'MarkdownCode/services';
+import { Menu, Dropdown, Button as AntButton } from 'antd';
+import MonacoEditor from 'MarkdownCode/components/body/results view/MonacoEditor';
+import Tab from 'MarkdownCode/components/body/results view/Tab';
+import ResultsView from 'MarkdownCode/components/body/results view/ResultsView';
+import MenuItem from 'MarkdownCode/components/body/results view/MenuItem';
+import Button from 'MarkdownCode/components/body/results view/Button';
+import DialogService from 'MarkdownCode/services/dialog service/DialogService';
+import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
+import ProjectService from 'MarkdownCode/services/project service/ProjectService';
+import SelectionService from 'MarkdownCode/services/Selection service/SelectionService';
+import UndoService from 'MarkdownCode/services/Undo service/UndoService';
+import LineParser from 'MarkdownCode/services/line parser/LineParser';
+import PositionTrackingService from 'MarkdownCode/services/position-tracking service/PositionTrackingService';
+import ResultCacheService from 'MarkdownCode/services/result-cache service/ResultCacheService';
+import BuildService from 'MarkdownCode/services/build service/BuildService';
+import CompressService from 'MarkdownCode/services/compress service/CompressService';
 
-const ContextMenu = () => {
-  const [services, setServices] = useState([]);
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedModel, setSelectedModel] = useState(null);
-  const [selectedFragment, setSelectedFragment] = useState(null);
-  const [resultCache, setResultCache] = useState(null);
+/**
+ * ContextMenu component
+ * @param {Object} props - Component properties
+ */
+const ContextMenu = (props) => {
+  const [activeTab, setActiveTab] = useState(null);
+  const [results, setResults] = useState([]);
+  const [selectedText, setSelectedText] = useState('');
   const [theme, setTheme] = useState(ThemeService.getCurrentTheme());
 
   useEffect(() => {
-    setServices(ProjectService.getServices());
-    setSelectedService(ProjectService.getDefaultService());
-    setSelectedModel(ProjectService.getDefaultModel());
-    setSelectedFragment(SelectionService.getCurrentFragment());
-    setResultCache(ResultCacheService.getResultCache());
+    PositionTrackingService.subscribe(setSelectedText);
     ThemeService.subscribe(setTheme);
+    return () => {
+      PositionTrackingService.unsubscribe(setSelectedText);
+      ThemeService.unsubscribe(setTheme);
+    };
   }, []);
 
-  const handleModelChange = (model) => {
-    setSelectedModel(model);
-    ProjectService.updateModelForService(selectedService, model);
-  };
-
-  const handleFragmentModelChange = (model) => {
-    setSelectedModel(model);
-    ProjectService.updateModelForServiceAndFragment(selectedService, selectedFragment, model);
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    const result = ResultCacheService.getResult(tab);
+    setResults(result);
   };
 
   const handleRefresh = () => {
-    BuildService.refreshResultForService(selectedService);
+    const result = BuildService.build(selectedText);
+    ResultCacheService.updateResult(activeTab, result);
+    setResults(result);
+  };
+
+  const handleModelChange = (model, forAll = false) => {
+    if (forAll) {
+      ProjectService.setModelForAll(model);
+    } else {
+      ProjectService.setModelForFragment(activeTab, model);
+    }
+    handleRefresh();
   };
 
   const handleMoreClick = ({ key }) => {
     switch (key) {
       case 'modelForAll':
-        handleModelChange();
+        DialogService.showDialog({
+          title: 'Select Model',
+          onOk: handleModelChange,
+          onCancel: () => {},
+        });
         break;
       case 'modelForFragment':
-        handleFragmentModelChange();
+        DialogService.showDialog({
+          title: 'Select Model for Fragment',
+          onOk: (model) => handleModelChange(model, false),
+          onCancel: () => {},
+        });
         break;
       default:
         break;
     }
   };
 
-  const menu = (
+  const moreMenu = (
     <Menu onClick={handleMoreClick}>
-      <Menu.SubMenu key="modelForAll" title="Model for all">
-        {services.map(service => (
-          <MenuItem key={service}>{service}</MenuItem>
-        ))}
-      </Menu.SubMenu>
-      <Menu.SubMenu key="modelForFragment" title="Model for fragment">
-        {services.map(service => (
-          <MenuItem key={service}>{service}</MenuItem>
-        ))}
-      </Menu.SubMenu>
+      <MenuItem key="modelForAll">Model for all</MenuItem>
+      <MenuItem key="modelForFragment">Model for fragment</MenuItem>
     </Menu>
   );
 
   return (
-    <ResultsView>
-      <Tab title={selectedService}>
-        <MonacoEditor
-          value={resultCache[selectedService]}
-          theme={theme}
-          onChange={value => ResultCacheService.updateResultCache(selectedService, value)}
-        />
-        <Button onClick={handleRefresh}>Refresh</Button>
-        <Dropdown overlay={menu}>
-          <Button>More</Button>
-        </Dropdown>
-      </Tab>
-    </ResultsView>
+    <div className={`context-menu ${theme}`}>
+      <Tab onChange={handleTabChange} />
+      <ResultsView results={results} />
+      <MonacoEditor value={selectedText} />
+      <AntButton onClick={handleRefresh}>Refresh</AntButton>
+      <Dropdown overlay={moreMenu}>
+        <AntButton>More</AntButton>
+      </Dropdown>
+    </div>
   );
 };
 

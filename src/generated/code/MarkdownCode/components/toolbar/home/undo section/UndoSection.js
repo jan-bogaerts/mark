@@ -6,22 +6,26 @@ import ThemeService from 'MarkdownCode/services/Theme service/ThemeService';
 import UndoService from 'MarkdownCode/services/Undo service/UndoService';
 import DialogService from 'MarkdownCode/services/dialog service/DialogService';
 
+/**
+ * UndoSection component
+ * Contains undo and redo actions
+ */
 const UndoSection = () => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
+  // Monitor undo service for changes
   useEffect(() => {
-    const updateUndoRedoState = () => {
-      setCanUndo(UndoService.canUndo());
-      setCanRedo(UndoService.canRedo());
-    };
+    const undoSubscription = UndoService.canUndo.subscribe(setCanUndo);
+    const redoSubscription = UndoService.canRedo.subscribe(setCanRedo);
 
-    UndoService.subscribe(updateUndoRedoState);
     return () => {
-      UndoService.unsubscribe(updateUndoRedoState);
+      undoSubscription.unsubscribe();
+      redoSubscription.unsubscribe();
     };
   }, []);
 
+  // Handle undo action
   const handleUndo = () => {
     try {
       UndoService.undo();
@@ -30,6 +34,7 @@ const UndoSection = () => {
     }
   };
 
+  // Handle redo action
   const handleRedo = () => {
     try {
       UndoService.redo();
@@ -38,8 +43,10 @@ const UndoSection = () => {
     }
   };
 
+  const theme = ThemeService.getCurrentTheme();
+
   return (
-    <div className={`undo-section ${ThemeService.getCurrentTheme()}`}>
+    <div className={`undo-section ${theme}`}>
       <Button
         className="undo-button"
         icon={<UndoOutlined />}
