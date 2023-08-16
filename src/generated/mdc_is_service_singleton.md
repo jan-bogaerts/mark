@@ -1,5 +1,3 @@
-# MarkdownCode > services > dialog service
-{"DialogService": "no"}
 # MarkdownCode > services > Selection service
 {"SelectionService": "yes"}
 # MarkdownCode > services > line parser
@@ -20,3 +18,5 @@
 {"BuildService": "yes"}
 # MarkdownCode > services > Theme service
 {"ThemeService": "yes"}
+# MarkdownCode > services > dialog service
+{"DialogService": "yes"}

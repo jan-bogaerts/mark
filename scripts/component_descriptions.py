@@ -1,6 +1,6 @@
 """
 Create short descriptions of the components that are declared in a text fragment.
-first run the component_lister.py script to get the list of components.
+first run the component_lister.py and double_compress scripts to get the list of components.
 """
 
 import sys

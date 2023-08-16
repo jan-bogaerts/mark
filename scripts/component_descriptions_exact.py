@@ -1,33 +1,38 @@
+"""
+Create a more detailed description of the components that are declared in a text fragment.
+first run the component_lister.py and compress.py scripts to get the list of components.
+"""
+
 import sys
 import os
-from time import sleep
-from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
-import project
-import result_loader
-import get_styling_names
 import json
+from time import sleep
+from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
+import compress
+import component_lister
+import result_loader
+
 
 import openai
 import tiktoken
 
+ONLY_MISSING = False # only check if the fragment has not yet been processed
 
-ONLY_MISSING = True # only check if the fragment has not yet been processed
+system_prompt = """Act as an ai software analyst.
+It is your task to make a description of a UI component that is declared in the feature list.
 
-system_prompt = """using the following development stack:
-{0}
-write out all the styling classes:
-{1}
-
-based on the user's text
-only return styling, no code. Don't return any explanation or introduction or editor formatting."""
-user_prompt = "{0}"
-term_prompt = """remember: only return styling"""
+Only return what is in the feature list about {0}{1}. No introduction or explanation."""
+user_prompt = """The component name: '{0}'
+the feature list: 
+{1}"""
+term_prompt = """"""
 
 
 def generate_response(params, key):
 
     total_tokens = 0
-    model = get_model_config('render_styling', key)
+    key = key.split('#')[-1].strip()
+    model = get_model_config('component_descriptions_exact', key)
     
     def reportTokens(prompt):
         encoding = tiktoken.encoding_for_model(model)
@@ -48,17 +53,18 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['dev_stack'], params['styling_names'])
+    if params['other_classes']:
+        other_classes = ', nothing about ' + ', '.join(params['other_classes'])
+    else:
+        other_classes = ''
+    prompt = system_prompt.format(params['class_name'], other_classes ) 
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['feature_description'])
-    messages.append({"role": "user", "content": prompt} )
+    prompt = user_prompt.format(params['class_name'], params['feature_description'])
+    messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
-    if term_prompt:
-        messages.append({"role": "assistant", "content": term_prompt})
-        total_tokens += reportTokens(term_prompt)
     
-    total_tokens = DEFAULT_MAX_TOKENS  # max result needs to be short
+    total_tokens += int(total_tokens /2)
     if total_tokens > DEFAULT_MAX_TOKENS:
         total_tokens = DEFAULT_MAX_TOKENS
     params = {
@@ -88,59 +94,39 @@ def generate_response(params, key):
     return None
 
 
-def add_result(to_add, result, writer):
-    result.append(to_add)
+def add_result(to_add, writer):
     writer.write(to_add + "\n")
     writer.flush()
 
 
-def collect_file_list(title, file_names, writer):
-    names_str = json.dumps(file_names)
-    writer.write(f'# {title}\n')
-    writer.write(f'{names_str}\n')
-    writer.flush()
+def collect_response(title, response, writer):
+    # title comes from the text fragment, already has the # in it
+    add_result(title, writer)
+    add_result(response, writer)
 
 
-def collect_response(filename, response):
-    file_name = filename.replace(".js", ".css")
-    with open(file_name, "w") as writer:
-        writer.write(response)
-    return file_name
-
-
-
-def process_data(root_path, writer):
-    result = []
-    dev_stack = project.fragments[1].content
-    for fragment in project.fragments:
+def process_data(writer):
+    for fragment in component_lister.text_fragments:
         if ONLY_MISSING and has_fragment(fragment.full_title):
             continue
-        files = get_styling_names.get_data(fragment.full_title)
-        for file_name, styling_names in files.items():    
-            if len(styling_names):
-                file_names = [] # keep track of the file names generated for this fragment, so we can save it in the markdown file
-                response = generate_response({
-                    'styling_names': '- ' + '\n- '.join(styling_names),
-                    'dev_stack': dev_stack,
-                    'feature_description': fragment.content
-                }, fragment.full_title)
+        result = {}
+        # process each key-value pair of the json data structure
+        for comp_name in fragment.data:
+            comp_info = compress.get_fragment(fragment.full_title)
+            if comp_info:
+                params = {
+                    'class_name': comp_name,
+                    'other_classes': [c for c in fragment.data if c != comp_name],
+                    'feature_description': comp_info.content,
+                }
+                response = generate_response(params, fragment.full_title)
                 if response:
-                    # remove the code block markdown, the 3.5 version wants to add it itself
-                    response = response.strip() # need to remove the newline at the end
-                    if response.startswith("```css"):
-                        response = response[len("```css"):]
-                    if response.endswith("```"):
-                        response = response[:-len("```")]
-                    file_name = collect_response(file_name, response)
-                    file_names.append(file_name)
-            if file_names:
-                collect_file_list(fragment.full_title, file_names, writer)
-            
-    return result
-                    
+                    result[comp_name] = response
+        collect_response(fragment.full_title, json.dumps(result), writer)
 
 
-def main(prompt, styling_list, file=None):
+
+def main(prompt, compressed, list, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -149,21 +135,23 @@ def main(prompt, styling_list, file=None):
     print("loading project")
 
     # split the prompt into a toolbar, list of components and a list of services, based on the markdown headers
-    project.split_standard(prompt)
-    get_styling_names.load_results(styling_list)
+
+    compress.load_results(compressed)
+    component_lister.load_results(list)
 
     # save there result to a file while rendering.
     if file is None:
         file = 'output'
-    
-    file_name = file + "_styling_files.md"
+        
     open_mode = 'w'
+    filename= file + "_comp_descriptions_exact.md"
     if ONLY_MISSING:
-        load_results(file_name)
+        load_results(filename)
         open_mode = 'a'
 
     print("rendering results")
-    with open(file_name, open_mode) as writer:
+    
+    with open(filename, open_mode) as writer:
         process_data(writer)
     
     print("done! check out the output file for the results!")
@@ -175,9 +163,8 @@ def load_results(filename, overwrite_file_name=None):
     if not overwrite_file_name:
         # modify the filename so that the filename without extension ends on _overwrite
         overwrite_file_name = filename.split('.')[0] + '_overwrite.' + filename.split('.')[1]
-    result_loader.load(filename, text_fragments, False, overwrite_file_name)
-
-
+    result_loader.load(filename, text_fragments, True, overwrite_file_name)
+        
 
 def has_fragment(title):
     '''returns true if the title is in the list of fragments'''
@@ -190,19 +177,37 @@ def has_fragment(title):
     return False
 
 
+def get_data(title):
+    '''returns the list of components for the given title'''
+    to_search = title.lower().strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
+    for fragment in text_fragments:
+        if fragment.title.lower() == to_search:
+            return fragment.data or []
+    return []    
+
+
+def get_description(title, component):
+    data = get_data(title)
+    if component in data:
+        return data[component]
+    return None
+
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
         # Set prompt to the first argument
         prompt = sys.argv[1]
-        styling_names = sys.argv[2]
+        compressed = sys.argv[2]
+        declare_or_use_list = sys.argv[3]
 
     # Pull everything else as normal
-    file = sys.argv[3] if len(sys.argv) > 3 else None
+    file = sys.argv[4] if len(sys.argv) > 4 else None
 
     # Run the main function
-    main(prompt, styling_names, file)
+    main(prompt, compressed, declare_or_use_list, file)

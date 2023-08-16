@@ -8,10 +8,13 @@ import component_lister
 import declare_or_use_comp_classifier
 import get_if_service_is_used
 import get_if_service_is_singleton
-import list_component_expansions
+# import list_component_expansions
 import list_how_service_describes_components
 import resolve_component_imports
-import component_descriptions
+import component_descriptions_exact
+import get_interface_parts
+import get_interface_parts_usage
+import primary_component
 import json
 import result_loader
 
@@ -28,19 +31,19 @@ use the following development stack:
 """
 user_prompt = """The component '{0}' is described as follows:
 {1}
+
 {2}
-
-
-globally declared features:
 {3}
+globally declared features:
+{4}
 
 imports (only include the imports that are used in the code):
-{4}
-"""
+{5}"""
 term_prompt = """
 Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
 Use small functions.
-When the user text contains references to other components, use the component, do not write the functionality inline. 
+When the user text contains references to other components, use the component, do not write the functionality inline.
+A file always contains the definition for 1 component, service or object, no more.
 Add documentation to your code.
 only write valid code
 do not include any intro or explanation, only write code
@@ -74,7 +77,7 @@ def generate_response(params, key):
     prompt = system_prompt.format(params['component'], params['dev_stack']) + term_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['component'], params['feature_title'], params['feature_description'], params['global_features'], params['imports'] )
+    prompt = user_prompt.format(params['component'], params['feature_description'], params['interface_parts'], params['others_interface_parts'], params['global_features'], params['imports'].strip() )
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
@@ -115,6 +118,11 @@ def collect_file_list(title, file_names, writer):
     writer.flush()
 
 
+def get_file_path(title, root_path):
+    file_name = title.replace(" > ", "_")
+    file_path = os.path.join(root_path, file_name.replace(" ", "_") + ".js")
+    return file_path
+
 def collect_response(title, response, root_path):
     file_name = title.replace(" > ", "_")
     if not os.path.exists(root_path):
@@ -124,103 +132,223 @@ def collect_response(title, response, root_path):
         writer.write(response)
     return file_path
 
-def get_import_service_line(import_def):
+
+def get_import_service_line(import_def, cur_path):
     service = import_def['service']
     service_path = import_def['path']
+    service_path = os.path.relpath(service_path, cur_path)
     is_global = get_if_service_is_singleton.is_singleton(import_def['service_loc'], service)
     if is_global:
-        global_txt = "global "
+        service_txt = "global object"
         service = service.lower()
     else:
-        global_txt = ""
-    return f"The {global_txt}service {service} can be imported from {service_path}\n"
+        service_txt = "service"
+    return f"The {service_txt} {service} can be imported from {service_path}\n"
+
 
 def get_all_imports(component, full_title, cur_path):
-    imported = {} # so we don't list the same thing twice
     imports_txt = ''
-
+    cur_path = cur_path.strip()
     imports = resolve_component_imports.get_data(full_title)
+    primary = primary_component.get_primary(full_title) # only the primary component imports other components declared in the same fragment. this is to prevent confusion from gpt
     for comp, items in imports.items():
         if comp == component:
             for import_def in items:
-                imports_txt += get_import_service_line(import_def)
+                imports_txt += get_import_service_line(import_def, cur_path)
         else:
             is_declare = declare_or_use_comp_classifier.get_is_declared(full_title, comp)
             if is_declare:
-                # another component declared in the same fragment, so import from local path
-                comp_path = os.path.join(cur_path, comp)
-                imports_txt += f"The component {comp} can be imported from {comp_path}\n"
+                if primary == component: # this is to prevent confusion from gpt, otherwise it starts using the parent component in the children
+                    # another component declared in the same fragment, so import from local path
+                    imports_txt += f"The component {comp} can be imported from {comp}\n"
             else:
-                imports_txt += f"The component {comp} can be imported from {items}\n"
+                rel_path = os.path.relpath(items.strip(), cur_path)
+                imports_txt += f"The component {comp} can be imported from {rel_path}\n"
 
 
     return imports_txt  
 
-def get_to_render(title, components):
+
+def get_to_render_and_used(title, components):
     to_render = []
+    used = []
     for component in components:
         is_declare = declare_or_use_comp_classifier.get_is_declared(title, component)
         if is_declare:
             to_render.append(component)
-    return to_render
+        else:
+            used.append(component)
+    return to_render, used
 
 
-def get_global_features():
+def get_global_features(full_title, component):
+    """
+    returns the descriptions of all the features of the services that are declared to be globally used.
+    This list of services is normally declared globally: each service says that it is to be used globally or not.
+    Sometimes however, a component doesn't use a global service (ex: all components must use the dialogService to 
+    log errors, but what if a component doesn't log errors?)
+    The developer can overwrite the global behavior through the imports that are declared for the component: if a global
+    service is not included in the list of imports, don't include it in the description either.
+    """
+    to_search = full_title.strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
     result = ''
+    services_to_include = []
+    imports = resolve_component_imports.get_data(full_title)
+    if imports:
+        imports_for_comp = imports.get(component)
+        if imports_for_comp:
+            for import_def in imports_for_comp:
+                service = import_def['service']
+                services_to_include.append(service)
     for fragment in list_how_service_describes_components.text_fragments:
         if fragment.data:
             if result:
                 result += '\n'
             for service, features in fragment.data.items():
-                result += f' - {service}\n{features}'
+                if service in services_to_include:
+                    result += f' - {service}\n{features}'
     return result
 
-def process_data(root_path, writer):
-    dev_stack = project.fragments[1].content
-    global_features = get_global_features()
+
+def extract_service_interface_parts(code, fragment, rendered_comp):
+    """
+    extract the interface parts from the code and save them in the interface parts file
+    """
+    imports = resolve_component_imports.get_data(fragment.full_title)
+    items = imports.get(rendered_comp)
+    if items:
+        for import_def in items:
+            service = import_def['service']
+            service_loc = import_def['service_loc']
+            known_parts = get_interface_parts_usage.get_interface_parts(service_loc, service)
+            get_interface_parts.extract_interface_parts_for(service, service_loc, known_parts, code, fragment.full_title)
+
+def extract_used_comp_interface_parts(code, fragment, rendered_comp, used_comps):
+    for comp in used_comps:
+        comp_loc = declare_or_use_comp_classifier.get_declared_in(fragment.full_title, comp)
+        known_parts = get_interface_parts_usage.get_interface_parts(comp_loc, comp)
+        get_interface_parts.extract_interface_parts_for(comp, comp_loc, known_parts, code, fragment.full_title)
+
+
+def get_description_and_interface_parts(fragment, component, to_render):
+    if len(to_render) > 1:
+        feature_description = component_descriptions_exact.get_description(fragment.full_title, component)
+    else:
+        feature_description = fragment.content
+    interface_parts = get_interface_parts.get_interface_parts(fragment.full_title, component) # things this component needs to implement
+    if interface_parts:
+        to_join = []
+        for key, value in interface_parts.items():
+            to_join.append(f'{key}: {value}')
+        interface_parts = f'\nMake certain that {component} has:\n- ' + '\n- '.join(to_join) + '\n'
+    if not interface_parts:
+        interface_parts = ''
+    return feature_description, interface_parts
+
+
+def format_interface(interface_def):
+    result = ''
+    for key, value in interface_def.items():
+        result += f'- {key}: {value}\n'
+    return result
+
+def get_interface_parts_of_others(fragment, component):
+    """
+    goes over all the services that are imported by the component and builds up the interface from them so that 
+    the entire application uses the same interface for the same service
+    """
+    result = ''
+    imports = resolve_component_imports.get_data(fragment.full_title)
+    items = imports.get(component)
+    if items:
+        component_desc = component_descriptions_exact.get_description(fragment.full_title, component)
+        for import_def in items:
+            service = import_def['service']
+            service_loc = import_def['service_loc']
+            interface_def = get_interface_parts.get_interface_parts(service_loc, service)
+            if interface_def:
+                comp_and_global_service_desc = component_desc
+                service_features_fragment = list_how_service_describes_components.get_data(service_loc)
+                if service_features_fragment:
+                    comp_and_global_service_desc += '\n'
+                    for key, value in service_features_fragment.items():
+                        comp_and_global_service_desc += f'\n{value}'
+                interface_def = format_interface(interface_def)
+                interface = get_interface_parts_usage.list_used_interface_parts(service, service_loc, interface_def, comp_and_global_service_desc, fragment.full_title)
+                if interface:
+                    interface_list = []
+                    for key, value in interface.items():
+                        interface_list.append(f'{key}: {value}')
+                    result += f'\n{service} has the following interface:\n- ' + '\n- '.join(interface_list) + '\n'
+    return result
+
+
+def render_component(component, fragment, to_render, root_path, file_names):
+    # calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
+    title_to_path = fragment.full_title.replace(":", "").replace('?', '').replace('!', '')
+    path_items = title_to_path.split(" > ")
+    path_items[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
+    path_section = os.path.join(root_path, *path_items)
+    relative_path = os.path.join(*path_items)
+
+    feature_description, interface_parts = get_description_and_interface_parts(fragment, component, to_render)
+    others_interface_parts = get_interface_parts_of_others(fragment, component)
+    global_features = get_global_features(fragment.full_title, component)
+
+    params = {
+        'component': component,
+        'feature_title': fragment.title,
+        'feature_description': feature_description,
+        'dev_stack': project.fragments[1].content,
+        'imports': get_all_imports(component, fragment.full_title, relative_path),
+        'interface_parts': interface_parts,
+        'global_features': global_features,
+        'others_interface_parts': others_interface_parts
+    }
+    response = generate_response(params, fragment.full_title)
+    if response:
+        # remove the code block markdown, the 3.5 version wants to add it itself
+        response = response.strip() # need to remove the newline at the end
+        if response.startswith("```javascript"):
+            response = response[len("```javascript"):]
+        if response.endswith("```"):
+            response = response[:-len("```")]
+        file_name = collect_response(component, response, path_section)
+        file_names.append(file_name)
+        return response
+    
+
+def process_data(root_path, writer): 
     for fragment in project.fragments:
         if ONLY_MISSING and has_fragment(fragment.full_title):
             continue
         components = component_lister.get_components(fragment.full_title)
         if len(components) > 0:
             file_names = [] # keep track of the file names generated for this fragment, so we can save it in the markdown file
-            to_render = get_to_render(fragment.full_title, components)
-            # calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
-            title_to_path = fragment.full_title.replace(":", "").replace('?', '').replace('!', '')
-            path_items = title_to_path.split(" > ")
-            path_section = os.path.join(root_path, *path_items)
-            relative_path = os.path.join(*path_items)
-            for component in to_render:
-                if len(to_render) > 1:
-                    feature_description = component_descriptions.get_description(fragment.full_title, component)
-                else:
-                    feature_description = fragment.content
-                public_features = list_component_expansions.get_all_expansions_for(component)
-                params = {
-                    'component': component,
-                    'feature_title': fragment.title,
-                    'feature_description': feature_description,
-                    'dev_stack': dev_stack,
-                    'imports': get_all_imports(component, fragment.full_title, relative_path),
-                    'public_features': public_features,
-                    'global_features': global_features,
-                }
-                response = generate_response(params, fragment.full_title)
-                if response:
-                    # remove the code block markdown, the 3.5 version wants to add it itself
-                    response = response.strip() # need to remove the newline at the end
-                    if response.startswith("```javascript"):
-                        response = response[len("```javascript"):]
-                    if response.endswith("```"):
-                        response = response[:-len("```")]
-                    file_name = collect_response(component, response, path_section)
-                    file_names.append(file_name)
+            to_render, used = get_to_render_and_used(fragment.full_title, components)
+            primary = primary_component.get_primary(fragment.full_title)
+            if not primary:
+                raise Exception('no primary found for ', fragment.full_title)
+            # we presume that only the primary component is currently using the sub components and non of the subs use each other.
+            # to save some cost & time. this means don't put too complex stuff in a single fragment
+            primary_code = render_component(primary, fragment, to_render, root_path, file_names)
+            extract_service_interface_parts(primary_code, fragment, primary)
+            extract_used_comp_interface_parts(primary_code, fragment, primary, used)
+            
+            non_primary = [c for c in to_render if c != primary]
+            for component in non_primary:
+                get_interface_parts.extract_interface_parts_for(component, fragment.full_title, None, primary_code, fragment.full_title)
+                code = render_component(component, fragment, to_render, root_path, file_names)
+                extract_service_interface_parts(code, fragment, component)
             if file_names:
                 collect_file_list(fragment.full_title, file_names, writer)
                     
 
 
-def main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, is_service_singleton, imports, comp_desc, root_path=None, file=None):
+def main(prompt, components_list, declare_or_use_list, comp_features_from_service, is_service_used, 
+         is_service_singleton, imports, comp_desc, interface_parts, interface_parts_usage, primary_components, root_path=None, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -232,12 +360,15 @@ def main(prompt, components_list, declare_or_use_list, expansions, comp_features
     project.split_standard(prompt)
     component_lister.load_results(components_list)
     declare_or_use_comp_classifier.load_results(declare_or_use_list)
-    list_component_expansions.load_results(expansions)
+    # list_component_expansions.load_results(expansions)
     list_how_service_describes_components.load_results(comp_features_from_service)
     get_if_service_is_used.load_results(is_service_used)
     get_if_service_is_singleton.load_results(is_service_singleton)
     resolve_component_imports.load_results(imports)
-    component_descriptions.load_results(comp_desc)
+    component_descriptions_exact.load_results(comp_desc)
+    get_interface_parts.load_results(interface_parts)
+    get_interface_parts_usage.load_results(interface_parts_usage)
+    primary_component.load_results(primary_components)
 
     # save there result to a file while rendering.
     if file is None:
@@ -304,16 +435,19 @@ if __name__ == "__main__":
         prompt = sys.argv[1]
         components_list = sys.argv[2]
         declare_or_use_list = sys.argv[3]
-        expansions = sys.argv[4]
-        comp_features_from_service = sys.argv[5]
-        is_service_used = sys.argv[6]
-        is_service_singleton = sys.argv[7]
-        imports = sys.argv[8]
-        comp_desc = sys.argv[9] 
+        comp_features_from_service = sys.argv[4]
+        is_service_used = sys.argv[5]
+        is_service_singleton = sys.argv[6]
+        imports = sys.argv[7]
+        comp_desc = sys.argv[8] 
+        interface_parts = sys.argv[9]
+        interface_parts_usage = sys.argv[10]
+        primary_components = sys.argv[11]
 
     # Pull everything else as normal
-    folder = sys.argv[10] if len(sys.argv) > 10 else None
-    file = sys.argv[11] if len(sys.argv) > 11 else None
+    folder = sys.argv[12] if len(sys.argv) > 12 else None
+    file = sys.argv[13] if len(sys.argv) > 13 else None
 
     # Run the main function
-    main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, is_service_singleton, imports, comp_desc, folder, file)
+    main(prompt, components_list, declare_or_use_list, comp_features_from_service, is_service_used, 
+         is_service_singleton, imports, comp_desc, interface_parts, interface_parts_usage, primary_components, folder, file)

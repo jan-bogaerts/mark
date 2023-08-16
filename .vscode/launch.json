@@ -114,7 +114,7 @@
         },
 
         {
-            "name": "get component descriptions - mdc",
+            "name": "get short component descriptions - mdc",
             "type": "python",
             "request": "launch",
             "program": "scripts/component_descriptions.py",
@@ -128,6 +128,20 @@
             "justMyCode": true
         },
 
+        {
+            "name": "get exact component descriptions - mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/component_descriptions_exact.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_cond_compress.md",
+                "${workspaceFolder}/src/generated/mdc_components.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
 
         {
             "name": "classify declare or use component - mdc",
@@ -192,7 +206,7 @@
         },
 
         {
-            "name": "get if component is used mdc",
+            "name": "-- get if component is used mdc",
             "type": "python",
             "request": "launch",
             "program": "scripts/get_if_component_is_used.py",
@@ -253,7 +267,7 @@
         },
 
         {
-            "name": "list component expansion mdc",
+            "name": "-- list component expansion mdc",
             "type": "python",
             "request": "launch",
             "program": "scripts/list_component_expansions.py",
@@ -296,12 +310,15 @@
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_components.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
-                "${workspaceFolder}/src/generated/mdc_component_expansion.md",
                 "${workspaceFolder}/src/generated/mdc_service_describes_components.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_used.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_singleton.md",
                 "${workspaceFolder}/src/generated/mdc_resolve_component_imports.md",
-                "${workspaceFolder}/src/generated/mdc_comp_descriptions.md",
+                "${workspaceFolder}/src/generated/mdc_comp_descriptions_exact.md",
+
+                "${workspaceFolder}/src/generated/mdc_interface_parts.md",
+                "${workspaceFolder}/src/generated/mdc_interface_parts_usage.md",
+                "${workspaceFolder}/src/generated/mdc_primary_comp.md",
                 "${workspaceFolder}/src/generated/code/",
                 "${workspaceFolder}/src/generated/mdc"
             ],

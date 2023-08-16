@@ -19,7 +19,7 @@ MarkdownCode is an ideation and software building tool driven by machine learnin
 the application uses a toolbar similar to applications like mS Access, excel, word or draw: a single integrated menu and toolbar
 
 - At the top of the toolbar are a nr of tabs (use the tabs from the antd library)
-- all components on the toolbar show a F (from the antd library) containing a short description of the action.
+- all components on the toolbar show a tooltip (from the antd library) containing a short description of the action.
 
 the following tabs are available:
 - home: this is shown as the first tab when the application starts.
@@ -61,6 +61,7 @@ the following tabs are available:
     - wrap in an exceptions handler and show the error
   - auto-save: a toggle button, when pressed, asks the project service to update the auto-save state.
     - the toggle button's state follows that of the project service's auto-save state.
+- The undo service needs to be monitored for changes so that the state of the buttons can be updated.
   
 ##### edit section
 - the edit-section component contains actions related to the clipboard and the currently selected data.
@@ -160,6 +161,7 @@ the following tabs are available:
 - all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - key: this button opens a dialog box where the user can enter his api-key that will be used for api-calls with the open-ai platform.
+    - use a key for the icon.
   - model: this is a combobox where the user can select which default model should be used when requests are sent to open-ai.
     - the list of available models used to populate the combobox, comes from the gpt-service.
   
@@ -252,12 +254,12 @@ the following tabs are available:
 ## services
 
 ### dialog service
-- the dialog service provides a common interface for other components and services to show dialog boxes.
+- the dialog service is a global singleton that provides a common interface for other components and services to show dialog boxes.
 - the service can show a dialog box for errors, warnings and info.
 - all actions or functions that the user can trigger from a component, should be wrapped in a proper error handler so that when an error occurs, an electron dialog box is shown to the user with details on the error. 
 
 ### Theme service
-- The theme service is responsible for managing the currently selected theme: when the selected theme is changed, the new value is saved to the local storage. When the service is created, the value previously stored in local storage, is retrieved.
+- The theme service is a global singleton, responsible for managing the currently selected theme: when the selected theme is changed, the new value is saved to the local storage. When the service is created, the value previously stored in local storage, is retrieved.
 - The service allows for a selection between a light or dark theme.
 - Every component uses this service to retrieve the currently selected theme so it can apply this. Components don't need to subscribe for changes to the selected theme value, they only need to retrieve this value from the theme service and use the styling names, based on the selected. theme.
 - The main window refreshes it's entire content when the selected theme is updated.

@@ -163,6 +163,16 @@ def has_fragment(title):
     return False
 
 
+def get_fragment(full_title):
+    to_search = full_title.lower().strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
+    for fragment in text_fragments:
+        if fragment.full_title.lower().strip() == to_search:
+            return fragment
+    return None
+
+
 if __name__ == "__main__":
 
     # Check for arguments

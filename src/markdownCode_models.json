@@ -37,5 +37,13 @@
     "render_component": {
         "default": "gpt-4",
         "topics": {}
+    },
+    "get_interface_parts": {
+        "default": "gpt-4",
+        "topics": {}
+    },
+    "get_interface_parts_usage": {
+        "default": "gpt-4",
+        "topics": {}
     }
 }

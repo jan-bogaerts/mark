@@ -23,7 +23,7 @@ FontSection
 # MarkdownCode > components > toolbar > preferences
 PreferencesTab
 # MarkdownCode > components > toolbar > preferences > GPT section:
-GptSection
+GPTSection
 # MarkdownCode > components > toolbar > preferences > view section:
 ViewSection
 # MarkdownCode > components > body > editor

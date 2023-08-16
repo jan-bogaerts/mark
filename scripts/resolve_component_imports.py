@@ -7,7 +7,7 @@ import project
 import component_lister
 import declare_or_use_comp_classifier
 import get_if_service_is_used
-import list_component_expansions
+# import list_component_expansions
 import list_how_service_describes_components
 import component_descriptions
 import json
@@ -112,6 +112,7 @@ def get_service_imports(full_title):
     if services_used:
         for service_loc, values in services_used.items():
             cur_path_parts = service_loc.split("#")[-1].split(" > ")
+            cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
             for service, value in values.items():
                 if value == 'yes' and not service in imported:
                     imported[service] = True
@@ -119,12 +120,13 @@ def get_service_imports(full_title):
                     results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
     for fragment in list_how_service_describes_components.text_fragments:
         cur_path_parts = fragment.full_title.split("#")[-1].split(" > ")
+        cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
         if fragment.data:
             for service, features in fragment.data.items():
                 if not service in imported:
                     imported[service] = True
-                    service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
-                    results.append({'service': service, 'path': service_path, 'service_loc': service_path})
+                    service_path = os.path.join(*cur_path_parts, service.replace(" ", "_")).strip()
+                    results.append({'service': service, 'path': service_path, 'service_loc': fragment.full_title})
     return results  
 
 
@@ -137,14 +139,18 @@ def resolve_component_imports(full_title, component, results):
         components = component_lister.get_components(declared_in)
         if component in components:
             declared_in = declared_in.replace("'", "").replace('"', '') # remove quotes cause gpr sometimes adds them
-            path = os.path.join(*declared_in.split(" > "), component.replace(" ", "_") )
+            declared_in_parts = declared_in.split(" > ")
+            declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
+            path = os.path.join(*declared_in_parts, component.replace(" ", "_") )
             results[component] = path
         else:
             # if there is only 1 component declared in the fragment, we can presume that's the one we need
             declared_comps = declare_or_use_comp_classifier.get_all_declared(declared_in)
             if len(declared_comps) == 1:
                 declared_in = declared_in.replace("'", "").replace('"', '')
-                path = os.path.join(*declared_in.split(" > "), declared_comps[0].replace(" ", "_") )
+                declared_in_parts = declared_in.split(" > ")
+                declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
+                path = os.path.join(*declared_in_parts, declared_comps[0].replace(" ", "_") )
                 results[component] = path
             else:
                 description = component_descriptions.get_description(full_title, component)
@@ -190,7 +196,7 @@ def main(prompt, components_list, declare_or_use_list, expansions, comp_features
     project.split_standard(prompt)
     component_lister.load_results(components_list)
     declare_or_use_comp_classifier.load_results(declare_or_use_list)
-    list_component_expansions.load_results(expansions)
+    # list_component_expansions.load_results(expansions)
     list_how_service_describes_components.load_results(comp_features_from_service)
     get_if_service_is_used.load_results(is_service_used)
     component_descriptions.load_results(descriptions)
@@ -234,7 +240,7 @@ def has_fragment(title):
 
 
 def get_data(title):
-    '''returns the list of components for the given title'''
+    '''returns the data for the given title, or an empty list if it doesn't exist'''
     to_search = title.lower().strip()
     if not to_search.startswith('# '):
         to_search = '# ' + to_search
