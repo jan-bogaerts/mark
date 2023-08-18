@@ -137,6 +137,7 @@
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_cond_compress.md",
                 "${workspaceFolder}/src/generated/mdc_components.md",
+                "${workspaceFolder}/src/generated/mdc_primary_comp.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -293,7 +294,7 @@
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
                 "${workspaceFolder}/src/generated/mdc_component_expansion.md",
                 "${workspaceFolder}/src/generated/mdc_service_describes_components.md",
-                "${workspaceFolder}/src/generated/mdc_is_service_used.md",
+                "${workspaceFolder}/src/generated/mdc_class_usage.md",
                 "${workspaceFolder}/src/generated/mdc_comp_descriptions.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],

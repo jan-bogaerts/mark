@@ -1,2 +1,32 @@
 # MarkdownCode > components > main window
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\main window\\MainWindow.js"]
+# MarkdownCode > components > toolbar
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.js"]
+# MarkdownCode > components > toolbar > home
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\HomeTab.js"]
+# MarkdownCode > components > toolbar > home > file section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file section\\FileSection.js"]
+# MarkdownCode > components > toolbar > home > edit section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit section\\EditSection.js"]
+# MarkdownCode > components > toolbar > home > undo section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\undo section\\UndoSection.js"]
+# MarkdownCode > components > toolbar > home > build section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build section\\BuildSection.js"]
+# MarkdownCode > components > toolbar > format
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\FormatTab.js"]
+# MarkdownCode > components > toolbar > format > style section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\style section\\StyleSection.js"]
+# MarkdownCode > components > toolbar > format > paragraph section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\paragraph section\\ParagraphSection.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\paragraph section\\IndentButton.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\paragraph section\\UnindentButton.js"]
+# MarkdownCode > components > toolbar > format > font section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\font section\\FontSection.js"]
+# MarkdownCode > components > toolbar > preferences
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\PreferencesTab.js"]
+# MarkdownCode > components > body
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js"]
+# MarkdownCode > components > body > horizontal splitter
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\horizontal splitter\\HorizontalSplitter.js"]
+# MarkdownCode > components > body > vertical splitter
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\vertical splitter\\VerticalSplitter.js"]
+# MarkdownCode > components > body > outline
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js"]

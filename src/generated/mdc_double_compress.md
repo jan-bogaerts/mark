@@ -16,14 +16,6 @@ The edit-section component handles clipboard and selected data actions. It suppo
 The undo-section component has actions for the undo/redo service. It supports undo and redo buttons that are enabled based on the project's undo-service actions.
 # MarkdownCode > components > toolbar > home > build section
 The build-section component has actions for the build-service. It supports the following actions: rendering all code for the entire project, rendering code files for the currently active fragment, and rendering code for the selected fragment in the currently selected service. These actions are enabled when there are out-of-date or missing results in the result-cache.
-# MarkdownCode > components > toolbar > format > style section
-The style-section component applies markdown formatting to text. Toggle buttons update their state based on selected text. Supported actions include paragraph style, where only one item can be selected at a time. Each item is represented as a button in a row. Pressing a button applies the selected style as markdown to the selected text. Available buttons: heading 1-6, paragraph, quote, code.
-# MarkdownCode > components > toolbar > format > paragraph section
-- The paragraph-section component applies markdown formatting to text.
-- Toggle buttons update based on selected text changes.
-- Supported actions: bullet list, numbered list, indent, unindent.
-# MarkdownCode > components > toolbar > format > font section
-The font-section component handles markdown formatting actions for text, including bold, italic, underline, and strike-through. Toggle buttons update based on the selected text.
 # MarkdownCode > components > body > results view
 - Bottom position displays results based on selected text block
 - Services list creates tabs with service names
@@ -97,14 +89,6 @@ The undo service records user text edits in monaco-editors and includes both und
 - Utilizes compress service to render results for each text-fragment in the project
 # MarkdownCode > services > compress service
 The compress service uses the gpt service to shorten a text fragment. The get-result function calls the GPT-service with specific parameters, including a system message and the content of the text fragment. This service is useful for checking if the gpt service understands the fragment and can be used for other processes. It utilizes a result-cache-service to store and track results, updating the result-cache whenever the get-result function is called. The gpt-interface for this service is named "compress".
-# MarkdownCode > components > toolbar > preferences > GPT section:
-The GPT-section component configures the GPT service. It has actions for entering the API key and selecting the default model from a list provided by the GPT service.
-# MarkdownCode > components > toolbar > preferences > view section:
-The view-section component configures the application's appearance. It supports actions for selecting the theme (light or dark mode), font, and font size for the monaco editor and markdown viewer.
-# MarkdownCode > components > body > editor
-- The app's main view is the editor component, displaying markdown text.
-- The monaco editor npm package is used for this purpose.
-- When the user moves the cursor, the editor requests the position-tracking service to update the selected line.
 # MarkdownCode > components > body > outline
 - Left-aligned outline component
 - Shows tree outline of active project
@@ -114,8 +98,6 @@ The view-section component configures the application's appearance. It supports 
 - Updates selected tree item when position changes
 # MarkdownCode > services > dialog service
 The dialog service is a shared interface for displaying dialog boxes in other components and services, supporting errors, warnings, and information. User-triggered actions in a component should be wrapped in an error handler to show an electron dialog box with error details if needed.
-# MarkdownCode > components > toolbar > format
-The format-tab component arranges children horizontally and includes Style, Paragraph, and Font sections.
 # MarkdownCode > components > toolbar > preferences
 The preferences-tab component arranges its children in a row and includes the GPT and View sections on the toolbar.
 # MarkdownCode > components > toolbar > home
@@ -128,3 +110,34 @@ The application's main body is represented by the body component, which includes
 The horizontal splitter manages the layout of 2 child components, allowing users to resize the panels above and below it. It has properties for the top and bottom components, the position of the bottom component, and a callback function for when the position value needs to be updated. The splitter includes a div component for dragging and triggering the callback.
 # MarkdownCode > components > body > vertical splitter
 The vertical splitter manages the layout of two child components, allowing users to adjust the width of the left panel while changing the size of the right panel. It has properties for the left and right components, position, and onPositionChanged callback. The splitter includes a div component for dragging and triggering the onPositionChanged callback.
+# MarkdownCode > components > toolbar > format
+The format-tab component arranges its children in a row, including the Style, Paragraph, and Font sections.
+# MarkdownCode > components > toolbar > format > paragraph section
+The paragraph-section component applies markdown formatting to text using icon buttons. Supported actions include indenting and unindenting lines or selections.
+# MarkdownCode > components > toolbar > format > font section
+- The font-section component applies markdown formatting to text.
+- Buttons in the component use icons instead of text.
+- Toggle buttons update based on text selection changes in the selection-service.
+- The component supports the following actions: Bold, Italic, Underline, and Strike-through.
+# MarkdownCode > components > toolbar > format > style section
+The style-section component applies markdown formatting to text using buttons with icons. The buttons assign different formatting styles to the selected text in the selection-service. Only one button can be selected at a time. The buttons are arranged in a single row and include heading styles, paragraph, quote, code, bullet list, and numbered list. The toggle buttons update to reflect the style of the selected text when the selection changes. The selection-service provides a method to retrieve the style of the selected text.
+# MarkdownCode > components > toolbar > preferences > GPT section
+- GPT-section handles GPT service configuration.
+- Buttons have icons, not text.
+- Supports key and model actions.
+- Key button opens 'open-ai configuration dialog' with key icon.
+- Model is a combobox to select default model for open-ai requests.
+- Combobox is populated from gpt-service.
+- Initial value and changes are saved to gpt-service.
+# MarkdownCode > components > toolbar > preferences > open-ai configuration dialog
+The open-ai configuration dialog is used to edit settings. It has a title, description, and an input box for the api-key. The current api-key is retrieved and displayed. There are "Cancel" and "OK" buttons at the bottom.
+# MarkdownCode > components > toolbar > preferences > view section
+The view-section component configures the app's appearance. Buttons have icon-only content. It supports theme, font, and font size selection. These values are linked to the theme-service.
+# MarkdownCode > components > body > editor
+- Editor component uses monaco editor npm package to display markdown text.
+- Text for editor is retrieved from project service on load.
+- Theme, font, and font-size retrieved from theme-service and applied to editor.
+- Project service monitored for text changes.
+- User changes saved to project service and position-tracking service updated.
+- Cursor movement triggers update of currently selected line.
+- Monaco editor always occupies all available space.

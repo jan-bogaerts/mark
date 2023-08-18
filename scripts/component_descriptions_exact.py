@@ -10,22 +10,22 @@ from time import sleep
 from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import compress
 import component_lister
+import primary_component
 import result_loader
 
 
 import openai
 import tiktoken
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
-system_prompt = """Act as an ai software analyst.
-It is your task to make a description of a UI component that is declared in the feature list.
+system_prompt = """Act as an ai feature classification system.
+It is your task to build the feature list related to the UI component '{0}' using the provided feature list.
 
 Only return what is in the feature list about {0}{1}. No introduction or explanation."""
-user_prompt = """The component name: '{0}'
-the feature list: 
-{1}"""
-term_prompt = """"""
+user_prompt = """The feature list:
+{0}"""
+term_prompt = """{0}"""
 
 
 def generate_response(params, key):
@@ -53,16 +53,16 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    if params['other_classes']:
-        other_classes = ', nothing about ' + ', '.join(params['other_classes'])
-    else:
-        other_classes = ''
-    prompt = system_prompt.format(params['class_name'], other_classes ) 
+    prompt = system_prompt.format(params['class_name'], params['other_classes'] ) 
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['class_name'], params['feature_description'])
+    prompt = user_prompt.format(params['feature_description'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
+    term_prompt = params['remember_prompt']
+    if term_prompt:
+        messages.append({"role": "assistant", "content": term_prompt})
+        total_tokens += reportTokens(term_prompt)
     
     total_tokens += int(total_tokens /2)
     if total_tokens > DEFAULT_MAX_TOKENS:
@@ -111,13 +111,39 @@ def process_data(writer):
             continue
         result = {}
         # process each key-value pair of the json data structure
-        for comp_name in fragment.data:
+        components = fragment.data
+        primary = primary_component.get_primary(fragment.full_title)
+        for comp_name in components:
             comp_info = compress.get_fragment(fragment.full_title)
+            other_components = [c for c in components if c != comp_name]
+
+            remember_prompt = ''
+            if len(other_components) == 1:
+                to_be = ' is'
+                other_components = other_components[0]
+            elif len(other_components) > 1:
+                to_be = ' are'
+                if comp_name == primary:
+                    last_join = ' and '
+                else:
+                    last_join = ' or '
+                other_components = ', '.join(other_components[:-1]) + last_join + other_components[-1]
+            else:
+                other_components = ''
+            if other_components:
+                if comp_name == primary:
+                    remember_prompt = 'Remember: mention where ' + other_components + to_be + ' used but not their features'
+                    other_components = ', only mention where ' + other_components + to_be + ' used but not their features'
+                else:
+                    other_components = ', nothing about ' + other_components
+
+
             if comp_info:
                 params = {
                     'class_name': comp_name,
-                    'other_classes': [c for c in fragment.data if c != comp_name],
+                    'other_classes': other_components,
                     'feature_description': comp_info.content,
+                    'remember_prompt': remember_prompt
                 }
                 response = generate_response(params, fragment.full_title)
                 if response:
@@ -126,7 +152,7 @@ def process_data(writer):
 
 
 
-def main(prompt, compressed, list, file=None):
+def main(prompt, compressed, list, primary, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -138,6 +164,7 @@ def main(prompt, compressed, list, file=None):
 
     compress.load_results(compressed)
     component_lister.load_results(list)
+    primary_component.load_results(primary)
 
     # save there result to a file while rendering.
     if file is None:
@@ -197,7 +224,7 @@ def get_description(title, component):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -205,9 +232,10 @@ if __name__ == "__main__":
         prompt = sys.argv[1]
         compressed = sys.argv[2]
         declare_or_use_list = sys.argv[3]
+        primary = sys.argv[4]
 
     # Pull everything else as normal
-    file = sys.argv[4] if len(sys.argv) > 4 else None
+    file = sys.argv[5] if len(sys.argv) > 5 else None
 
     # Run the main function
-    main(prompt, compressed, declare_or_use_list, file)
+    main(prompt, compressed, declare_or_use_list, primary, file)

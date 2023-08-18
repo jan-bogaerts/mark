@@ -8,18 +8,10 @@
 []
 # MarkdownCode > components > toolbar > home > build section
 []
-# MarkdownCode > components > toolbar > format > style section
-[]
 # MarkdownCode > components > toolbar > format > paragraph section
 []
 # MarkdownCode > components > toolbar > format > font section
 []
-# MarkdownCode > components > toolbar > preferences > GPT section:
-[]
-# MarkdownCode > components > toolbar > preferences > view section:
-[{"component_name": "MonacoEditor", "value": "- Theme: a combobox where the user can select the preferred color mode. This maps to the theme used by the Monaco Editor.\n- Font: a combobox that the user can use to select the font that is used by the Monaco Editor.\n- Font-size: a combobox that the user can use to select the size of the font in the Monaco Editor.", "source": "# MarkdownCode > components > body > editor"}]
-# MarkdownCode > components > body > editor
-[ {"component_name": "MonacoEditor", "value": "- the monaco editor npm package is used to display the markdown text\n- the editor asks the position-tracking service to update the currently selected line when the user moves the cursor to another line", "source": "# MarkdownCode > components > body > results view"}]
 # MarkdownCode > components > body > outline
 [{"component_name": "Editor", "value": "- The outline component is positioned to the left of the editor\n- When the user clicks on a tree item, the related text is scrolled into view on the editor.", "source": "# MarkdownCode > components > body > editor"}]
 # MarkdownCode > components > body > results view
@@ -27,7 +19,7 @@
 # MarkdownCode > services
 []
 # MarkdownCode > services > Theme service
-[{"component_name": "MainWindow", "value": "The main window refreshes it's entire content when the selected theme is updated.", "source": "# MarkdownCode > components > main window"}, {"component_name": "Theme", "value": "- Theme service\n- Managing the currently selected theme\n- Selection between a light or dark theme\n- Every component uses the theme service to retrieve the currently selected theme\n- The main window refreshes its entire content when the selected theme is updated", "source": "# MarkdownCode > components > toolbar > preferences > view section:"}]
+[{"component_name": "MainWindow", "value": "The main window refreshes it's entire content when the selected theme is updated.", "source": "# MarkdownCode > components > main window"}, {"component_name": "Theme", "value": "- Theme service\n- Managing the currently selected theme\n- Selection between a light or dark theme\n- Every component uses the theme service to retrieve the currently selected theme\n- The main window refreshes its entire content when the selected theme is updated", "source": "# MarkdownCode > components > toolbar > preferences > view section"}]
 # MarkdownCode > services > project service
 [{"component_name": "Outline", "value": "- The project service provides a function to retrieve a tree-structure, where each item in the tree represents a header that is used in the project. This tree-structure can be used in the outline or in drop-down boxes on the results-view.", "source": "# MarkdownCode > components > body > outline"}]
 # MarkdownCode > services > Selection service

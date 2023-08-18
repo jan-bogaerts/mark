@@ -105,45 +105,44 @@ the following tabs are available:
 #### format
 - the format-tab component is a wrapper that displays it's children in a row.
 - This component contains the following child components :
-  - style
-  - paragraph
-  - font
+  - style section
+  - paragraph section
+  - font section
 
 ##### style section
 - the style-section component contains actions related to the markup used in the text for applying markdown formatting.
 - all buttons use an appropriate icon as content, no text.
-- it currently only has 1 action:
-  - paragraph style: this is a list of styles that can be assigned to the currently selected text.
-    - only 1 style can be selected at the same time, it is not possible to have no selection at all.
-    - each style is represented as a button.
-    - all the buttons are lined up in a single row.
-    - when a button is pressed, the selection-service reformats the markdown text.
-    - styles that can be selected:
-      - heading 1
-      - heading 2
-      - heading 3
-      - heading 4
-      - heading 5
-      - heading 6
-      - paragraph
-      - quote
-      - code
+- there is a button for each of the following formatting styles:
+  - heading 1
+  - heading 2
+  - heading 3
+  - heading 4
+  - heading 5
+  - heading 6
+  - paragraph
+  - quote
+  - code
+  - bullet list
+  - numbered list
+- when a button is pressed, the formatting style is applied to the currently selected text in the selection-service.
+- only 1 button can be selected at the same time, it is not possible to have no selection at all.
+- all the buttons are lined up in a single row.    
 - the selection-service (not a component) is monitored for changes in the currently selected text. whenever the text selection is changed, the state of the toggle buttons is updated to reflect the style of the currently selected text. The selection service provides a method for retrieving the style of the currently selected text.
+
+Remember that each button needs it's own appropriate icon.
 
 ##### paragraph section
 - the paragraph-section component contains actions related to the markup used in the text for applying markdown formatting.
 - all buttons use an appropriate icon as content, no text.
-- whenever the text selection is changed, the state of the toggle buttons is updated to reflect the state of the selected text.
 - it supports the following actions
-  - bullet list: a toggle button to turn the current selection into a bullet list or when there is no selection but only a cursor position, to make the current line into a bullet point.
-  - numbered list:a toggle button to turn the current selection into a numbered list or when there is no selection but only a cursor position, to make the current line into a numbered list item.
-  - indent: a button to increase the indent of the current line or selection.
-  - unindent: a button to decrease the indent of the current line or selection.
+  - indent: a button to increase the indent of the current line or selection. The selection-service performs this action on the selected text or current cursor position.
+  - unindent: a button to decrease the indent of the current line or selection. The selection-service performs this action on the selected text or current cursor position.
+
   
 ##### font section
 - the font-section component contains actions related to the markup used in the text for applying markdown formatting.
 - all buttons use an appropriate icon as content, no text.
-- whenever the text selection is changed, the state of the toggle buttons is updated to reflect the state of the selected text.
+- whenever the text selection is changed (in the selection-service), the state of the toggle buttons is updated to reflect the state of the selected text.
 - it supports the following actions
   - bold: a toggle button to set the bold state on/off on the selected text and to show the state of the current selection. 
   - italic: a toggle button to set the italic state on/off on the selected text and to show the state of the current selection. 
@@ -156,22 +155,34 @@ the following tabs are available:
   - GPT
   - View
   
-##### GPT section:
+##### GPT section
 - the GPT-section component contains actions related to the configuration of the GPT service.
 - all buttons use an appropriate icon as content, no text.
+- The GPT-section component keeps track of the open state of the 'open-ai configuration dialog'
 - it supports the following actions
-  - key: this button opens a dialog box where the user can enter his api-key that will be used for api-calls with the open-ai platform.
+  - key: this button opens the 'open-ai configuration dialog'.
     - use a key for the icon.
-  - model: this is a combobox where the user can select which default model should be used when requests are sent to open-ai.
+  - model: the ModelComboBox component (Select in antd) where the user can select the default model for requests sent to open-ai.
     - the list of available models used to populate the combobox, comes from the gpt-service.
+    - get the initial value for the combobox from the gpt-service.
+    - when the value is changed, save to the gpt-service.
+
+##### open-ai configuration dialog
+- The open-ai configuration dialog is a modal dialog (from the antd library) implementation that is used to edit the open-ai configuration settings.
+- the top of the dialog contains a title with short description.
+- the dialog contains an input box where the user can enter his api-key that will be used for api-calls with the open-ai platform.
+  - When the dialog box opens, the current value of the api-key is retrieved from the gpt-service and shown in the input box.
+- At the bottom of the dialog box are 2 buttons:
+  - cancel: close the modal dialog without saving the value.
+  - ok: close the modal dialog after saving the new api-key value to the gpt-service. 
   
-##### view section:
+##### view section
 - the view-section component contains actions related to the configuration of the appearance of the application
 - all buttons use an appropriate icon as content, no text.
 - it supports the following actions
-  - theme: this is a combobox where the user can select the preferred color mode: light or dark mode. This maps to the theme used by the monaco editor.
-  - font: this is a combobox that the user can use to select the font that is used by the monaco editor and markdown viewer.
-  - font-size: this is a combobox that the suer can use to select the size of the font in the monaco editor and markdown view.
+  - theme: this is a combobox where the user can select the preferred color mode: light or dark mode. This value is linked to the value of the theme-service that manages the currently selected theme.
+  - font: this is a combobox that the user can use to select the font for the markdown text. This value is linked to the value of the theme-service.
+  - font-size: this is a combobox that the suer can use to select the size of the font for the markdown text. This value is linked to the value of the theme-service.
 
 ### body
 - the body component represents the main body of the application.
@@ -203,10 +214,15 @@ the following tabs are available:
 - between the left and right component, the splitter puts a div component of 8 pixels wide. When the user drags this bar left or right, the onPositionChanged callback is called (when provided) with the new position value.
 
 #### editor
-- The editor component displays the markdown text of the currently loaded project.
+- The editor component displays markdown text. 
 - to display the markdown text, the monaco editor npm package is used.
+- When the editor is loaded:
+  - the text for the monaco editor is retrieved from the project service.
+  - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
+- the project service is monitored for changes to the text (ex: when another project is loaded).
+- when the user changes the text in the monaco editor, the new text is saved to the project service. The position-tracking service is also updated.
 - when the user moves the cursor to another line, the editor asks the position-tracking service to update the currently selected line
-- when the user changes the text in the monaco editor, the new text is saved into the project.
+- the monaco editor always occupies all the space that is available.
 
 #### outline
 - the outline component is positioned to the left of the editor

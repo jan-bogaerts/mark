@@ -13,7 +13,10 @@ import tiktoken
 
 ONLY_MISSING = True # only check if the fragment has not yet been processed
 
-system_prompt = """List all of {0}'s interface parts used in this code{1}
+system_prompt = """List all interface items of the {0} used in this code{1}
+
+Return the result as a json object of key-value pairs where the value is a short description of the key with enough information so that {0} can implement the feature. Do not include any introduction or explanation. Return an empty object if nothing is found."""
+system_prompt_component = """List all properties of {0} used in this code{1}
 
 Return the result as a json object of key-value pairs where the value is a short description of the key with enough information so that {0} can implement the feature. Do not include any introduction or explanation. Return an empty object if nothing is found."""
 user_prompt = """{0}"""
@@ -44,7 +47,10 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['interface'], params['known_parts'])
+    if params['is_component']:
+        prompt = system_prompt_component.format(params['interface'], params['known_parts'])
+    else:
+        prompt = system_prompt.format(params['interface'], params['known_parts'])
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
     prompt = user_prompt.format(params['code'])
@@ -192,7 +198,7 @@ def get_interface_parts(title, interface_name):
     return result
 
 
-def extract_interface_parts_for(interface, interface_title, known_parts, code, code_title):
+def extract_interface_parts_for(interface, interface_title, code, code_title, is_component=False):
     '''extracts the interface parts from the code'''
     code_title = code_title.strip()
     if not code_title.startswith('# '):
@@ -205,6 +211,7 @@ def extract_interface_parts_for(interface, interface_title, known_parts, code, c
     if not fragment.data:
         fragment.data = {}
 
+    known_parts = get_interface_parts(interface_title, interface)
     if known_parts:
         known_parts_list = []
         for key, value in known_parts.items():
@@ -221,7 +228,8 @@ def extract_interface_parts_for(interface, interface_title, known_parts, code, c
     params = {
         'code': code,
         'interface': interface,
-        'known_parts': known_parts
+        'known_parts': known_parts,
+        'is_component': is_component
     }
     response = generate_response(params, code_title) # using the code title here, cause that one determines the complexity of the code
     if response:

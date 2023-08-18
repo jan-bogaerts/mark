@@ -17,7 +17,7 @@ system_prompt = """This is the known interface for {0}:
 {1}
 List everything from the known interface described above that is used in the following feature description.
 
-Return the result as a json object of key-value pairs where the value is a short description of the key with enough information so that a component can use the feature in code. Do not include any introduction or explanation. Return an empty object if nothing is found."""
+Return the result as a json object of key-value pairs where the value is a short description of the key with enough information so that a component can use the feature in code. Do not include by who the key is used in the description. Do not include any introduction or explanation. Return an empty object if nothing is found."""
 user_prompt = """feature description:
 {0}"""
 term_prompt = "Remember: only include items from the known interface that are required for the feature descriptions"

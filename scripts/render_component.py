@@ -31,14 +31,12 @@ use the following development stack:
 """
 user_prompt = """The component '{0}' is described as follows:
 {1}
-
 {2}
-{3}
 globally declared features:
-{4}
+{3}
 
 imports (only include the imports that are used in the code):
-{5}"""
+{4}"""
 term_prompt = """
 Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
 Use small functions.
@@ -77,7 +75,7 @@ def generate_response(params, key):
     prompt = system_prompt.format(params['component'], params['dev_stack']) + term_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['component'], params['feature_description'], params['interface_parts'], params['others_interface_parts'], params['global_features'], params['imports'].strip() )
+    prompt = user_prompt.format(params['component'], params['feature_description'].strip(), params['interface_parts'], params['global_features'], params['imports'].strip() )
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
@@ -222,14 +220,12 @@ def extract_service_interface_parts(code, fragment, rendered_comp):
         for import_def in items:
             service = import_def['service']
             service_loc = import_def['service_loc']
-            known_parts = get_interface_parts_usage.get_interface_parts(service_loc, service)
-            get_interface_parts.extract_interface_parts_for(service, service_loc, known_parts, code, fragment.full_title)
+            get_interface_parts.extract_interface_parts_for(service, service_loc, code, fragment.full_title)
 
 def extract_used_comp_interface_parts(code, fragment, rendered_comp, used_comps):
     for comp in used_comps:
         comp_loc = declare_or_use_comp_classifier.get_declared_in(fragment.full_title, comp)
-        known_parts = get_interface_parts_usage.get_interface_parts(comp_loc, comp)
-        get_interface_parts.extract_interface_parts_for(comp, comp_loc, known_parts, code, fragment.full_title)
+        get_interface_parts.extract_interface_parts_for(comp, comp_loc, code, fragment.full_title, True)
 
 
 def get_description_and_interface_parts(fragment, component, to_render):
@@ -261,6 +257,8 @@ def get_interface_parts_of_others(fragment, component):
     """
     result = ''
     imports = resolve_component_imports.get_data(fragment.full_title)
+    if not imports:
+        raise Exception(f'no imports found for {fragment.full_title}: need to run resolve_component_imports first')
     items = imports.get(component)
     if items:
         component_desc = component_descriptions_exact.get_description(fragment.full_title, component)
@@ -279,8 +277,13 @@ def get_interface_parts_of_others(fragment, component):
                 interface = get_interface_parts_usage.list_used_interface_parts(service, service_loc, interface_def, comp_and_global_service_desc, fragment.full_title)
                 if interface:
                     interface_list = []
+                    interface_parts_def = get_interface_parts.get_interface_parts(service_loc, service)
                     for key, value in interface.items():
-                        interface_list.append(f'{key}: {value}')
+                        if key in interface_parts_def: # prefer the description that is extracted with get_interface_parts, gives better results (less chatter)
+                            description = interface_parts_def[key]
+                        else:
+                            description = value
+                        interface_list.append(f'{key}: {description}')
                     result += f'\n{service} has the following interface:\n- ' + '\n- '.join(interface_list) + '\n'
     return result
 
@@ -297,6 +300,10 @@ def render_component(component, fragment, to_render, root_path, file_names):
     others_interface_parts = get_interface_parts_of_others(fragment, component)
     global_features = get_global_features(fragment.full_title, component)
 
+    if interface_parts and others_interface_parts:
+        interface_parts += '\n'
+    interface_parts += others_interface_parts
+
     params = {
         'component': component,
         'feature_title': fragment.title,
@@ -305,7 +312,6 @@ def render_component(component, fragment, to_render, root_path, file_names):
         'imports': get_all_imports(component, fragment.full_title, relative_path),
         'interface_parts': interface_parts,
         'global_features': global_features,
-        'others_interface_parts': others_interface_parts
     }
     response = generate_response(params, fragment.full_title)
     if response:
@@ -339,7 +345,7 @@ def process_data(root_path, writer):
             
             non_primary = [c for c in to_render if c != primary]
             for component in non_primary:
-                get_interface_parts.extract_interface_parts_for(component, fragment.full_title, None, primary_code, fragment.full_title)
+                get_interface_parts.extract_interface_parts_for(component, fragment.full_title, primary_code, fragment.full_title)
                 code = render_component(component, fragment, to_render, root_path, file_names)
                 extract_service_interface_parts(code, fragment, component)
             if file_names:

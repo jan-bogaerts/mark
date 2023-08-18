@@ -6,7 +6,7 @@ from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY, MAX
 import project
 import component_lister
 import declare_or_use_comp_classifier
-import get_if_service_is_used
+import list_service_usage # this one has the most accurate knowledge of which services are used, which is important to not confuse gpt
 # import list_component_expansions
 import list_how_service_describes_components
 import component_descriptions
@@ -108,16 +108,19 @@ def get_service_imports(full_title):
     imported = {} # so we don't list the same thing twice
     results = []
    
-    services_used = get_if_service_is_used.get_data(full_title)
+    services_used = list_service_usage.get_data(full_title)
     if services_used:
-        for service_loc, values in services_used.items():
+        for rec in services_used:
+            if not rec['value']:
+                continue # some services are included in the list cause the previous step had flagged them (cheap run), but then list_service_usage didn't find any usage of them (expensive run)
+            service_loc = rec['source']
+            service = rec['class_name']
             cur_path_parts = service_loc.split("#")[-1].split(" > ")
             cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-            for service, value in values.items():
-                if value == 'yes' and not service in imported:
-                    imported[service] = True
-                    service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
-                    results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
+            if not service in imported:
+                imported[service] = True
+                service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
+                results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
     for fragment in list_how_service_describes_components.text_fragments:
         cur_path_parts = fragment.full_title.split("#")[-1].split(" > ")
         cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
@@ -130,6 +133,14 @@ def get_service_imports(full_title):
     return results  
 
 
+def build_path(declared_in, filename):
+    declared_in = declared_in.replace("'", "").replace('"', '') # remove quotes cause gpr sometimes adds them
+    declared_in_parts = declared_in.split(" > ")
+    declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
+    path = os.path.join(*declared_in_parts, filename.replace(" ", "_") )
+    return path
+
+
 def resolve_component_imports(full_title, component, results):
     declared_in = declare_or_use_comp_classifier.get_declared_in(full_title, component)
     if not declared_in:
@@ -138,19 +149,13 @@ def resolve_component_imports(full_title, component, results):
     else:
         components = component_lister.get_components(declared_in)
         if component in components:
-            declared_in = declared_in.replace("'", "").replace('"', '') # remove quotes cause gpr sometimes adds them
-            declared_in_parts = declared_in.split(" > ")
-            declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-            path = os.path.join(*declared_in_parts, component.replace(" ", "_") )
+            path = build_path(declared_in, component)
             results[component] = path
         else:
             # if there is only 1 component declared in the fragment, we can presume that's the one we need
             declared_comps = declare_or_use_comp_classifier.get_all_declared(declared_in)
             if len(declared_comps) == 1:
-                declared_in = declared_in.replace("'", "").replace('"', '')
-                declared_in_parts = declared_in.split(" > ")
-                declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-                path = os.path.join(*declared_in_parts, declared_comps[0].replace(" ", "_") )
+                path = build_path(declared_in, declared_comps[0])
                 results[component] = path
             else:
                 description = component_descriptions.get_description(full_title, component)
@@ -161,7 +166,8 @@ def resolve_component_imports(full_title, component, results):
                 }
                 response = generate_response(params, full_title)
                 if response:
-                    results[component] = response
+                    path = build_path(declared_in, response)
+                    results[component] = path
                 else:
                     print(f"can't find import location for component {component} used in {full_title}")
                     exit(-1) # serious error
@@ -198,7 +204,7 @@ def main(prompt, components_list, declare_or_use_list, expansions, comp_features
     declare_or_use_comp_classifier.load_results(declare_or_use_list)
     # list_component_expansions.load_results(expansions)
     list_how_service_describes_components.load_results(comp_features_from_service)
-    get_if_service_is_used.load_results(is_service_used)
+    list_service_usage.load_results(is_service_used)
     component_descriptions.load_results(descriptions)
 
     # save there result to a file while rendering.

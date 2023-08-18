@@ -45,30 +45,6 @@
     - Enabled when the selected fragment is out-of-date or missing in any service's result-cache in the GPT-service's list.
   - Active topic in active prompt: Renders code for the selected fragment in the currently selected service.
     - Enabled when the selected fragment is out-of-date or missing in the related service.
-# MarkdownCode > components > toolbar > format > style section
-- The style-section component handles actions related to applying markdown formatting to the text.
-- The toggle buttons in the component update their state based on the selected text.
-- Supported actions include:
-  - Paragraph style: a toggle group where only one item can be selected at a time.
-  - Each item is represented as a button in a single row.
-  - Pressing a button applies the selected style as markdown to the currently selected text.
-  - Available buttons in the group: heading 1, heading 2, heading 3, heading 4, heading 5, heading 6, paragraph, quote, code.
-# MarkdownCode > components > toolbar > format > paragraph section
-- The paragraph-section component handles actions related to applying markdown formatting to text.
-- The toggle buttons are updated to reflect the state of the selected text whenever the text selection is changed.
-- It supports the following actions:
-  - Bullet list: Turns the current selection into a bullet list or makes the current line a bullet point if there is no selection.
-  - Numbered list: Turns the current selection into a numbered list or makes the current line a numbered list item if there is no selection.
-  - Indent: Increases the indent of the current line or selection.
-  - Unindent: Decreases the indent of the current line or selection.
-# MarkdownCode > components > toolbar > format > font section
-- The font-section component handles markdown formatting actions for text.
-- Toggle buttons in the component update based on the selected text.
-- Supported actions include:
-  - Bold: toggle button for setting bold state and displaying current selection state.
-  - Italic: toggle button for setting italic state and displaying current selection state.
-  - Underline: toggle button for setting underline state and displaying current selection state.
-  - Strike-through: toggle button for setting strike-through state and displaying current selection state.
 
 # MarkdownCode > components > body > results view
 - Positioned at the bottom of the main body
@@ -197,22 +173,6 @@
   - The result-cache is updated whenever the get-result function is called.
   - The result is stored under the same key as the input parameter of get-result.
 - The gpt-interface for this service is named "compress".
-# MarkdownCode > components > toolbar > preferences > GPT section:
-- The GPT-section component handles actions for configuring the GPT service.
-- It includes the following actions:
-  - Key: Opens a dialog box for the user to enter their API key, which will be used for API calls with the OpenAI platform.
-  - Model: A combobox where the user can select the default model to use for requests sent to OpenAI.
-    - The list of available models in the combobox is populated from the GPT service.
-# MarkdownCode > components > toolbar > preferences > view section:
-- The view-section component handles actions for configuring the application's appearance.
-- It supports the following actions:
-  - Theme: A combobox for selecting the preferred color mode (light or dark mode), which corresponds to the theme used by the monaco editor.
-  - Font: A combobox for selecting the font used by the monaco editor and markdown viewer.
-  - Font-size: A combobox for selecting the font size in the monaco editor and markdown viewer.
-# MarkdownCode > components > body > editor
-- The main view in the application is the editor component, which shows the markdown text of the project.
-- The monaco editor npm package is used to display the markdown text.
-- When the user moves the cursor to a different line, the editor requests the position-tracking service to update the selected line.
 # MarkdownCode > components > body > outline
 - Outline component positioned to the left of the editor
 - Displays a tree representing the outline of the active project
@@ -230,12 +190,6 @@
 - At the top of the toolbar, there are multiple tabs, which are implemented using the tabs from the antd library.
 - Each component on the toolbar displays a tooltip from the antd library, providing a brief description of the action.
 - The available tabs on the toolbar are: Home (shown as the first tab when the application starts), Format, and Preferences.
-# MarkdownCode > components > toolbar > format
-- The format-tab component is a wrapper that arranges its children in a horizontal row.
-- The component includes the following child components (sections on the toolbar):
-  - Style
-  - Paragraph
-  - Font
 # MarkdownCode > components > toolbar > preferences
 - The preferences-tab component is a wrapper that arranges its children in a row.
 - This component includes the following child components (sections on the toolbar):
@@ -279,3 +233,67 @@
   - position: the width assigned to the left component
   - onPositionChanged: a callback function that updates the position value. It takes one parameter: the new position value (number)
 - The splitter includes a div component of 8 pixels width between the left and right components. When the user drags this bar, the onPositionChanged callback is triggered (if provided) with the new position value.
+
+# MarkdownCode > components > toolbar > format
+- The format-tab component is a wrapper that arranges its children in a row.
+- Child components of the format-tab component include:
+  - Style section
+  - Paragraph section
+  - Font section
+# MarkdownCode > components > toolbar > format > paragraph section
+- The paragraph-section component handles actions for applying markdown formatting to text.
+- Buttons in the component use icons instead of text.
+- Supported actions include:
+  - Indent: Increases the indent of the current line or selection.
+  - Unindent: Decreases the indent of the current line or selection.
+# MarkdownCode > components > toolbar > format > font section
+- The font-section component handles actions related to applying markdown formatting to text.
+- Buttons in the component use icons instead of text.
+- The state of the toggle buttons is updated whenever the text selection changes in the selection-service.
+- The component supports the following actions:
+  - Bold: A toggle button to enable or disable bold formatting on the selected text and display the current selection state.
+  - Italic: A toggle button to enable or disable italic formatting on the selected text and display the current selection state.
+  - Underline: A toggle button to enable or disable underline formatting on the selected text and display the current selection state.
+  - Strike-through: A toggle button to enable or disable strike-through formatting on the selected text and display the current selection state.
+# MarkdownCode > components > toolbar > format > style section
+- The style-section component handles actions related to applying markdown formatting to text.
+- Buttons in the component have icons as content, no text.
+- The component has a list of buttons that assign different formatting styles to the selected text in the selection-service when pressed.
+  - Only one button can be selected at a time, no option for no selection.
+  - All buttons are arranged in a single row.
+  - Available formatting styles: heading 1, heading 2, heading 3, heading 4, heading 5, heading 6, paragraph, quote, code, bullet list, numbered list.
+- The selection-service is monitored for changes in the selected text. When the selection changes, the toggle buttons update to reflect the style of the selected text. The selection-service provides a method to retrieve the style of the selected text.
+# MarkdownCode > components > toolbar > preferences > open-ai configuration dialog
+- The open-ai configuration dialog is a modal dialog used to edit the open-ai configuration settings.
+- The dialog has a title with a short description at the top.
+- It includes an input box for the user to enter their api-key, which will be used for api-calls with the open-ai platform.
+  - When the dialog opens, the current api-key value is retrieved from the gpt-service and displayed in the input box.
+- At the bottom of the dialog, there are two buttons:
+  - "Cancel" to close the dialog without saving the value.
+  - "OK" to close the dialog and save the new api-key value to the gpt-service.
+# MarkdownCode > components > toolbar > preferences > view section
+- The view-section component handles actions related to configuring the appearance of the application.
+- All buttons have icons as content, with no text.
+- It supports the following actions:
+  - Theme: A combobox where the user can choose between light or dark mode. This value is linked to the theme-service, which manages the currently selected theme.
+  - Font: A combobox for selecting the font of the markdown text. This value is also linked to the theme-service.
+  - Font size: A combobox for selecting the font size of the markdown text. This value is also linked to the theme-service.
+# MarkdownCode > components > body > editor
+- The editor component uses the monaco editor npm package to display markdown text.
+- The text for the editor is retrieved from the project service when it is loaded.
+- The theme (light or dark), font, and font-size are retrieved from the theme-service and applied to the editor.
+- The project service is monitored for changes to the text.
+- When the user changes the text in the editor, it is saved to the project service and the position-tracking service is updated.
+- When the user moves the cursor to another line, the editor asks the position-tracking service to update the currently selected line.
+- The monaco editor always occupies all available space.
+# MarkdownCode > components > toolbar > preferences > GPT section
+- GPT-section component handles GPT service configuration actions.
+- Buttons in the component have icon content, no text.
+- GPT-section component tracks the open state of the 'open-ai configuration dialog'.
+- Supported actions:
+  - Key: Opens the 'open-ai configuration dialog'.
+    - Icon: Key.
+  - Model: ModelComboBox component (Select in antd) allows user to select default model for open-ai requests.
+    - Available models for the combobox are fetched from gpt-service.
+    - Initial value for the combobox is retrieved from gpt-service.
+    - When value is changed, it is saved to gpt-service.

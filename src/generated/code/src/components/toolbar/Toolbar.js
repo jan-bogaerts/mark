@@ -22,41 +22,33 @@ class Toolbar extends React.Component {
   }
 
   /**
-   * Render the component.
+   * Function to render a tab with a tooltip
+   * @param {string} key - The key of the tab
+   * @param {string} tab - The name of the tab
+   * @param {string} tooltip - The tooltip of the tab
+   * @param {React.Component} component - The component of the tab
    */
+  renderTab(key, tab, tooltip, component) {
+    return (
+      <TabPane
+        key={key}
+        tab={
+          <Tooltip title={tooltip}>
+            {tab}
+          </Tooltip>
+        }
+      >
+        {component}
+      </TabPane>
+    );
+  }
+
   render() {
     return (
       <Tabs defaultActiveKey="1" className={this.state.currentTheme}>
-        <TabPane
-          tab={
-            <Tooltip title="Home tab">
-              <span>Home</span>
-            </Tooltip>
-          }
-          key="1"
-        >
-          <HomeTab />
-        </TabPane>
-        <TabPane
-          tab={
-            <Tooltip title="Format tab">
-              <span>Format</span>
-            </Tooltip>
-          }
-          key="2"
-        >
-          <FormatTab />
-        </TabPane>
-        <TabPane
-          tab={
-            <Tooltip title="Preferences tab">
-              <span>Preferences</span>
-            </Tooltip>
-          }
-          key="3"
-        >
-          <PreferencesTab />
-        </TabPane>
+        {this.renderTab("1", "Home", "Go to Home", <HomeTab />)}
+        {this.renderTab("2", "Format", "Change the format", <FormatTab />)}
+        {this.renderTab("3", "Preferences", "Change your preferences", <PreferencesTab />)}
       </Tabs>
     );
   }
