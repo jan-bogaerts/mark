@@ -164,8 +164,8 @@ Remember that each button needs it's own appropriate icon.
     - use a key for the icon.
   - model: the ModelComboBox component (Select in antd) where the user can select the default model for requests sent to open-ai.
     - the list of available models used to populate the combobox, comes from the gpt-service.
-    - get the initial value for the combobox from the gpt-service.
-    - when the value is changed, save to the gpt-service.
+    - get the initial value for the combobox from the gpt-service (getDefaultModel function).
+    - when the value is changed, save to the gpt-service (setDefaultModel function).
 
 ##### open-ai configuration dialog
 - The open-ai configuration dialog is a modal dialog (from the antd library) implementation that is used to edit the open-ai configuration settings.

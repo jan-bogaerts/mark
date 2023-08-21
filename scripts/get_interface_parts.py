@@ -20,7 +20,7 @@ system_prompt_component = """List all properties of {0} used in this code{1}
 
 Return the result as a json object of key-value pairs where the value is a short description of the key with enough information so that {0} can implement the feature. Do not include any introduction or explanation. Return an empty object if nothing is found."""
 user_prompt = """{0}"""
-term_prompt = ""
+term_prompt = "Remember: only include items of {0}"
 
 
 def generate_response(params, key):
@@ -57,8 +57,9 @@ def generate_response(params, key):
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     if term_prompt:
-        messages.append({"role": "assistant", "content": term_prompt})
-        total_tokens += reportTokens(term_prompt)
+        prompt = term_prompt.format(params['interface'])
+        messages.append({"role": "assistant", "content": prompt})
+        total_tokens += reportTokens(prompt)
     
     total_tokens += 80 
     if total_tokens > DEFAULT_MAX_TOKENS:
@@ -189,11 +190,14 @@ def get_interface_parts(title, interface_name):
     if not to_search.startswith('# '):
         to_search = '# ' + to_search
     result = {}
+    search_for_interface = interface_name.lower().strip()
     for fragment in text_fragments:
         if to_search in fragment.data:
             section = fragment.data[to_search]
-            if interface_name in section:
-                for key, value in section[interface_name].items():
+            # doing case insensitive search here, otherwise things can go wrong
+            temp_section = {k.lower(): v for k, v in section.items()}
+            if search_for_interface in temp_section:
+                for key, value in temp_section[search_for_interface].items():
                     result[key] = value
     return result
 
@@ -203,6 +207,8 @@ def extract_interface_parts_for(interface, interface_title, code, code_title, is
     code_title = code_title.strip()
     if not code_title.startswith('# '):
         code_title = '# ' + code_title
+    if not interface_title.startswith('# '):
+        interface_title = '# ' + interface_title
     fragment = get_fragment(code_title)
     if not fragment:
         fragment = project.TextFragment(code_title, '')

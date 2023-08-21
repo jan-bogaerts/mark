@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
-import { Button, Tooltip } from 'antd';
-import { KeyOutlined, DatabaseOutlined } from '@ant-design/icons';
-import GptService from '../../../../services/gpt-service/GptService';
-import ThemeService from '../../../../services/theme-service/ThemeService';
-import OpenAiConfigurationDialog from '../open-ai-configuration-dialog/OpenAiConfigurationDialog';
-import ModelComboBox from '../ModelComboBox';
+import { Button, Space } from 'antd';
+import { KeyOutlined } from '@ant-design/icons';
+import ThemeService from '../../../../services/ThemeService/ThemeService';
+import OpenAIConfigurationDialog from '../open-ai-configuration-dialog/OpenAiConfigurationDialog';
+import ModelComboBox from './ModelComboBox';
 
 /**
  * GPTSection component.
@@ -16,36 +15,34 @@ const GPTSection = () => {
   const theme = ThemeService.getCurrentTheme();
 
   /**
-   * Handle click event for the key button.
+   * Handle key button click.
    * This function opens the 'open-ai configuration dialog'.
    */
-  const handleKeyClick = () => {
+  const handleKeyButtonClick = () => {
     setIsOpen(true);
   };
 
   /**
-   * Handle close event for the 'open-ai configuration dialog'.
-   * This function closes the 'open-ai configuration dialog'.
+   * Handle dialog close.
+   * This function tracks the open state of the 'open-ai configuration dialog'.
    */
-  const handleClose = () => {
+  const handleDialogClose = () => {
     setIsOpen(false);
   };
 
   return (
-    <div className={`gpt-section ${theme}`}>
-      <Tooltip title="Open AI Configuration">
-        <Button
-          className="gpt-section-button"
-          icon={<KeyOutlined />}
-          onClick={handleKeyClick}
-        />
-      </Tooltip>
-      <ModelComboBox className="gpt-section-combobox" />
-      <OpenAiConfigurationDialog
-        visible={isOpen}
-        onClose={handleClose}
+    <Space className={`gpt-section ${theme}`}>
+      <Button
+        className="key-button"
+        icon={<KeyOutlined />}
+        onClick={handleKeyButtonClick}
       />
-    </div>
+      <ModelComboBox className="model-combo-box" />
+      <OpenAIConfigurationDialog
+        visible={isOpen}
+        onClose={handleDialogClose}
+      />
+    </Space>
   );
 };
 

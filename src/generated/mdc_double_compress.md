@@ -121,14 +121,6 @@ The paragraph-section component applies markdown formatting to text using icon b
 - The component supports the following actions: Bold, Italic, Underline, and Strike-through.
 # MarkdownCode > components > toolbar > format > style section
 The style-section component applies markdown formatting to text using buttons with icons. The buttons assign different formatting styles to the selected text in the selection-service. Only one button can be selected at a time. The buttons are arranged in a single row and include heading styles, paragraph, quote, code, bullet list, and numbered list. The toggle buttons update to reflect the style of the selected text when the selection changes. The selection-service provides a method to retrieve the style of the selected text.
-# MarkdownCode > components > toolbar > preferences > GPT section
-- GPT-section handles GPT service configuration.
-- Buttons have icons, not text.
-- Supports key and model actions.
-- Key button opens 'open-ai configuration dialog' with key icon.
-- Model is a combobox to select default model for open-ai requests.
-- Combobox is populated from gpt-service.
-- Initial value and changes are saved to gpt-service.
 # MarkdownCode > components > toolbar > preferences > open-ai configuration dialog
 The open-ai configuration dialog is used to edit settings. It has a title, description, and an input box for the api-key. The current api-key is retrieved and displayed. There are "Cancel" and "OK" buttons at the bottom.
 # MarkdownCode > components > toolbar > preferences > view section
@@ -141,3 +133,14 @@ The view-section component configures the app's appearance. Buttons have icon-on
 - User changes saved to project service and position-tracking service updated.
 - Cursor movement triggers update of currently selected line.
 - Monaco editor always occupies all available space.
+# MarkdownCode > components > toolbar > preferences > GPT section
+- GPT-section component configures GPT service actions.
+- Buttons in the component have icon content only.
+- GPT-section component tracks the open state of the 'open-ai configuration dialog'.
+- Supported actions:
+  - Key button: Opens the 'open-ai configuration dialog'.
+    - Icon: Key.
+  - Model: ModelComboBox component allows user to select default model for open-ai requests.
+    - Available models are fetched from gpt-service.
+    - Initial value is obtained from gpt-service using getDefaultModel function.
+    - When value is changed, it is saved to gpt-service using setDefaultModel function.

@@ -1,5 +1,5 @@
 """
-for each component file that needs to be rendered, build up the exact list of files that need to be imported to make it work
+for each class / service file that needs to be rendered, build up the exact list of files that need to be imported to make it work
 """
 
 import sys
@@ -8,12 +8,9 @@ from time import sleep
 from utils import clean_dir
 from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY, MAX_TOKENS
 import project
-import component_lister
-import declare_or_use_comp_classifier
+import class_lister
+import declare_or_use_class_classifier
 import list_service_usage # this one has the most accurate knowledge of which services are used, which is important to not confuse gpt
-# import list_component_expansions
-import list_how_service_describes_components
-import component_descriptions
 import json
 import result_loader
 
@@ -23,7 +20,7 @@ import tiktoken
 ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """Only return the name of the most likely match, don't give any introduction or explanation."""
-user_prompt = """Which of these component names best matches '{0}', described as {1}:
+user_prompt = """Which of these class names best matches '{0}', described as {1}:
 {2}
 """
 term_prompt = """"""
@@ -32,7 +29,7 @@ term_prompt = """"""
 def generate_response(params, key):
 
     total_tokens = 0
-    model = get_model_config('resolve_component_imports', key)
+    model = get_model_config('resolve_class_imports', key)
     
     def reportTokens(prompt):
         encoding = tiktoken.encoding_for_model(model)
@@ -56,7 +53,7 @@ def generate_response(params, key):
     prompt = system_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['component'], params['description'], params['items'])
+    prompt = user_prompt.format(params['class'], params['description'], params['items'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
@@ -125,15 +122,6 @@ def get_service_imports(full_title):
                 imported[service] = True
                 service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
                 results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
-    for fragment in list_how_service_describes_components.text_fragments:
-        cur_path_parts = fragment.full_title.split("#")[-1].split(" > ")
-        cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-        if fragment.data:
-            for service, features in fragment.data.items():
-                if not service in imported:
-                    imported[service] = True
-                    service_path = os.path.join(*cur_path_parts, service.replace(" ", "_")).strip()
-                    results.append({'service': service, 'path': service_path, 'service_loc': fragment.full_title})
     return results  
 
 
@@ -145,56 +133,57 @@ def build_path(declared_in, filename):
     return path
 
 
-def resolve_component_imports(full_title, component, results):
-    declared_in = declare_or_use_comp_classifier.get_declared_in(full_title, component)
+def resolve_class_imports(full_title, cl, results):
+    declared_in = declare_or_use_class_classifier.get_declared_in(full_title, cl)
     if not declared_in:
-        print(f"can't find import location for component {component} used in {full_title}")
+        print(f"can't find import location for class {cl} used in {full_title}")
         return # serious error
     else:
-        components = component_lister.get_components(declared_in)
-        if component in components:
-            path = build_path(declared_in, component)
-            results[component] = path
+        classes = class_lister.get_classes(declared_in)
+        if cl in classes:
+            path = build_path(declared_in, cl)
+            results[cl] = path
         else:
-            # if there is only 1 component declared in the fragment, we can presume that's the one we need
-            declared_comps = declare_or_use_comp_classifier.get_all_declared(declared_in)
+            # if there is only 1 cl declared in the fragment, we can presume that's the one we need
+            declared_comps = declare_or_use_class_classifier.get_all_declared(declared_in)
             if len(declared_comps) == 1:
                 path = build_path(declared_in, declared_comps[0])
-                results[component] = path
+                results[cl] = path
             else:
-                description = component_descriptions.get_description(full_title, component)
+                # raise Exception("not yet supported")
+                description = project.get_fragment(full_title).content
                 params = {
-                    'component': component,
+                    'cl': cl,
                     'description': description,
                     'items': '- ' + '\n- '.join(declared_comps),
                 }
                 response = generate_response(params, full_title)
                 if response:
                     path = build_path(declared_in, response)
-                    results[component] = path
+                    results[cl] = path
                 else:
-                    print(f"can't find import location for component {component} used in {full_title}")
+                    print(f"can't find import location for class {cl} used in {full_title}")
                     exit(-1) # serious error
 
 def process_data(writer):
     for fragment in project.fragments:
         if ONLY_MISSING and has_fragment(fragment.full_title):
             continue
-        components = component_lister.get_components(fragment.full_title)
-        if len(components) > 0:
+        classes = class_lister.get_classes(fragment.full_title)
+        if len(classes) > 0:
             results = {} # keep track of the file names generated for this fragment, so we can save it in the markdown file
-            for component in components:
-                is_declare = declare_or_use_comp_classifier.get_is_declared(fragment.full_title, component)
+            for cl in classes:
+                is_declare = declare_or_use_class_classifier.get_is_declared(fragment.full_title, cl)
                 if is_declare:
                     imports = get_service_imports(fragment.full_title)
-                    results[component] = imports
+                    results[cl] = imports
                 else:
-                    resolve_component_imports(fragment.full_title, component, results)
+                    resolve_class_imports(fragment.full_title, cl, results)
             collect_response(fragment.full_title, json.dumps(results), writer)
                     
 
 
-def main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, descriptions, file=None):
+def main(prompt, components_list, declare_or_use_list, is_service_used, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -204,18 +193,17 @@ def main(prompt, components_list, declare_or_use_list, expansions, comp_features
 
     # split the prompt into a toolbar, list of components and a list of services, based on the markdown headers
     project.split_standard(prompt)
-    component_lister.load_results(components_list)
-    declare_or_use_comp_classifier.load_results(declare_or_use_list)
+    class_lister.load_results(components_list)
+    declare_or_use_class_classifier.load_results(declare_or_use_list)
     # list_component_expansions.load_results(expansions)
-    list_how_service_describes_components.load_results(comp_features_from_service)
     list_service_usage.load_results(is_service_used)
-    component_descriptions.load_results(descriptions)
+    # component_descriptions.load_results(descriptions)
 
     # save there result to a file while rendering.
     if file is None:
         file = 'output'
         
-    filename = file + "_resolve_component_imports.md"
+    filename = file + "_resolve_class_imports.md"
     open_mode = 'w'
     if ONLY_MISSING:
         load_results(filename)
@@ -264,7 +252,7 @@ def get_data(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 7:
+    if len(sys.argv) < 5:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -272,13 +260,11 @@ if __name__ == "__main__":
         prompt = sys.argv[1]
         components_list = sys.argv[2]
         declare_or_use_list = sys.argv[3]
-        expansions = sys.argv[4]
-        comp_features_from_service = sys.argv[5]
-        is_service_used = sys.argv[6]
-        description = sys.argv[7] 
+        is_service_used = sys.argv[4]
+        # description = sys.argv[7] 
 
     # Pull everything else as normal
-    file = sys.argv[8] if len(sys.argv) > 8 else None
+    file = sys.argv[5] if len(sys.argv) > 5 else None
 
     # Run the main function
-    main(prompt, components_list, declare_or_use_list, expansions, comp_features_from_service, is_service_used, description, file)
+    main(prompt, components_list, declare_or_use_list, is_service_used, file)

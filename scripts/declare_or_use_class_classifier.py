@@ -203,6 +203,18 @@ def get_declared_in(full_title, name):
                 return fragment.data[name]
     return None
 
+
+def get_all_declared(full_title):
+    """Returns the list of classes that are declared in the given text fragment"""
+    to_search = full_title.strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
+    for fragment in text_fragments:
+        if fragment.full_title.strip() == to_search:
+            return [name for name in fragment.data if fragment.data[name] == 'declare']
+    return []
+
+
 def has_fragment(title):
     '''returns true if the title is in the list of fragments'''
     to_search = title.strip()

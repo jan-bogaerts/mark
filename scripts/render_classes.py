@@ -1,13 +1,16 @@
 import sys
 import os
 from time import sleep
-from utils import clean_dir
-from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
+from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY, MAX_TOKENS
 import project
 import class_lister
 import declare_or_use_class_classifier
-# import declare_or_use_class_classifier
+import get_if_service_is_singleton
+import get_interface_parts
+import get_interface_parts_usage
+import resolve_class_imports
 import list_service_usage
+import primary_class
 import json
 import result_loader
 
@@ -25,35 +28,20 @@ use the following development stack:
 user_prompt = """The class '{0}' is described as follows:
 {1}
 {2}
-
-make certain that the following functionality is publicly available:
-{3}
-
-globally declared features:
-{4}
-"""
+{3}"""
 term_prompt = """
 Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
 Use small functions.
+A file always contains the definition for 1 component, service or object, no more.
 Add documentation to your code.
 only write valid code
-do not include any intro or explanation, only write code
-add styling names
-
-bad response:
-```javascript
-const a = 1;
-```
-
-good response:
-const a = 1;
-"""
+do not include any intro or explanation, only write code"""
 
 
 def generate_response(params, key):
 
     total_tokens = 0
-    model = get_model_config('render_classes', key)
+    model = get_model_config('render_class', key)
     
     def reportTokens(prompt):
         encoding = tiktoken.encoding_for_model(model)
@@ -77,13 +65,17 @@ def generate_response(params, key):
     prompt = system_prompt.format(params['class'], params['dev_stack'], params['imports'] ) + term_prompt
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['class'], params['feature_title'], params['feature_description'], params['public_features'])
+    imports_txt = ''
+    if params['imports']:
+        imports_txt = f'imports (only include the imports that are used in the code):\n{params["imports"]}'
+    prompt = user_prompt.format(params['class'], params['feature_description'].strip(), params['interface_parts'], imports_txt)
+    prompt = prompt.strip()
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
-    total_tokens = DEFAULT_MAX_TOKENS # code needs max allowed
-    if total_tokens > DEFAULT_MAX_TOKENS:
-        total_tokens = DEFAULT_MAX_TOKENS
+    total_tokens = (total_tokens * 2) + DEFAULT_MAX_TOKENS # code needs max allowed
+    if total_tokens > MAX_TOKENS:
+        total_tokens = MAX_TOKENS
     params = {
         "model": model,
         "messages": messages,
@@ -118,6 +110,12 @@ def collect_file_list(title, file_names, writer):
     writer.flush()
 
 
+def get_file_path(title, root_path):
+    file_name = title.replace(" > ", "_")
+    file_path = os.path.join(root_path, file_name.replace(" ", "_") + ".js")
+    return file_path
+
+
 def collect_response(title, response, root_path):
     file_name = title.replace(" > ", "_")
     if not os.path.exists(root_path):
@@ -128,16 +126,170 @@ def collect_response(title, response, root_path):
     return file_path
 
 
-def get_to_render_and_imports(title, classes):
-    imports = []
+def get_to_render_and_used(title, classes):
+    used = []
     to_render = []
     for cl in classes:
         is_declare = declare_or_use_class_classifier.get_is_declared(title, cl)
         if not is_declare:
-            imports.append(cl)
+            used.append(cl)
         else:
             to_render.append(cl)
-    return to_render, imports
+    return to_render, used
+
+
+def get_description_and_interface_parts(fragment, cl, to_render):
+    if len(to_render) > 1:
+        print('more than 1 class to render, this is not fully supported yet')
+    feature_description = fragment.content
+    interface_parts = get_interface_parts.get_interface_parts(fragment.full_title, cl) # things this component needs to implement
+    if interface_parts:
+        to_join = []
+        for key, value in interface_parts.items():
+            to_join.append(f'{key}: {value}')
+        interface_parts = f'\nMake certain that {cl} has:\n- ' + '\n- '.join(to_join) + '\n'
+    if not interface_parts:
+        interface_parts = ''
+    return feature_description, interface_parts
+
+
+def format_interface(interface_def):
+    result = ''
+    for key, value in interface_def.items():
+        result += f'- {key}: {value}\n'
+    return result
+
+
+def get_interface_parts_of_others(fragment, component):
+    """
+    goes over all the services that are imported by the component and builds up the interface from them so that 
+    the entire application uses the same interface for the same service
+    """
+    result = ''
+    imports = resolve_class_imports.get_data(fragment.full_title)
+    if not imports:
+        return result
+    items = imports.get(component)
+    if items:
+        print('todo: add class-description-exact converter')
+        class_desc = fragment.content # component_descriptions_exact.get_description(fragment.full_title, component)
+        for import_def in items:
+            service = import_def['service']
+            service_loc = import_def['service_loc']
+            interface_def = get_interface_parts.get_interface_parts(service_loc, service)
+            if interface_def:
+                comp_and_global_service_desc = class_desc
+                # if there would be global descriptions for services, add them here to comp_and_global_service_desc
+                interface_def = format_interface(interface_def)
+                interface = get_interface_parts_usage.list_used_interface_parts(service, service_loc, interface_def, comp_and_global_service_desc, fragment.full_title)
+                if interface:
+                    interface_list = []
+                    interface_parts_def = get_interface_parts.get_interface_parts(service_loc, service)
+                    for key, value in interface.items():
+                        if key in interface_parts_def: # prefer the description that is extracted with get_interface_parts, gives better results (less chatter)
+                            description = interface_parts_def[key]
+                        else:
+                            description = value
+                        interface_list.append(f'{key}: {description}')
+                    result += f'\n{service} has the following interface:\n- ' + '\n- '.join(interface_list) + '\n'
+    return result
+
+
+def get_import_service_line(import_def, cur_path):
+    service = import_def['service']
+    service_path = import_def['path']
+    service_path = os.path.relpath(service_path, cur_path)
+    is_global = get_if_service_is_singleton.is_singleton(import_def['service_loc'], service)
+    if is_global:
+        service_txt = "global object"
+        service = service.lower()
+    else:
+        service_txt = "service"
+    return f"The {service_txt} {service} can be imported from {service_path}\n"
+
+
+def get_all_imports(cl_to_render, full_title, cur_path):
+    imports_txt = ''
+    cur_path = cur_path.strip()
+    imports = resolve_class_imports.get_data(full_title)
+    if not imports:
+        return imports_txt
+    primary = primary_class.get_primary(full_title) # only the primary component imports other components declared in the same fragment. this is to prevent confusion from gpt
+    for comp, items in imports.items():
+        if comp == cl_to_render:
+            for import_def in items:
+                imports_txt += get_import_service_line(import_def, cur_path)
+        else:
+            is_declare = declare_or_use_class_classifier.get_is_declared(full_title, comp)
+            if is_declare:
+                # only import components from the same folder if we are rendering the primary component, which uses the children
+                if primary == cl_to_render: # this is to prevent confusion from gpt, otherwise it starts using the parent component in the children
+                    # another component declared in the same fragment, so import from local path
+                    imports_txt += f"The class {comp} can be imported from ./{comp}\n"
+            else:
+                rel_path = os.path.relpath(items.strip(), cur_path)
+                imports_txt += f"The class {comp} can be imported from {rel_path}\n"
+    return imports_txt  
+
+
+def render_class(cl, fragment, to_render, root_path, file_names):
+    # calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
+    title_to_path = fragment.full_title.replace(":", "").replace('?', '').replace('!', '')
+    path_items = title_to_path.split(" > ")
+    path_items[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
+    path_section = os.path.join(root_path, *path_items)
+    relative_path = os.path.join(*path_items)
+
+    feature_description, interface_parts = get_description_and_interface_parts(fragment, cl, to_render)
+    others_interface_parts = get_interface_parts_of_others(fragment, cl)
+    # global_features = get_global_features(fragment.full_title, cl)
+
+    if interface_parts and others_interface_parts:
+        interface_parts += '\n'
+    interface_parts += others_interface_parts
+
+    params = {
+        'class': cl,
+        'feature_title': fragment.title,
+        'feature_description': feature_description,
+        'dev_stack': project.fragments[1].content,
+        'imports': get_all_imports(cl, fragment.full_title, relative_path),
+        'interface_parts': interface_parts,
+        # 'global_features': global_features,
+    }
+    response = generate_response(params, fragment.full_title)
+    if response:
+        # remove the code block markdown, the 3.5 version wants to add it itself
+        response = response.strip() # need to remove the newline at the end
+        if response.startswith("```javascript"):
+            response = response[len("```javascript"):]
+        if response.endswith("```"):
+            response = response[:-len("```")]
+        file_name = collect_response(cl, response, path_section)
+        file_names.append(file_name)
+        return response
+    
+
+def extract_service_interface_parts(code, fragment, rendered_comp):
+    """
+    extract the interface parts from the code and save them in the interface parts file
+    """
+    imports = resolve_class_imports.get_data(fragment.full_title)
+    if imports:
+        items = imports.get(rendered_comp)
+        if items:
+            for import_def in items:
+                service = import_def['service']
+                service_loc = import_def['service_loc']
+                get_interface_parts.extract_interface_parts_for(service, service_loc, code, fragment.full_title)
+
+
+def extract_used_comp_interface_parts(code, fragment, rendered_comp, used_classes):
+    for cl in used_classes:
+        cl_loc = declare_or_use_class_classifier.get_declared_in(fragment.full_title, cl)
+        get_interface_parts.extract_interface_parts_for(cl, cl_loc, code, fragment.full_title)
+
+
 
 def process_data(root_path, writer):
     dev_stack = project.fragments[1].content
@@ -147,36 +299,27 @@ def process_data(root_path, writer):
         classes = class_lister.get_classes(fragment.full_title)
         if len(classes) > 0:
             file_names = [] # keep track of the file names generated for this fragment, so we can save it in the markdown file
-            imports_txt = ''
-            to_render, imports = get_to_render_and_imports(fragment.full_title, classes)
-            imports_txt = '\n'.join([f"The class {cl} can be imported from './{cl.replace(' ', '_')}.js';" for cl in imports])    
-            for cl in to_render:
-                public_features = list_service_usage.get_all_expansions_for(cl)
-                params = {
-                    'class': cl,
-                    'feature_title': fragment.title,
-                    'feature_description': fragment.content,
-                    'dev_stack': dev_stack,
-                    'imports': imports_txt,
-                    'public_features': public_features
-                }
-                response = generate_response(params, fragment.full_title)
-                if response:
-                    # remove the code block markdown, the 3.5 version wants to add it itself
-                    response = response.strip() # need to remove the newline at the end
-                    if response.startswith("```javascript"):
-                        response = response[len("```javascript"):]
-                    if response.endswith("```"):
-                        response = response[:-len("```")]
-                    path_section = os.path.join(root_path, *fragment.full_title.split(" > "))
-                    file_name = collect_response(cl, response, path_section)
-                    file_names.append(file_name)
+            to_render, used = get_to_render_and_used(fragment.full_title, classes)
+            primary = primary_class.get_primary(fragment.full_title)
+            if not primary:
+                raise Exception('no primary found for ', fragment.full_title)
+            # we presume that only the primary class is currently using the sub classes and non of the subs use each other.
+            # to save some cost & time. this means don't put too complex stuff in a single fragment
+            primary_code = render_class(primary, fragment, to_render, root_path, file_names)
+            extract_service_interface_parts(primary_code, fragment, primary)
+            extract_used_comp_interface_parts(primary_code, fragment, primary, used)
+
+            non_primary = [c for c in to_render if c != primary]
+            for cl in non_primary:
+                get_interface_parts.extract_interface_parts_for(cl, fragment.full_title, primary_code, fragment.full_title)
+                code = render_class(cl, fragment, to_render, root_path, file_names)
+                extract_service_interface_parts(code, fragment, cl)
             if file_names:
                 collect_file_list(fragment.full_title, file_names, writer)
                     
 
 
-def main(prompt, components_list, declare_or_use_list, expansions, root_path=None, file=None):
+def main(prompt, components_list, declare_or_use_list, expansions, interface_parts, interface_parts_usage, imports, primary, singleton, root_path=None, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -189,6 +332,11 @@ def main(prompt, components_list, declare_or_use_list, expansions, root_path=Non
     class_lister.load_results(components_list)
     declare_or_use_class_classifier.load_results(declare_or_use_list)
     list_service_usage.load_results(expansions)
+    get_interface_parts.load_results(interface_parts)
+    get_interface_parts_usage.load_results(interface_parts_usage)
+    resolve_class_imports.load_results(imports)
+    primary_class.load_results(primary)
+    get_if_service_is_singleton.load_results(singleton)
 
     # save there result to a file while rendering.
     if file is None:
@@ -247,7 +395,7 @@ def get_data(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 11:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -256,9 +404,16 @@ if __name__ == "__main__":
         components_list = sys.argv[2]
         declare_or_use_list = sys.argv[3]
         expansions = sys.argv[4]
+        interface_parts = sys.argv[5]
+        interface_parts_usage = sys.argv[6]
+        imports = sys.argv[7]
+        primary = sys.argv[8]
+        singleton = sys.argv[9] 
 
     # Pull everything else as normal
-    file = sys.argv[5] if len(sys.argv) > 5 else None
+    folder = sys.argv[10] if len(sys.argv) > 10 else None
+    file = sys.argv[11] if len(sys.argv) > 11 else None
 
     # Run the main function
-    main(prompt, components_list, declare_or_use_list, expansions, file)
+    main(prompt, components_list, declare_or_use_list, expansions, interface_parts, interface_parts_usage,
+         imports, primary, singleton, folder, file)

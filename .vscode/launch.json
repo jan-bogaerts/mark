@@ -342,6 +342,22 @@
         },
 
         {
+            "name": "resolve class imports mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/resolve_class_imports.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_classes.md",
+                "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
+                "${workspaceFolder}/src/generated/mdc_class_usage.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
             "name": "render classes mdc",
             "type": "python",
             "request": "launch",
@@ -350,7 +366,12 @@
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_classes.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
-                "${workspaceFolder}/src/generated/mdc_service_usage.md",
+                "${workspaceFolder}/src/generated/mdc_class_usage.md",
+                "${workspaceFolder}/src/generated/mdc_interface_parts.md",
+                "${workspaceFolder}/src/generated/mdc_interface_parts_usage.md",
+                "${workspaceFolder}/src/generated/mdc_resolve_class_imports.md",
+                "${workspaceFolder}/src/generated/mdc_primary_class.md",
+                "${workspaceFolder}/src/generated/mdc_is_service_singleton.md",
                 "${workspaceFolder}/src/generated/code/",
                 "${workspaceFolder}/src/generated/mdc"
             ],

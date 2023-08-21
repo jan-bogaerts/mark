@@ -39,6 +39,10 @@
         "default": "gpt-4",
         "topics": {}
     },
+    "render_class": {
+        "default": "gpt-4",
+        "topics": {}
+    },
     "get_interface_parts": {
         "default": "gpt-4",
         "topics": {}

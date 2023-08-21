@@ -286,14 +286,15 @@
 - When the user changes the text in the editor, it is saved to the project service and the position-tracking service is updated.
 - When the user moves the cursor to another line, the editor asks the position-tracking service to update the currently selected line.
 - The monaco editor always occupies all available space.
+
 # MarkdownCode > components > toolbar > preferences > GPT section
 - GPT-section component handles GPT service configuration actions.
 - Buttons in the component have icon content, no text.
 - GPT-section component tracks the open state of the 'open-ai configuration dialog'.
 - Supported actions:
-  - Key: Opens the 'open-ai configuration dialog'.
+  - Key button: Opens the 'open-ai configuration dialog'.
     - Icon: Key.
   - Model: ModelComboBox component (Select in antd) allows user to select default model for open-ai requests.
     - Available models for the combobox are fetched from gpt-service.
-    - Initial value for the combobox is retrieved from gpt-service.
-    - When value is changed, it is saved to gpt-service.
+    - Initial value for the combobox is obtained from gpt-service using getDefaultModel function.
+    - When value is changed, it is saved to gpt-service using setDefaultModel function.

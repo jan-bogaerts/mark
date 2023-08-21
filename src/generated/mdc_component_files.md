@@ -30,3 +30,7 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\vertical splitter\\VerticalSplitter.js"]
 # MarkdownCode > components > body > outline
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js"]
+# MarkdownCode > components > toolbar > preferences > GPT section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\GPT section\\GPTSection.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\GPT section\\ModelComboBox.js"]
+# MarkdownCode > components > toolbar > preferences > open-ai configuration dialog
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\open-ai configuration dialog\\OpenAiConfigurationDialog.js"]

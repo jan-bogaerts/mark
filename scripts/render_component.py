@@ -1,7 +1,6 @@
 import sys
 import os
 from time import sleep
-from utils import clean_dir
 from constants import  get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY, MAX_TOKENS
 import project
 import component_lister
@@ -79,7 +78,7 @@ def generate_response(params, key):
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     
-    total_tokens = total_tokens + DEFAULT_MAX_TOKENS # code needs max allowed
+    total_tokens = (total_tokens * 2) + DEFAULT_MAX_TOKENS # code needs max allowed
     if total_tokens > MAX_TOKENS:
         total_tokens = MAX_TOKENS
     params = {
@@ -156,14 +155,13 @@ def get_all_imports(component, full_title, cur_path):
         else:
             is_declare = declare_or_use_comp_classifier.get_is_declared(full_title, comp)
             if is_declare:
+                # only import components from the same folder if we are rendering the primary component, which uses the children
                 if primary == component: # this is to prevent confusion from gpt, otherwise it starts using the parent component in the children
                     # another component declared in the same fragment, so import from local path
-                    imports_txt += f"The component {comp} can be imported from {comp}\n"
+                    imports_txt += f"The component {comp} can be imported from ./{comp}\n"
             else:
                 rel_path = os.path.relpath(items.strip(), cur_path)
                 imports_txt += f"The component {comp} can be imported from {rel_path}\n"
-
-
     return imports_txt  
 
 

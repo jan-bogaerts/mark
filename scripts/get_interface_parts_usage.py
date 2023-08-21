@@ -156,14 +156,17 @@ def get_data(title):
 
 def get_interface_parts(title, interface_name):
     to_search = title.strip()
+    search_for_interface = interface_name.lower().strip()
     if not to_search.startswith('# '):
         to_search = '# ' + to_search
     result = {}
     for fragment in text_fragments:
         if to_search in fragment.data:
             section = fragment.data[to_search]
-            if interface_name in section:
-                for key, value in section[interface_name].items():
+            # doing case insensitive search here, otherwise things can go wrong
+            temp_section = {k.lower(): v for k, v in section.items()}
+            if search_for_interface in temp_section:
+                for key, value in temp_section[search_for_interface].items():
                     result[key] = value
     return result
 
@@ -172,6 +175,8 @@ def list_used_interface_parts(interface_name, interface_title, interface_content
     content_title = content_title.strip()
     if not content_title.startswith('# '):
         content_title = '# ' + content_title
+    if not interface_title.startswith('# '):
+        interface_title = '# ' + interface_title
     fragment = get_fragment(content_title)
     if not fragment:
         fragment = project.TextFragment(content_title, '')
