@@ -6,6 +6,7 @@ from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
 import declare_or_use_class_classifier
 import class_descriptions
+import constant_lister
 import json
 import result_loader
 
@@ -142,10 +143,11 @@ def process_data(writer):
                         del old_fragment_results[class_name] # remove it, so we know which components were deleted
                         continue
                     description = class_descriptions.get_description(check_against.full_title, class_name)
+                    content = constant_lister.get_fragment(to_check.full_title, to_check.content)
                     if value == 'declare':
                         params = {
                             'class_name': class_name,
-                            'feature_description': to_check.content,
+                            'feature_description': content,
                             'class_description': description
                         }
                         response = generate_response(params, to_check.full_title)
@@ -162,7 +164,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, class_list, descriptions, file=None):
+def main(prompt, class_list, descriptions, constants, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -174,6 +176,7 @@ def main(prompt, class_list, descriptions, file=None):
     project.split_standard(prompt)
     declare_or_use_class_classifier.load_results(class_list)
     class_descriptions.load_results(descriptions)
+    constant_lister.load_results(constants)
 
     # save there result to a file while rendering.
     if file is None:
@@ -240,7 +243,7 @@ def has_fragment(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         print("Please provide a prompt")
         sys.exit(1)
     else:
@@ -248,9 +251,10 @@ if __name__ == "__main__":
         prompt = sys.argv[1]
         class_list = sys.argv[2]
         descriptions = sys.argv[3]
+        constants = sys.argv[4]
 
     # Pull everything else as normal
-    file = sys.argv[4] if len(sys.argv) > 4 else None
+    file = sys.argv[5] if len(sys.argv) > 5 else None
 
     # Run the main function
-    main(prompt, class_list, descriptions, file)
+    main(prompt, class_list, descriptions, constants, file)

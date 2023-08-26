@@ -94,11 +94,11 @@ the following tabs are available:
 ##### build section
 - the build-section component contains actions that the build-service can perform.
 - all buttons use an appropriate icon as content, no text.
-- it supports the following actions
+- it contains the following actions:
   - all: a button to start rendering all the code for the entire project.
-    - enabled when the result-cache of any of the services in the GPT-service's list has an out-of-date result fragment or missing result fragments.
+    - enabled when the result-cache of any of the transformers in the GPT-service's list has an out-of-date result fragment or missing result fragments.
   - code for active topic: a button to start rendering all the code files for the currently active fragment.
-    - enabled when the selected fragment is out-of-date or missing in any of the result-caches of any of the services in the GPT-service's list.
+    - enabled when the selected fragment is out-of-date or missing in any of the result-caches of any of the transformers in the GPT-service's list.
   - active topic in active prompt
     - enabled when the selected fragment is out-of-date or missing in the service related to the currently selected 
 
@@ -180,9 +180,9 @@ Remember that each button needs it's own appropriate icon.
 - the view-section component contains actions related to the configuration of the appearance of the application
 - all buttons use an appropriate icon as content, no text.
 - it supports the following actions
-  - theme: this is a combobox where the user can select the preferred color mode: light or dark mode. This value is linked to the value of the theme-service that manages the currently selected theme.
-  - font: this is a combobox that the user can use to select the font for the markdown text. This value is linked to the value of the theme-service.
-  - font-size: this is a combobox that the suer can use to select the size of the font for the markdown text. This value is linked to the value of the theme-service.
+  - theme: this is a combobox where the user can select the preferred color mode: light or dark mode. This value is linked to the value of the theme-service that manages the currently selected theme (get & set current theme).
+  - font: this is a combobox that the user can use to select the font for the markdown text. This value is linked to the value of the theme-service (get & set current font). Supported fonts: Consolas (monospace) Helvetica (sans-serif), Arial (sans-serif), Arial Black (sans-serif), Verdana (sans-serif), Tahoma (sans-serif), Trebuchet MS (sans-serif), Impact (sans-serif), Gill Sans (sans-serif), Times New Roman (serif), Georgia (serif), Palatino (serif), Baskerville (serif), Andalé Mono (monospace), Courier (monospace), Lucida (monospace), Monaco (monospace), Bradley Hand (cursive), Brush Script MT (cursive), Luminari (fantasy), Comic Sans MS (cursive)
+  - font-size: this is a combobox that the user can use to select the size of the font for the markdown text. This value is linked to the value of the theme-service (get & set current font-size). It supports values ranging from 6px up to 50px.
 
 ### body
 - the body component represents the main body of the application.
@@ -191,9 +191,14 @@ Remember that each button needs it's own appropriate icon.
   - to the right is a vertical splitter component.  
     - at the top of the vertical splitter component is an editor component
     - at the bottom of the vertical splitter component is a results view component
-- The body component has an event handler for the 'onPositionChanged' callback of both the horizontal and vertical splitter that will store the new value for it's position.
+- The body component has an event handler for the 'onPositionChanged' callback of both the horizontal and vertical splitter that will store the new value for it's position (number).
 - When the body component is unloaded, the last position of the horizontal and vertical splitters are stored in the local storage.
-- When te body component is loaded, the last position of the horizontal and vertical splitters are restored from the local storage, but only if the previous value fits in the current size of the component, otherwise 1/3 of the width for the vertical splitter is used and 1/3 of the component's height is used for the horizontal splitter.
+- When the body component is loaded:
+  - the last position of the horizontal and vertical splitters are restored from the local storage, 
+  - the clientWidth & clientHeight of the component are retrieved
+  - if there was no previous value for the vertical splitter or the value is bigger then the clientWidth, use the value 'clientWidth / 4' instead
+  - if there was no previous value for the horizontal splitter or the value is bigger then the clientHeight, use the value 'clientHeight / 4' instead
+  
 
 #### horizontal splitter
 - The horizontal splitter is a component that is responsible for managing the layout of 2 child components so that users can increase the size of the panel above the splitter while simultaneously decreasing the size of the panel below it, or vice versa.
@@ -220,52 +225,83 @@ Remember that each button needs it's own appropriate icon.
   - the text for the monaco editor is retrieved from the project service.
   - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
 - the project service is monitored for changes to the text (ex: when another project is loaded).
-- when the user changes the text in the monaco editor, the new text is saved to the project service. The position-tracking service is also updated.
-- when the user moves the cursor to another line, the editor asks the position-tracking service to update the currently selected line
+- when the user changes the text in the monaco editor, the new text is saved to the project service.
+- monitor the following events on the monaco editor:
+  - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
+  - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
+  - onDidChangeCursorPosition: if the selection service currently references this monaco editor, update the position-tracking service with the new cursor position
+  - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed
 - the monaco editor always occupies all the space that is available.
 
 #### outline
 - the outline component is positioned to the left of the editor
-- it contains a tree representing te outline of the currently active project: all markdown headings in the document are present in the outline
-- a tree structure is used to display the relationship between titles: text-fragments that have a heading of level 1, become the root items, text-fragments with level 2 headings become the children of the first  previous text-fragment of a higher level. An example of a tree:
-  - # app title
-    - ## specs
-    - ## components
-      - ### comp 1
-    - ## services
-      - ### service 1
-- when the user clicks on a tree item, the related text is scrolled into view on the editor.
+- it contains a tree representing the outline of the currently active project: all markdown headings in the document are present in the outline
+- When the component is loaded and whenever the project-service raises an event to indicate that a new project was loaded, the project data is retrieved from the project-service and converted into a tree structure using the function 'convertToTreeData'.
+- Whenever the project service raises an event that a data item was removed, look up the key in the tree structure and remove the node from the tree. Note: also search in the 'children' list of every node recursively until the key is found or at end of tree.
+- Whenever the project service raises an event that a data item was added or (multiple) item(s) were changed, rebuild the tree structure.
+- when the user selects a tree item, the key of the first selected item is assigned to the position-tracking service's activeFragment
 - this component monitors the position-tracking service for changes to the currently selected text-fragment.
-  - when the position changes, set the corresponding tree-item as selected.
+  - when the position changes, set the tree's selectedKeys property to the key of the selected text-fragment so that the corresponding tree node becomes selected.
+- show the tree with lines
+
+the function 'convertToTreeData' is described as:
+  set parent to null
+  for every data item:
+    create a new node for the data item. Set the title & key of the node to the title & key of the data item. also keep a reference to the data item itself in the node
+    if the item's field level-count = 1, add the new node to the root node and make that node the parent 
+    else if there is no parent yet, skip the item
+    if the item's level count is higher then parent.data.level-count: add the new node to the parent's children. make the new node parent 
+    if the item's level count equals parent.data.level-count or is lower:
+      get the parent of the current parent until the level count of this new parent is 1 higher then the level count of the item and add the item as a child of this new parent. Make the item the new parent.
 
 
 #### results view
 - the results-view component is positioned at the bottom of the main body
-- the user can view the results that were generated by the services that were registered with the gpt-service, for the currently selected text block.
-- For each service in the services list provided by the gpt-service, this view creates a tab.
+- the user can view the results that were generated by the transformers that were registered with the gpt-service, for the currently selected text block.
+- For each transformer in the transformers list provided by the gpt-service, this view creates a tab.
   - the tabs are located at the top of the view (to the left)
-  - the service name is used as the title of the tab
-  - the tab content shows:
-    - in the center: a monaco editor containing the result from the result-cache of the service, if available (could be that it's not yet available)
-      - if the result is marked as out-of-date, show the text as grayed-out.
-      - if the text is an overwritten version of the service output, show the text in red. (dark-red for the light theme, light-red for the dark theme)
-    - in the top right corner is a 'more' button that opens a context menu. This context menu has the following menu items:
-      - model for all: select the gpt model to be used by the service associated with the current tab.
-        - the sub menu items are provided by the gpt-service's list of available models.
-        - the menu item that contains the name of the currently selected model, is shown as selected.
-          - Get the value for the current model, registered under the name of the current service, from the gpt-service
-        - when an other model is selected, ask the gpt-service to update the model-name for the name of the service related to the results-view.
-      - model for fragment: select the gpt model to be used by the service associated with the current tab, for the currently active fragment.
-        - the sub menu items are provided by the gpt-service's list of available models.
-        - the menu item that contains the name of the currently selected model, is shown as selected.
-          - Get the value for the current model, registered under the name of the current service and current fragment-title, from the gpt-service
-        - when an other model is selected, ask the gpt-service to update the model-name for the name of the service related to the results-view and the current fragment-title.
-    - next, to the right of the previous button, is a 'refresh' button. When pressed, the service will update the result.
-  - when the users performs edits in the monaco-editor of the tab, all changes are stored back in the result-cache of the service, marked as 'overwritten'
-    - 
-- the user can copy the current text displayed in the center to the clipboard.
-- the view monitors the position-tracking service for changes to the currently selected text-fragment. 
-  - when this changes update the content of the currently active tab by setting the selected value of the first combobox to the header-title of the text-fragment.
+  - the transformer name is used as the title of the tab
+  - the tab content shows a results-view-tab component
+
+
+##### results view tab
+- the results-view-tab component displays the results of a transformer for a particular text-fragment, identified by it's key.
+- to display the results as markdown, json data, javascript, html or css, the monaco editor npm package is used.
+- The monaco editor fills the full width and height that are available to the component.
+- When the results-view-tab is loaded:
+  - the text for the monaco editor is retrieved from the result-cache of the transformer that is assigned to this component using the currently assigned key, if available (could be that it's null)
+  - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
+- the results-cache of the transformer is monitored for changes in the result (only for changes in the result with the current key).
+  - if the result is marked as out-of-date, show the text as grayed-out.
+  - if the result is marked as 'overwritten', show the text in red 
+- when the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer, marked as overwritten.
+- monitor the following events on the monaco editor:
+  - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
+  - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
+  - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed
+- put a results-view-context-menu component on top of the monaco editor
+- the component monitors the position-tracking service for changes to the currently selected text-fragment. 
+  - when this changes update the key value and retrieve the text from the result-cache and show in the monaco-editor
+
+
+##### results view context menu
+- this results-view-context-menu is a component that is a wrapper for the Dropdown antd component.
+- it has the properties 'transformer' and 'key' that needs to be supplied 
+- The dropdown's content is a 'more' button icon and the trigger for the dropdown is 'click'.
+- the dropdown is positioned in the top-right corner (with a margin of 16px)
+- it contains the following menu items:
+  - model for all: select the gpt model to be used by the transformer.
+    - the sub menu items are provided by the gpt-service's list of available models.
+    - the menu item that contains the name of the currently selected model, is shown as selected.
+      - Get the value for the current model, registered under the name of the current transformer, from the gpt-service
+    - when an other model is selected, ask the gpt-service to update the model-name of the transformer related to the results-view.
+  - model for fragment: select the gpt model to be used by the transformer, for the current key.
+    - the sub menu items are provided by the gpt-service's list of available models.
+    - the menu item that contains the name of the currently selected model, is shown as selected.
+      - Get the value for the current model, registered under the name of the current transformer and current key, from the gpt-service
+    - when an other model is selected, ask the gpt-service to update the model-name of the transformer and the current title.
+  - a splitter
+  - refresh: when pressed, the transformer associated with the current tab recalculates the result
 
 ## services
 
@@ -275,22 +311,22 @@ Remember that each button needs it's own appropriate icon.
 - all actions or functions that the user can trigger from a component, should be wrapped in a proper error handler so that when an error occurs, an electron dialog box is shown to the user with details on the error. 
 
 ### Theme service
-- The theme service is a global singleton, responsible for managing the currently selected theme: when the selected theme is changed, the new value is saved to the local storage. When the service is created, the value previously stored in local storage, is retrieved.
+- The theme service is a global singleton, responsible for managing the currently selected theme font & font-size: when the selected theme, font or font-size is changed, the new value is saved to the local storage. When the service is created, the values previously stored in local storage, are retrieved.
 - The service allows for a selection between a light or dark theme.
-- Every component uses this service to retrieve the currently selected theme so it can apply this. Components don't need to subscribe for changes to the selected theme value, they only need to retrieve this value from the theme service and use the styling names, based on the selected. theme.
+- Every component uses this service to retrieve the currently selected theme (not the font or font-size)  so it can apply this. Components don't need to subscribe for changes to the selected theme value, they only need to retrieve this value from the theme service and use the styling names, based on the selected. theme.
 - The main window refreshes it's entire content when the selected theme is updated.
 
 ### project service
 - the project service is a global singleton that is responsible for:
   - creating a new project
     - all data is cleared from the project's data list
-    - all registered gpt-services recreate their cache object.
+    - all registered gpt-transformers recreate their cache object.
     - an event is raised to indicate that the data has changed (for the project-editor & and results-view components, if they are opened)
   - opening an existing project.
     - read the contents of the file that is specified as a parameter. Read it as a string.
     - split the file in lines
-    - for each line in the file, parse it and store the result object of the parse in the project's data list. This way, the list has an item for each line at the same index number as the line number in the file.
-    - fore each registered gpt-service, recreate the cache object, with as parameter the name of the existing cached file so that it can be loaded again.
+    - for each line in the file, parse it using the line-parser service.
+    - for each registered gpt-service, recreate the cache object, with as parameter the name of the existing cached file so that it can be loaded again.
     - raise an event to indicate that the data has changed (for the project editor)
   - saving the currently opened project.
     - open the file that was specified in the argument, for writing
@@ -310,6 +346,15 @@ Remember that each button needs it's own appropriate icon.
 
 ### Selection service
 - The selection service is a global singleton object that keeps track of the currently selected text.
+- the selection service keeps track of the currently active editor (an object from the monaco editor npm package)
+- the service can be monitored for changes in the selection.
+- supports the following actions:
+  - cut: if there is a reference to an editor, ask the monaco editor to cut the selected text to the clipboard.
+  - copy: if there is a reference to an editor, ask the monaco editor to copy the selected text to the clipboard.
+  - paste: if there is a reference to an editor, ask the monaco editor to paste the clipboard content at the current cursor position.
+  - delete: if there is a reference to an editor, ask the monaco editor to delete the selected text.
+  - clear selection: if there is a reference to an editor, ask the monaco editor to clear the current selection.
+  - select all: if there is a reference to an editor, ask the monaco editor to select all the text.
 
 
 ### Undo service
@@ -317,81 +362,118 @@ Remember that each button needs it's own appropriate icon.
 - It has an undo and redo list.
 
 ### line parser
-- this service is used to parse markdown lines and update the links in the project's data-list items.
-- the parse function of this service:
+- the line-parser service is a global singleton object used to parse markdown lines and update the the text-fragments stored in the project-service.
+- the line-parser service maintains an array of text-fragment objects (called fragmentsIndex). When the service is created, this list is empty.
+- the line-parser has a function for creating new text-fragments (json objects). it accepts as input a string which is the line that is being processed and an index.
+  - trim the line and convert it to lower case.
+  - count the nr of '#' that are in front of the title and assign to the depth-level of the text-fragment. so '#' is level 1, '##' is level 2, '###' is level 3 and so on.
+  - remove all the '#' from the line and assign to the title value of the text-fragment.
+  - calculate the key for the text-fragment and store in the text-fragment.
+  - set the 'out-of-date' flag to true, indicating that this fragment hasn't been processed yet
+  - ask the project-service to insert the text-fragment in it's list of text-fragments at the specified index.
+- the line-parser has a function to calculate the key of a text-fragment, which accepts as input a text-fragment and an index position. it goes as follows:
+  - the current depth = the depth-level of the text-fragment
+  - the result value = the title of the text-fragment
+  - loop from the given index position until 0 using the field idx
+    - prev-fragment = the text-fragment that the project-service has at position 'idx'
+    - if the depth-level of the prev-fragment is smaller then the current depth:
+      - store the new current depth
+      - prepend the title of the prev-fragment + ' > ' to the result
+      - if the new current depth == 1, stop the loop
+- the parse function of this service
   - accepts as input:
-    - a string as input, which is the text that needs to be parsed.
+    - a string, which is the text that needs to be parsed.
     - the index nr of the line in the project
   - performs:
-    - first trim the line and convert it to lower case.
-    - if the line starts with a '#', it's a header
-      - if at that index position in the project, already is a text-fragment object: update this, otherwise create a new line object.
-      - when it's a new text fragment, all 'line-fragments' below it, until the next text-fragment', need to be updated so that their 'parent' field points to the new text fragment.
-      - count the nr of '#' that are in front of the title. this determines the level or depth of the text-fragment. so '#' is level 1, '##' is level 2, '###' is level 3 and so on.
-      - find the first text-fragment that is above the current text-fragment that is 1 level higher than the current one (so if the current text-fragment has '###', it's at level 3, search for the first text-fragment that is at level 2 or has '##') and use that as parent of the text-fragment that represents the line we are parsing.
-    - otherwise it's a regular line, so store it as a line-object. 
-      - if at the index position in the project, there is already a line-object, just update the line
-      - if there was no line-object yet (or a text-fragment), create a new line-object and find the first text-fragment that is higher up the data list and use that as the parent of the line-object.
+    - if the string is empty:
+      - if fragmentsIndex is empty or contains only nulls, fill the array with nulls until the current line index (this is for empty lines at the start of a document)
+      - otherwise get the json object at the current line index or decrease the index nr until a json object is found. Next, find the index value of the fist occurrence of the json object in the array. This can be found by decreasing the index nr until an object is found that doesn't match the current json object.
+      - calculate the difference between the current line index nr and the index of the first occurrence of the json object. this is the index value of the line within the text-fragment.
+      - add empty lines to the json object's lines field until the index value of the line within the text-fragment is reached.
+    - if the line starts with a '#', it's a title
+      - if there is currently nothing at the line index (fragmentsIndex is not long enough), then create a new text-fragment.
+      - if at that index position in the fragmentsIndex already is a text-fragment object
+        - get the index of the first occurrence of the text-fragment in the fragmentsIndex array. This can be found by decreasing the index nr until an object is found that doesn't match the current json object.
+        - if the index of the first occurrence equals the index nr of the line, then the title of the current text fragment was updated:
+          - remove all the '#' from the line and assign to the title value of the text-fragment.
+          - before recalculating the new key for the text-fragment, store the previous one and ask the project-service to raise an event indicating that the key of a text-fragment is changed, providing the old & new key as parameters.
+        - if the index of the first occurrence of the text-fragment is different from the index nr of the line, then a new text fragment json object needs to be made
+          - the local-line-index = index nr of the line - index of the first occurrence.
+          - all the lines in the old text-fragment between the local-line-index and the end of the array, need to be moved to the lines field of the new text-fragment (json object)
+          - set the 'out-of-date' flag on the old text-fragment 
+    - if the line doesn't start with a '#', it's a regular line
+      - get the text fragment at the specified line index from the fragmentsIndex. 
+        - if there is no text fragment, create a new one with an empty title at the current line index. add the line to the lines field of the text-fragment
+        - if there is a text-fragment (the current text-fragment):
+          - get the index of the first occurrence of the text-fragment in the fragmentsIndex array.
+            - if the first-occurrence index is different from the current line index, get the difference between line & first-occurrence index and replace the value in the text-fragment's lines array at that index with the line and mark the text-fragment as out-of-date
+            - if the first-occurrence index equals the line index, the line changed from title to regular:
+              - search the first previous text-fragment
+              - append the line to this previous text-fragment and append all the lines in the current text-fragment to the lines of the previous text-fragment.
+              - mark the previous text-fragment as out-of-date
+              - ask the project-service to delete the current text-fragment
+
   
 ### position-tracking service
-- this service is responsible for tracking the text-fragment that the user is currently working on.
+- the position-tracking service is a global singleton object responsible for tracking the text-fragment that the user is currently working on.
 - The service keeps track of:
   - the currently selected line nr
-  - the text-fragment related to the currently selected line.
+  - the text-fragment related to the currently selected line. This is an object that can be assigned (property: activeFragment). When this value changes, an event needs to be raised so that other parts of the application can move to the new active fragment.
   - an eventTarget that stores the events which monitor changes in the currently selected text-fragment.
 - it provides the following methods:
-  - set currently selected line.
-      - if the new value is different from the current selected line:
-        - get the related object from the project's data list.
-        - If this is a new text-fragment or a line-object who's parent points to a text-fragment that is different from the currently selected text-fragment, then trigger the on-changed event for all the registered events.
+  - set currently selected line, input: line-index.
+      - if the new value is different from the current selected line index:
+        - get the object at the line-index position found on the fragmentsIndex array of the line-parser service.
+        - If this object differs from currently selected text-fragment, then store the object as the new currently selected text-fragment and trigger the on-changed event for all the registered event handlers.
 
 ### gpt service
-- the GPT service is a global singleton that is responsible for communicating with the open-ai api backend. It is primarily used by other services that perform more specific tasks.
+- the GPT service is a global singleton that is responsible for communicating with the open-ai api backend. It is primarily used by transformers that perform more specific tasks.
 - the service uses the openai node.js library to communicate with the backend.
 - it provides a function that other services (or components) can call to send an api request to open-ai.
   - this function accepts a list (called `messages`) json objects that contain a `role` and `content` field.
   - this `messages` list is sent to openai using the `createChatCompletion` function.
   - if the request fails, the service will retry 3 times before giving up and raising an error.
 - the service also provides a method to retrieve the list of available models. To retrieve this list, the openai nodejs library is used.
-- it manages a list of services that are currently available in the system. 
-  - Other services can register themselves. this will add them to the list.
+- it manages a list of transformers that are currently available in the system. 
+  - Other services can register themselves as a transformer. this will add them to the list.
   - Other services can also unregister themselves. this will remove them from the list.
-  - Each service that registers itself, should provide the following items in it's interface:
-    - name: the display name of the service.
-    - get-result: returns the result that the service has calculated for the specified project text-fragment (identified by the key of the text-fragment).
+  - Each transformer that registers itself, should provide the following items in it's interface:
+    - name: the display name of the transformer.
+    - get-result: returns the result that the transformer has calculated for the specified project text-fragment (identified by the key of the text-fragment).
 
 ### result-cache service
-- this service manages previously retrieved results for other services.
-- It allows other services that perform calculations on text fragments, to store these results for each text fragment and keep track if the result has become out of date or not (the original text fragment has changed).
-- because some services work on text fragments that come from the project directly and others that come from the result of other services, the result cache must be able to monitor changes in a project fragment and result fragment.
-- A service that wants to cache it's results uses an instance of this class to perform these tasks on it's results.
+- this service manages previously retrieved results for transformers.
+- It allows  transformers that perform calculations on text fragments, to store these results for each text fragment and keep track if the result has become out of date or not (the original text fragment has changed).
+- because some transformers work on text fragments that come from the project directly and others that come from the result of other transformers, the result cache must be able to monitor changes in a project fragment and result fragment.
+- A transformer that wants to cache it's results uses an instance of this class to perform these tasks on it's results.
 - internally, the cache uses a dictionary that maps the keys to their results.
-- whenever the service calculates a result, it asks the cache to update it's dictionary:
-  - first the key is calculated (by the service):
-    - the first part of the key is the key of the project text-fragment which was the primary input for the service.
-    - for every extra result-value coming from other services that the service uses to calculate the current result, the key of the result value is appended to the new key, separated with a '|'.
+- whenever the transformer calculates a result, it asks the cache to update it's dictionary:
+  - first the key is calculated (by the transformer):
+    - the first part of the key is the key of the project text-fragment which was the primary input for the transformer.
+    - for every extra result-value coming from other transformers that the transformer uses to calculate its result, the key of the result value is appended to the new key, separated with a '|'.
     example: 
-      - if the service is processing text-fragment with key 'a > b' 
-      - and the service uses the result of the 'class lister' service, where the result, for this calculation, comes from the text-fragment with the key 'c > d'
+      - if the transformer is processing text-fragment with key 'a > b' 
+      - and the transformer uses the result of the 'class lister' transformer, where the result, for this calculation, comes from the text-fragment with the key 'c > d'
       - than the key would become 'a > b | c > d' 
   - if the key is not yet present, a new cache-item object is created which contains:
-    - the result of the service
+    - the result of the transformer
     - the current state: still-valid (instead of out-of-date)
   - if the key is already present:
     - the cache item is retrieved,
     - it's result is updated to still-valid
-  - for each text-fragment in the inputs of the service (each section separated with '|'), the cache will also:
+  - for each text-fragment in the inputs of the transformer (each section separated with '|'), the cache will also:
     - search for the title of the text-fragment in a secondary dictionary.
     - if the title is not yet in this secondary dictionary, add the key, and use as value, a list containing the key for the primary dictionary.
     - if it already has the title, add the key for the primary dictionary at the end of the list.
 - the cache stores the results in a json file.
-  - the name of this file is specified by the service that creates the class instance (constructor parameter)
+  - the name of this file is specified by the transformer that creates the class instance (constructor parameter)
   - the json file contains:
     - the primary dictionary that contains the results.
-    - the secondary dictionary that contains the relationships between titles of text-fragments and full dictionary entries in the primary dict (which can consist out of multiple titles).
+    - the secondary dictionary that contains the relationships between keys of text-fragments and full dictionary entries in the primary dict (which can consist out of multiple keys cause 1 result value can have multiple inputs).
+    - a third dictionary that contains all the overwritten values of the results (if any)
     - a date that specifies the last save date of the project file. This is used when loading the dictionary back from file to verify if the results are still valid or not (when this date doesn't match the last-modified date of the project, something is out-of sync and consider the results in the file out-of-date).
   - the cache tries to load this json file during construction of the instance.
-- When the result-cache-service is created, it registers an event handler with each object that the parent service uses as input
+- When the result-cache-service is created, it registers an event handler with each object that the parent transformer uses as input
   - this can be either:
     - with the project service to monitor when text fragments have changed.
     - or with an other cache-service, when cache-results have gone out-of-date.
@@ -399,6 +481,9 @@ Remember that each button needs it's own appropriate icon.
     - for each entry in the list:
       - search in the primary dictionary and mark as out-of-date
       - if there are any other cache services that monitor this cache-service (instead of the project service directly), then let them know that the specified text-fragment (from the result) has gone out-of-date.
+- the result-cache has a function to overwrite the result for a key. this overwritten text value is stored in the 'overwrites' dictionary, under the supplied key.
+- the result-cache has a function to retrieve the result for a particular key: the key is first searched in the 'overwrites' dictionary. if this has a result, return this value, otherwise try to return the value found in the results dictionary.
+- the result-cache has a function to retrieve if a text fragment is out-of-date or not (from the key): if the result is marked as out-of-date, returns true
 
 ### build service
 - the build service is a global singleton that turns the markdown project data list into source code. It uses a set of gpt-services to iteratively generate conversions on the different text frames, starting with the original markdown code and finally ending with source code files that are stored on disk.
@@ -413,11 +498,11 @@ Remember that each button needs it's own appropriate icon.
 - the get-result function calls the GPT-service with the following parameters:
   - messages:
     - role: system, content:
-      ```
-      Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
-      Any text between markdown code blocks (``` or \""" signs) are declarations of constant values, do not change them, but replace with the name of the constant. Remove the markdown, but use bullet points where appropriate.
-      compress the following text:
-      ``` 
+      
+     > Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
+     > Any text between markdown code blocks (``` or \""" signs) are declarations of constant values, do not change them, but replace with the name of the constant. Remove the markdown, but use bullet points where appropriate.
+     > compress the following text:
+
     - role: user content: the content of the text fragment to process.
 - Useful to check if the gpt service understands the fragment and can be used as input for other processes.
 - this service uses a result-cache-service to store all the results and keep track of when the build has gone out-of-date.

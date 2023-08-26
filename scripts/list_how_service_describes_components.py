@@ -18,7 +18,8 @@ import tiktoken
 ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """List how all components should use the service described in the source text. If nothing is found, return an empty value (no quotes). 
-Do not say: the source text doesn't contain or provide any information specifically related to..."""
+Do not say: the source text doesn't contain or provide any information specifically related to...
+Keep the response as short as possible"""
 user_prompt = """Source text:
 {0}"""
 term_prompt = """"""

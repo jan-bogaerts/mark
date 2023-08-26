@@ -1,30 +1,23 @@
 import sys
 import os
 from time import sleep
-from utils import clean_dir
 from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
-import project
 import result_loader
-import constant_lister
+import double_compress
 
 import openai
 import tiktoken
 
+ONLY_MISSING = False # only check if the fragment has not yet been processed
 
-ONLY_MISSING = True # only check if the fragment has not yet been processed
-
-system_prompt = """Act as an ai software analyst. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
-Remove the markdown, but use bullet points where appropriate.
-compress the following text:
-"""
+system_prompt = """condense the following text to 1 sentence:"""
 user_prompt = """{0}"""
-term_prompt = ""
 
 
 def generate_response(params, key):
 
     total_tokens = 0
-    model = get_model_config('compres', key)
+    model = get_model_config('triple_compress', key)
     
     def reportTokens(prompt):
         encoding = tiktoken.encoding_for_model(model)
@@ -51,9 +44,8 @@ def generate_response(params, key):
     prompt = user_prompt.format(params['feature_description'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
-    if term_prompt:
-        messages.append({"role": "system", "content": term_prompt})
-        total_tokens += reportTokens(term_prompt)
+    # messages.append({"role": "system", "content": term_prompt})
+    # total_tokens += reportTokens(term_prompt)
     
     total_tokens *= 2  # max result can be as long as the input, also need to include the input itself
     if total_tokens > DEFAULT_MAX_TOKENS:
@@ -91,22 +83,21 @@ def add_result(to_add, result, writer):
 
 
 def collect_response(title, response, result, writer):
-    # get the first line in the component without the ## and the #
-    add_result(f'# {title}', result, writer)
+    # title comes from the text fragment, already has the # in it
+    add_result(title, result, writer)
     add_result(response, result, writer)
 
 
 def process_data(writer):
     result = []
 
-    for to_check in project.fragments:  # skip the first two fragments cause that's the description and dev stack
+    for to_check in double_compress.text_fragments:  # skip the first two fragments cause that's the description and dev stack
         if not to_check.content: # skip empty fragments
             continue
         if ONLY_MISSING and has_fragment(to_check.full_title):
             continue
-        content = constant_lister.get_fragment(to_check.full_title, to_check.content)
         params = {
-            'feature_description': content,
+            'feature_description': to_check.content,
         }
         response = generate_response(params, to_check.full_title)
         if response:
@@ -115,24 +106,17 @@ def process_data(writer):
                     
 
 
-def main(prompt, consts, file=None):
-    # read file from prompt if it ends in a .md filetype
-    if prompt.endswith(".md"):
-        with open(prompt, "r") as promptfile:
-            prompt = promptfile.read()
-
-
+def main(prompt, file=None):
+    
     print("loading project")
 
-    # split the prompt into a toolbar, list of components and a list of services, based on the markdown headers
-    project.split_standard(prompt)
-    constant_lister.load_results(consts)
+    double_compress.load_results(prompt)
 
     # save there result to a file while rendering.
     if file is None:
         file = 'output'
     
-    file_name = file + "_compress.md"
+    file_name = file + "_triple_compress.md"
     open_mode = 'w'
     if ONLY_MISSING:
         load_results(file_name)
@@ -147,12 +131,21 @@ def main(prompt, consts, file=None):
 
 text_fragments = []  # the list of text fragments representing all the results that were rendered.
 
-
 def load_results(filename, overwrite_file_name=None):
     if not overwrite_file_name:
         # modify the filename so that the filename without extension ends on _overwrite
         overwrite_file_name = filename.split('.')[0] + '_overwrite.' + filename.split('.')[1]
     result_loader.load(filename, text_fragments, False, overwrite_file_name)
+
+
+def get_fragment(full_title):
+    to_search = full_title.lower().strip()
+    if not to_search.startswith('# '):
+        to_search = '# ' + to_search
+    for fragment in text_fragments:
+        if fragment.full_title.lower().strip() == to_search:
+            return fragment
+    return None
 
 
 def has_fragment(title):
@@ -166,20 +159,11 @@ def has_fragment(title):
     return False
 
 
-def get_fragment(full_title):
-    to_search = full_title.lower().strip()
-    if not to_search.startswith('# '):
-        to_search = '# ' + to_search
-    for fragment in text_fragments:
-        if fragment.full_title.lower().strip() == to_search:
-            return fragment
-    return None
-
 
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
 
         # Looks like we don't have a prompt. Check if prompt.md exists
         if not os.path.exists("prompt.md"):
@@ -194,10 +178,9 @@ if __name__ == "__main__":
     else:
         # Set prompt to the first argument
         prompt = sys.argv[1]
-        consts = sys.argv[2] 
 
     # Pull everything else as normal
-    file = sys.argv[3] if len(sys.argv) > 3 else None
+    file = sys.argv[2] if len(sys.argv) > 2 else None
 
     # Run the main function
-    main(prompt, consts, file)
+    main(prompt, file)

@@ -1,12 +1,11 @@
 
 import React, { Component } from 'react';
 import { Button, Tooltip } from 'antd';
-import { BuildOutlined, CodeOutlined, FileOutlined } from '@ant-design/icons';
-import ProjectService from '../../../services/project-service/ProjectService';
-import GptService from '../../../services/gpt-service/GptService';
-import BuildService from '../../../services/build-service/BuildService';
-import DialogService from '../../../services/dialog-service/DialogService';
-import ThemeService from '../../../services/theme-service/ThemeService';
+import { BuildOutlined, CodeOutlined, HighlightOutlined } from '@ant-design/icons';
+import GptService from '../../../../services/gpt_service/GptService';
+import BuildService from '../../../../services/build_service/BuildService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
 
 /**
  * BuildSection component
@@ -21,31 +20,39 @@ class BuildSection extends Component {
   }
 
   /**
-   * Check if any service in the GPT-service's list has an out-of-date result fragment or missing result fragments.
-   * @returns {boolean}
+   * Start rendering all the code for the entire project.
    */
-  isAnyServiceOutOfDate() {
-    return GptService.services.some(service => service.resultCache.isOutOfDate());
-  }
+  handleAllClick = () => {
+    try {
+      BuildService.buildAll();
+    } catch (error) {
+      DialogService.showErrorDialog(error);
+    }
+  };
 
   /**
-   * Check if the selected fragment is out-of-date or missing in any of the result-caches of any of the services in the GPT-service's list.
-   * @returns {boolean}
+   * Start rendering all the code files for the currently active fragment.
    */
-  isSelectedFragmentOutOfDate() {
-    const selectedFragment = ProjectService.getActiveFragment();
-    return GptService.services.some(service => service.resultCache.isFragmentOutOfDate(selectedFragment));
-  }
+  handleActiveTopicClick = () => {
+    try {
+      const activeFragment = GptService.getActiveFragment();
+      BuildService.buildForActiveTopic(activeFragment);
+    } catch (error) {
+      DialogService.showErrorDialog(error);
+    }
+  };
 
   /**
-   * Check if the selected fragment is out-of-date or missing in the service related to the currently selected.
-   * @returns {boolean}
+   * Start rendering the selected fragment in the service related to the currently selected.
    */
-  isSelectedFragmentOutOfDateInActiveService() {
-    const selectedFragment = ProjectService.getActiveFragment();
-    const activeService = GptService.getActiveService();
-    return activeService.resultCache.isFragmentOutOfDate(selectedFragment);
-  }
+  handleActivePromptClick = () => {
+    try {
+      const activeFragment = GptService.getActiveFragment();
+      BuildService.buildForActivePrompt(activeFragment);
+    } catch (error) {
+      DialogService.showErrorDialog(error);
+    }
+  };
 
   render() {
     const { theme } = this.state;
@@ -53,23 +60,26 @@ class BuildSection extends Component {
       <div className={`build-section ${theme}`}>
         <Tooltip title="Build all">
           <Button
+            className="build-all-button"
             icon={<BuildOutlined />}
-            disabled={!this.isAnyServiceOutOfDate()}
-            onClick={() => BuildService.buildAll()}
+            onClick={this.handleAllClick}
+            disabled={!GptService.isAnyFragmentOutOfDate()}
           />
         </Tooltip>
-        <Tooltip title="Build code for active topic">
+        <Tooltip title="Build active topic">
           <Button
+            className="build-active-topic-button"
             icon={<CodeOutlined />}
-            disabled={!this.isSelectedFragmentOutOfDate()}
-            onClick={() => BuildService.buildActiveFragment()}
+            onClick={this.handleActiveTopicClick}
+            disabled={!GptService.isFragmentOutOfDate(GptService.getActiveFragment())}
           />
         </Tooltip>
-        <Tooltip title="Build active topic in active prompt">
+        <Tooltip title="Build active prompt">
           <Button
-            icon={<FileOutlined />}
-            disabled={!this.isSelectedFragmentOutOfDateInActiveService()}
-            onClick={() => BuildService.buildActiveFragmentInActiveService()}
+            className="build-active-prompt-button"
+            icon={<HighlightOutlined />}
+            onClick={this.handleActivePromptClick}
+            disabled={!GptService.isFragmentOutOfDate(GptService.getActiveFragment())}
           />
         </Tooltip>
       </div>

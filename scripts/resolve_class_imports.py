@@ -117,6 +117,8 @@ def get_service_imports(full_title):
             service_loc = rec['source']
             service = rec['class_name']
             cur_path_parts = service_loc.split("#")[-1].split(" > ")
+            # replace all spaces with underscores
+            cur_path_parts = [part.replace(" ", "_") for part in cur_path_parts]
             cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
             if not service in imported:
                 imported[service] = True

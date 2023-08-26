@@ -4,6 +4,7 @@ from time import sleep
 from utils import clean_dir
 from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
+import constant_lister
 import class_lister
 import result_loader
 
@@ -117,10 +118,11 @@ def process_data(writer):
         if len(classes) == 1:
             collect_response(fragment.full_title, classes[0], result, writer)
         elif len(classes) > 0:
+            content = constant_lister.get_fragment(fragment.full_title, fragment.content)
             params = {
                 'classes': ', '.join(classes),
                 'feature_title': fragment.title,
-                'feature_description': fragment.content
+                'feature_description': content
             }
             response = generate_response(params, fragment.full_title)
             if response:
@@ -130,7 +132,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, classes_list, file=None):
+def main(prompt, classes_list, constants, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -141,6 +143,7 @@ def main(prompt, classes_list, file=None):
     # split the prompt into a toolbar, list of classes and a list of services, based on the markdown headers
     project.split_standard(prompt)
     class_lister.load_results(classes_list)
+    constant_lister.load_results(constants)
 
     # save there result to a file while rendering.
     if file is None:
@@ -194,16 +197,17 @@ def has_fragment(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print("Please provide a prompt and a file containing the classes to check")
         sys.exit(1)
     else:
         # Set prompt to the first argument
         prompt = sys.argv[1]
         classes_list = sys.argv[2]
+        constants = sys.argv[3]
 
     # Pull everything else as normal
-    file = sys.argv[3] if len(sys.argv) > 3 else None
+    file = sys.argv[4] if len(sys.argv) > 4 else None
 
     # Run the main function
-    main(prompt, classes_list, file)
+    main(prompt, classes_list, constants, file)

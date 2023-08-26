@@ -14,6 +14,7 @@ import component_descriptions_exact
 import get_interface_parts
 import get_interface_parts_usage
 import primary_component
+import list_component_props
 import json
 import result_loader
 
@@ -37,7 +38,6 @@ globally declared features:
 imports (only include the imports that are used in the code):
 {4}"""
 term_prompt = """
-Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
 Use small functions.
 When the user text contains references to other components, use the component, do not write the functionality inline.
 A file always contains the definition for 1 component, service or object, no more.
@@ -140,10 +140,10 @@ def get_import_service_line(import_def, cur_path):
         service = service.lower()
     else:
         service_txt = "service"
-    return f"The {service_txt} {service} can be imported from {service_path}\n"
+    return f"The {service_txt} {service} from {service_path}\n"
 
 
-def get_all_imports(component, full_title, cur_path):
+def get_all_imports(component, full_title, cur_path, root_path):
     imports_txt = ''
     cur_path = cur_path.strip()
     imports = resolve_component_imports.get_data(full_title)
@@ -158,10 +158,12 @@ def get_all_imports(component, full_title, cur_path):
                 # only import components from the same folder if we are rendering the primary component, which uses the children
                 if primary == component: # this is to prevent confusion from gpt, otherwise it starts using the parent component in the children
                     # another component declared in the same fragment, so import from local path
-                    imports_txt += f"The component {comp} can be imported from ./{comp}\n"
+                    imports_txt += f"The component {comp}  from ./{comp}\n"
             else:
-                rel_path = os.path.relpath(items.strip(), cur_path)
-                imports_txt += f"The component {comp} can be imported from {rel_path}\n"
+                items_path = os.path.join(root_path, items.strip())
+                rel_path = os.path.relpath(items_path, cur_path)
+                rel_path = os.path.join('.', rel_path)
+                imports_txt += f"The component {comp} from {rel_path}\n"
     return imports_txt  
 
 
@@ -252,6 +254,7 @@ def get_interface_parts_of_others(fragment, component):
     """
     goes over all the services that are imported by the component and builds up the interface from them so that 
     the entire application uses the same interface for the same service
+    also goes over all the components that are used by the component and builds up the interface from them as well
     """
     result = ''
     imports = resolve_component_imports.get_data(fragment.full_title)
@@ -283,6 +286,22 @@ def get_interface_parts_of_others(fragment, component):
                             description = value
                         interface_list.append(f'{key}: {description}')
                     result += f'\n{service} has the following interface:\n- ' + '\n- '.join(interface_list) + '\n'
+    
+    for child_comp, path in imports.items():
+        if child_comp != component:
+            child_comp_loc = None
+            is_declare = declare_or_use_comp_classifier.get_is_declared(fragment.full_title, child_comp)
+            if is_declare:
+                child_comp_loc = fragment.full_title
+            else:
+                child_comp_loc = declare_or_use_comp_classifier.get_declared_in(fragment.full_title, child_comp)
+            props_def = list_component_props.get_props(child_comp_loc, child_comp)
+            if props_def:
+                props_lst = []
+                for prop_name, prop_desc in props_def.items():
+                    props_lst.append(f'{prop_name}: {prop_desc}')
+                if props_lst:
+                    result += f'\n{child_comp} has the following props:\n- ' + '\n- '.join(props_lst) + '\n'
     return result
 
 
@@ -292,7 +311,6 @@ def render_component(component, fragment, to_render, root_path, file_names):
     path_items = title_to_path.split(" > ")
     path_items[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
     path_section = os.path.join(root_path, *path_items)
-    relative_path = os.path.join(*path_items)
 
     feature_description, interface_parts = get_description_and_interface_parts(fragment, component, to_render)
     others_interface_parts = get_interface_parts_of_others(fragment, component)
@@ -307,7 +325,7 @@ def render_component(component, fragment, to_render, root_path, file_names):
         'feature_title': fragment.title,
         'feature_description': feature_description,
         'dev_stack': project.fragments[1].content,
-        'imports': get_all_imports(component, fragment.full_title, relative_path),
+        'imports': get_all_imports(component, fragment.full_title, path_section, root_path),
         'interface_parts': interface_parts,
         'global_features': global_features,
     }
@@ -352,7 +370,7 @@ def process_data(root_path, writer):
 
 
 def main(prompt, components_list, declare_or_use_list, comp_features_from_service, is_service_used, 
-         is_service_singleton, imports, comp_desc, interface_parts, interface_parts_usage, primary_components, root_path=None, file=None):
+         is_service_singleton, imports, comp_desc, interface_parts, interface_parts_usage, primary_components, comp_props, root_path=None, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -373,6 +391,7 @@ def main(prompt, components_list, declare_or_use_list, comp_features_from_servic
     get_interface_parts.load_results(interface_parts)
     get_interface_parts_usage.load_results(interface_parts_usage)
     primary_component.load_results(primary_components)
+    list_component_props.load_results(comp_props)
 
     # save there result to a file while rendering.
     if file is None:
@@ -431,7 +450,7 @@ def get_data(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 10:
+    if len(sys.argv) < 15:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -447,11 +466,12 @@ if __name__ == "__main__":
         interface_parts = sys.argv[9]
         interface_parts_usage = sys.argv[10]
         primary_components = sys.argv[11]
+        comp_props = sys.argv[12]  
 
     # Pull everything else as normal
-    folder = sys.argv[12] if len(sys.argv) > 12 else None
-    file = sys.argv[13] if len(sys.argv) > 13 else None
+    folder = sys.argv[13] if len(sys.argv) > 13 else None
+    file = sys.argv[14] if len(sys.argv) > 14 else None
 
     # Run the main function
     main(prompt, components_list, declare_or_use_list, comp_features_from_service, is_service_used, 
-         is_service_singleton, imports, comp_desc, interface_parts, interface_parts_usage, primary_components, folder, file)
+         is_service_singleton, imports, comp_desc, interface_parts, interface_parts_usage, primary_components, comp_props, folder, file)

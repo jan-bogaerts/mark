@@ -1,32 +1,28 @@
-# gets the features of the services.
-# before running this, run get_if_component_is_used.py to check if a service is used. 
-# this gives better results in 3.5
+# lcreates a json list of all the properties declared for by a component
 import sys
 from time import sleep
 from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
 import declare_or_use_comp_classifier
-import get_if_component_is_used
+import component_descriptions_exact
 import json
 import result_loader
-import compress
 
 import openai
 import tiktoken
 
 ONLY_MISSING = True # only check if the fragment has not yet been processed
 
-system_prompt = """list everything related to '{0}' that is declared in the source text. If nothing is found, return an empty value.
-Do not say: the source text doesn't contain or provide any information specifically related to..."""
-user_prompt = """source text:
-{0}"""
-term_prompt = """Remember: only include features related to '{0}' and return an empty string (no quotes) if nothing is found."""
+system_prompt = """list all features that the {0} component declares consumers of the {0} component should provide as property values for the {0}.
+Return the result as a json object of key-value pairs where the value is a short description. Do not include any introduction or explanation. Return an empty object if nothing is found."""
+user_prompt = """{0}"""
+term_prompt = """"""
 
 
 def generate_response(params, key):
 
     total_tokens = 0
-    model = get_model_config('list_component_expansions', key)
+    model = get_model_config('list_component_props', key)
     
     def reportTokens(prompt):
         encoding = tiktoken.encoding_for_model(model)
@@ -47,18 +43,18 @@ def generate_response(params, key):
     openai.api_key = OPENAI_API_KEY
 
     messages = []
-    prompt = system_prompt.format(params['class_name'], params['dev_stack'] )
+    prompt = system_prompt.format(params['component_name'] )
     messages.append({"role": "system", "content": prompt})
     total_tokens += reportTokens(prompt)
-    prompt = user_prompt.format(params['feature_description'])
+    prompt = user_prompt.format(params['component_description'])
     messages.append({"role": "user", "content": prompt})
     total_tokens += reportTokens(prompt)
     if term_prompt:
-        prompt = term_prompt.format(params['class_name'])
+        prompt = term_prompt.format(params['component_name'])
         messages.append({"role": "assistant", "content": prompt})
         total_tokens += reportTokens(prompt)
     
-    total_tokens *= 2  # max result can be as long as the input, also need to include the input itself
+    total_tokens += 120  
     if total_tokens > DEFAULT_MAX_TOKENS:
         total_tokens = DEFAULT_MAX_TOKENS
     params = {
@@ -96,57 +92,46 @@ def add_result(to_add, result, writer):
 
 def collect_response(title, response, result, writer):
     # get the first line in the component without the ## and the #
-    add_result(f'# {title}', result, writer)
+    add_result(title, result, writer)
     add_result(response, result, writer)
 
 
 def process_data(writer):
     result = []
 
-    dev_stack = compress.text_fragments[1].content
 
-    for to_check in project.fragments[2:]:  # skip the first two fragments cause that's the description and dev stack
-        if to_check.content == '':
-            continue
+    for to_check in declare_or_use_comp_classifier.text_fragments:
         if ONLY_MISSING and has_fragment(to_check.full_title):
             continue
-        results = []
-        for check_against in declare_or_use_comp_classifier.text_fragments:
-            if check_against.content == '':
-                continue
-            if check_against.title == to_check.title:
-                continue
-            components = check_against.data
-            if not components:
-                continue
-            for comp_name, value in components.items():
-                if value == 'declare':
-                    comp_used = get_if_component_is_used.is_used(to_check.full_title, check_against.title, comp_name)
-                    if not comp_used:
-                        continue
-                    params = {
-                        'class_name': comp_name,
-                        'dev_stack': dev_stack,
-                        'feature_description': to_check.content,
-                    }
-                    response = generate_response(params, to_check.full_title)
-                    if response:
-                        try:
-                            value_to_add = {
-                                'component_name': comp_name,
-                                'value': response,
-                                'source': check_against.full_title,
-                            }
-                            results.append(value_to_add)
-                        except Exception as e:
-                            print("Failed to parse response: ", e)
-                            print("Response: ", response)
+        components = to_check.data
+        if not components:
+            continue
+        results = {}
+        for component_name, value in components.items():
+            if value == 'declare':
+                description = component_descriptions_exact.get_description(to_check.full_title, component_name)
+                params = {
+                    'component_name': component_name,
+                    'component_description': description,
+                }
+                response = generate_response(params, to_check.full_title)
+                sleep(1) # wait a bit to prevent the api from getting overloaded
+                if response:
+                    try:
+                        results[component_name] = json.loads(response)
+                    except Exception as e:
+                        print("Failed to parse response: ", e)
+                        print("Response: ", response)
+                        results[component_name] = {}
+                else:
+                    results[component_name] = {}
+                    
         collect_response(to_check.full_title, json.dumps(results), result, writer)
     return result
                     
 
 
-def main(prompt, class_list, is_used, compressed, file=None):
+def main(prompt, class_list, descriptions, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -157,22 +142,21 @@ def main(prompt, class_list, is_used, compressed, file=None):
     # split the prompt into a toolbar, list of components and a list of services, based on the markdown headers
     project.split_standard(prompt)
     declare_or_use_comp_classifier.load_results(class_list)
-    get_if_component_is_used.load_results(is_used)
-    compress.load_results(compressed)
-
-    print("rendering results")
+    component_descriptions_exact.load_results(descriptions)
 
     if file is None:
         file = 'output'
 
-    file_name = file + "_component_expansion.md"
+    filename = file + "_component_props.md"
     open_mode = 'w'
     if ONLY_MISSING:
-        load_results(file_name)
+        load_results(filename)
         open_mode = 'a'
 
+    print("rendering results")
+
     # save there result to a file while rendering.
-    with open(file_name, open_mode) as writer:
+    with open(filename, open_mode) as writer:
         process_data(writer)
     
     print("done! check out the output file for the results!")
@@ -194,8 +178,8 @@ def get_data(title):
         to_search = '# ' + to_search
     for fragment in text_fragments:
         if fragment.title == to_search:
-            return fragment.data or []
-    return []   
+            return fragment.data or {}
+    return {}   
 
 def has_fragment(title):
     '''returns true if the title is in the list of fragments'''
@@ -207,31 +191,30 @@ def has_fragment(title):
             return True
     return False
 
-
-def get_all_expansions_for(name):
-    '''returns a list of all the expansions for the given component name'''
-    result = []
-    for fragment in text_fragments:
-        for item in fragment.data:
-            if item['component_name'] == name:
-                result.append(item['value'])
-    return result
+def get_props(title, comp):
+    '''the data found for the given component'''
+    data = get_data(title)
+    if not comp in data:
+        return []
+    section = data[comp]
+    if not section:
+        return []
+    return section
 
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 4:
         print("Please provide a prompt")
         sys.exit(1)
     else:
         # Set prompt to the first argument
         prompt = sys.argv[1]
         class_list = sys.argv[2]
-        is_used = sys.argv[3]
-        compressed = sys.argv[4]
+        descriptions = sys.argv[3]
 
     # Pull everything else as normal
-    file = sys.argv[5] if len(sys.argv) > 5 else None
+    file = sys.argv[4] if len(sys.argv) > 4 else None
 
     # Run the main function
-    main(prompt, class_list, is_used, compressed, file)
+    main(prompt, class_list, descriptions, file)

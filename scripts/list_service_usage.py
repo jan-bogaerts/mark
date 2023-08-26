@@ -7,6 +7,7 @@ from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
 import declare_or_use_class_classifier
 import get_if_service_is_used
+import constant_lister
 import json
 import result_loader
 
@@ -121,9 +122,10 @@ def process_data(writer):
                 continue
             for class_name, value in classes.items():
                 if value == 'declare':
+                    content = constant_lister.get_fragment(to_check.full_title, to_check.content)
                     params = {
                         'class_name': class_name,
-                        'feature_description': to_check.content,
+                        'feature_description': content,
                     }
                     class_used = get_if_service_is_used.is_used(to_check.full_title, check_against.title, class_name)
                     if not class_used:
@@ -144,7 +146,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, class_list, is_used, file=None):
+def main(prompt, class_list, is_used, constants, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -156,6 +158,7 @@ def main(prompt, class_list, is_used, file=None):
     project.split_standard(prompt)
     declare_or_use_class_classifier.load_results(class_list)
     get_if_service_is_used.load_results(is_used)
+    constant_lister.load_results(constants)
 
     # save there result to a file while rendering.
     if file is None:
@@ -218,7 +221,7 @@ def has_fragment(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         print("Please provide a prompt")
         sys.exit(1)
     else:
@@ -226,9 +229,10 @@ if __name__ == "__main__":
         prompt = sys.argv[1]
         class_list = sys.argv[2]
         is_used = sys.argv[3]
+        constants = sys.argv[4]
 
     # Pull everything else as normal
-    file = sys.argv[4] if len(sys.argv) > 4 else None
+    file = sys.argv[5] if len(sys.argv) > 5 else None
 
     # Run the main function
-    main(prompt, class_list, is_used, file)
+    main(prompt, class_list, is_used, constants, file)

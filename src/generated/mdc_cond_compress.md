@@ -36,41 +36,6 @@
     - Enabled when the project's undo-service has undo actions.
   - Redo: A button to repeat the last action performed by the project's undo-service.
     - Enabled when the undo-service has redo actions.
-# MarkdownCode > components > toolbar > home > build section
-- The build-section component contains actions for the build-service.
-- It supports the following actions:
-  - All: Renders all code for the entire project.
-    - Enabled when any service in the GPT-service's list has an out-of-date or missing result fragment in the result-cache.
-  - Code for active topic: Renders code files for the currently active fragment.
-    - Enabled when the selected fragment is out-of-date or missing in any service's result-cache in the GPT-service's list.
-  - Active topic in active prompt: Renders code for the selected fragment in the currently selected service.
-    - Enabled when the selected fragment is out-of-date or missing in the related service.
-
-# MarkdownCode > components > body > results view
-- Positioned at the bottom of the main body
-- Displays various results based on the selected text block
-- Each service in the services list creates a tab at the top of the view
-- Tab title is the service name
-- Tab content includes:
-  - Monaco editor in the center displaying the result from the service's result cache
-    - Grayed-out if result is marked as out-of-date
-    - Red if the text is an overwritten version of the service output
-  - 'More' button in the top right corner opens a context menu with the following options:
-    - 'Model for all' allows selection of GPT model for the service
-      - Sub-menu items are the available models from the GPT service
-      - Current model is shown as selected
-      - Retrieves the value for the current model from the GPT service
-      - Updates the model name for the service related to the results view when a different model is selected
-    - 'Model for fragment' allows selection of GPT model for the service and the currently active fragment
-      - Sub-menu items are the available models from the GPT service
-      - Current model is shown as selected
-      - Retrieves the value for the current model from the GPT service using the service and fragment title
-      - Updates the model name for the service related to the results view and the current fragment title when a different model is selected
-  - 'Refresh' button updates the result when pressed
-- Edits made in the tab's Monaco editor are stored back in the service's result cache as 'overwritten'
-- User can copy the current text in the center to the clipboard
-- View monitors changes in the currently selected text fragment from the position-tracking service
-  - Updates the content of the active tab by setting the selected value of the first combobox to the header title of the text fragment.
 
 # MarkdownCode > services > project service
 - The project service is responsible for:
@@ -100,36 +65,9 @@
   - If auto-save is on, triggers or resets an auto-save timer when the update function is called.
   - Automatically saves the project when the auto-save timer goes off, using a temporary filename if necessary.
   - Code style for rendering source code declared in a markdown text file.
-# MarkdownCode > services > Selection service
-- The selection service is a global singleton object that manages the currently selected text.
 # MarkdownCode > services > Undo service
 - The undo service records user text edits in different monaco-editors.
 - It includes both an undo and redo list.
-# MarkdownCode > services > line parser
-- Service for parsing markdown lines and updating links in project's data-list items.
-- Parse function:
-  - Accepts a string and the line index as input.
-  - Performs the following:
-    - Trims and converts the line to lowercase.
-    - If the line starts with '#', it's a header:
-      - If a text-fragment object already exists at that index in the project, update it. Otherwise, create a new line object.
-      - Update all line-fragments below the new text-fragment to have the new text-fragment as their parent.
-      - Count the number of '#' at the beginning of the line to determine the level of the text-fragment.
-      - Find the first text-fragment above the current one that is one level higher and use it as the parent of the new text-fragment.
-    - If it's a regular line, store it as a line-object:
-      - If a line-object already exists at that index in the project, update it.
-      - If no line-object or text-fragment exists yet, create a new line-object and use the first higher text-fragment as its parent.
-# MarkdownCode > services > position-tracking service
-- Tracks the text-fragment the user is working on.
-- Keeps track of:
-  - Currently selected line number.
-  - Text-fragment related to the currently selected line.
-  - EventTarget that stores events monitoring changes in the selected text-fragment.
-- Provides the following methods:
-  - Set currently selected line.
-    - If the new value is different from the current selected line:
-      - Get the related object from the project's data list.
-      - If this is a new text-fragment or a line-object with a different parent text-fragment, trigger the on-changed event for all registered events.
 # MarkdownCode > services > gpt service
 - Responsible for communication with the open-ai api backend, primarily used by other services.
 - Uses the openai node.js library for communication.
@@ -141,45 +79,12 @@
 - Manages a list of available services.
   - Services can register and unregister themselves.
   - Registered services should provide a name and a `get-result` function.
-# MarkdownCode > services > result-cache service
-- This service manages previously retrieved results for other services.
-- It allows other services to store and track results for text fragments, checking if they have become out of date.
-- The cache can monitor changes in both project fragments and result fragments.
-- Services can use an instance of this class to cache their results.
-- Internally, the cache uses a dictionary to map keys to results.
-- When a service calculates a result, it asks the cache to update its dictionary:
-  - The key is calculated by combining the key of the project text fragment with the keys of any additional result values used in the calculation.
-  - If the key is not present, a new cache item is created with the result and marked as still valid.
-  - If the key is already present, the cache item is retrieved and its result is updated to still valid.
-- The cache also maintains a secondary dictionary to track relationships between text fragment titles and dictionary entries.
-- The cache stores results in a JSON file specified by the service.
-- The JSON file contains the primary dictionary, secondary dictionary, and a date to verify if the results are still valid.
-- The cache tries to load the JSON file during construction.
-- The cache registers event handlers with input objects used by the parent service.
-- When triggered, the cache checks the secondary dictionary for entries and marks them as out of date in the primary dictionary.
-- If other cache services are monitoring this cache service, they are notified of the out-of-date text fragment.
 # MarkdownCode > services > build service
 - Converts markdown project data list into source code using a set of gpt-services
 - Iteratively generates conversions on different text frames
 - Starts with original markdown code and ends with source code files stored on disk
 - Performs the following actions to build the project:
   - Asks the compress service to render the result for each text-fragment in the project.
-# MarkdownCode > services > compress service
-- The compress service uses the gpt service to shorten a text fragment.
-- The get-result function calls the GPT-service with specific parameters.
-  - The parameters include a system message and the content of the text fragment.
-- This service is useful for checking if the gpt service understands the fragment and can be used for other processes.
-- The service utilizes a result-cache-service to store and track results.
-  - The result-cache is updated whenever the get-result function is called.
-  - The result is stored under the same key as the input parameter of get-result.
-- The gpt-interface for this service is named "compress".
-# MarkdownCode > components > body > outline
-- Outline component positioned to the left of the editor
-- Displays a tree representing the outline of the active project
-- Tree structure shows the relationship between headings
-- Clicking on a tree item scrolls the related text into view on the editor
-- Monitors position-tracking service for changes to the selected text-fragment
-- Sets the corresponding tree-item as selected when the position changes
 # MarkdownCode > services > dialog service
 - The dialog service is a shared interface for displaying dialog boxes in other components and services.
 - It supports dialog boxes for errors, warnings, and information.
@@ -202,21 +107,6 @@
   - Edit section
   - Undo section
   - Build section
-# MarkdownCode > services > Theme service
-- The theme service manages the currently selected theme by saving the new value to local storage when it is changed. It retrieves the previously stored value from local storage when the service is created.
-- The service allows for selecting between a light or dark theme.
-- Components use this service to retrieve the currently selected theme and apply it. They do not need to subscribe for changes to the selected theme value, they only need to retrieve the value from the theme service and use the corresponding styling names.
-- The main window refreshes its content when the selected theme is updated.
-# MarkdownCode > components > body
-- The main body of the application is represented by the body component.
-- The body component contains a horizontal splitter component that fills its entire area.
-  - On the left side of the horizontal splitter is an outline component.
-  - On the right side is a vertical splitter component.
-    - The top part of the vertical splitter component is an editor component.
-    - The bottom part of the vertical splitter component is a results view component.
-- The body component has an event handler for the 'onPositionChanged' callback of both the horizontal and vertical splitters. This handler stores the new position values.
-- When the body component is unloaded, the last positions of the horizontal and vertical splitters are saved in the local storage.
-- When the body component is loaded, the last positions of the horizontal and vertical splitters are retrieved from the local storage. However, this only happens if the previous values fit within the current size of the component. If not, the vertical splitter uses 1/3 of the width and the horizontal splitter uses 1/3 of the component's height.
 # MarkdownCode > components > body > horizontal splitter
 - The horizontal splitter manages the layout of 2 child components, allowing users to resize the panels above and below it.
 - The horizontal-splitter component has the following properties:
@@ -278,14 +168,7 @@
   - Theme: A combobox where the user can choose between light or dark mode. This value is linked to the theme-service, which manages the currently selected theme.
   - Font: A combobox for selecting the font of the markdown text. This value is also linked to the theme-service.
   - Font size: A combobox for selecting the font size of the markdown text. This value is also linked to the theme-service.
-# MarkdownCode > components > body > editor
-- The editor component uses the monaco editor npm package to display markdown text.
-- The text for the editor is retrieved from the project service when it is loaded.
-- The theme (light or dark), font, and font-size are retrieved from the theme-service and applied to the editor.
-- The project service is monitored for changes to the text.
-- When the user changes the text in the editor, it is saved to the project service and the position-tracking service is updated.
-- When the user moves the cursor to another line, the editor asks the position-tracking service to update the currently selected line.
-- The monaco editor always occupies all available space.
+
 
 # MarkdownCode > components > toolbar > preferences > GPT section
 - GPT-section component handles GPT service configuration actions.
@@ -298,3 +181,183 @@
     - Available models for the combobox are fetched from gpt-service.
     - Initial value for the combobox is obtained from gpt-service using getDefaultModel function.
     - When value is changed, it is saved to gpt-service using setDefaultModel function.
+# MarkdownCode > components > body > editor
+- The editor component uses the monaco editor npm package to display markdown text.
+- The text for the editor is retrieved from the project service.
+- The theme, font, and font-size are retrieved from the theme-service and applied to the editor.
+- The project service is monitored for changes to the text.
+- When the user changes the text in the editor, it is saved to the project service.
+- The editor is monitored for various events:
+  - onDidFocusEditorWidget: the editor reference is stored in the selection service.
+  - onDidBlurEditorWidget: if the selection service currently references this editor, the editor reference is set to null.
+  - onDidChangeCursorPosition: if the selection service currently references this editor, the position-tracking service is updated with the new cursor position.
+  - onDidChangeCursorSelection: if the selection service currently references this editor, the subscribers of the selection-service are informed of the selection change.
+- The editor always occupies all available space.
+# MarkdownCode > components > body > outline
+- The outline component is positioned to the left of the editor and displays a tree representing the outline of the active project.
+- The outline is updated whenever a new project is loaded or when changes are made to the project data.
+- The tree structure is created by converting the project data into a hierarchical format.
+- Nodes in the tree represent markdown headings in the document.
+- The title and key fields of each node correspond to the title and key of the associated data item.
+- The tree structure is rebuilt when data items are added, removed, or changed.
+- When a data item is removed, the corresponding node is removed from the tree.
+- When a data item is added or changed, the tree structure is updated accordingly.
+- When a tree item is selected, the key of the selected item is assigned to the position-tracking service's activeFragment.
+- The outline component monitors changes to the selected text-fragment and updates the tree's selectedKeys property to reflect the selected node.
+- The tree is displayed with lines to indicate the hierarchical structure.
+# MarkdownCode > components > body > results view
+- Results-view component is at the bottom of the main body.
+- Users can see results generated by registered transformers from the gpt-service for the selected text block.
+- Each transformer in the list creates a tab in the view.
+  - Tabs are located at the top left of the view.
+  - The transformer name is the tab title.
+  - The tab content displays a results-view-tab component.
+# MarkdownCode > components > body > results view > results view tab
+- The results-view-tab component displays the results of a transformer for a specific text fragment identified by its key.
+- The monaco editor npm package is used to display the results in markdown, json data, javascript, html, or css.
+- The monaco editor fills the available width and height of the component.
+- When the results-view-tab is loaded:
+  - The text for the monaco editor is retrieved from the result-cache of the assigned transformer using the current key, if available.
+  - The theme (light or dark), font, and font-size are retrieved from the theme-service and applied to the monaco editor.
+- The results-cache of the transformer is monitored for changes in the result with the current key.
+  - If the result is marked as out-of-date, the text is shown as grayed-out.
+  - If the result is marked as 'overwritten', the text is shown in red.
+- When the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer and marked as overwritten.
+- The following events are monitored on the monaco editor:
+  - onDidFocusEditorWidget: The monaco editor reference is stored in the selection service.
+  - onDidBlurEditorWidget: If the selection service currently references this monaco editor, the editor reference is set to null.
+  - onDidChangeCursorSelection: If the selection service currently references this monaco editor, the subscribers of the selection-service are notified of the selection change.
+- A results-view-context-menu component is placed on top of the monaco editor.
+- The component monitors the position-tracking service for changes to the currently selected text fragment.
+  - When this changes, the key value is updated and the text is retrieved from the result-cache and shown in the monaco editor.
+# MarkdownCode > components > body > results view > results view context menu
+- The results-view-context-menu is a component that wraps the Dropdown antd component.
+- It requires the properties 'transformer' and 'key' to be provided.
+- The dropdown displays a 'more' button icon and is triggered by a click.
+- The dropdown is positioned in the top-right corner with a 16px margin.
+- The menu items in the dropdown are as follows:
+  - "Model for all": Allows selection of the GPT model to be used by the transformer.
+    - The submenu items are provided by the GPT service's list of available models.
+    - The currently selected model is highlighted.
+      - The value for the current model, registered under the name of the current transformer, is obtained from the GPT service.
+    - When a different model is selected, the GPT service is asked to update the model name for the transformer related to the results-view.
+  - "Model for fragment": Allows selection of the GPT model to be used by the transformer for the current key.
+    - The submenu items are provided by the GPT service's list of available models.
+    - The currently selected model is highlighted.
+      - The value for the current model, registered under the name of the current transformer and current key, is obtained from the GPT service.
+    - When a different model is selected, the GPT service is asked to update the model name for the transformer and the current title.
+  - A splitter
+  - "Refresh": When pressed, the transformer associated with the current tab recalculates the result.
+# MarkdownCode > services > Theme service
+- The theme service manages the currently selected theme font and font-size globally.
+- It saves the new values to local storage when the selected theme, font, or font-size is changed.
+- The service retrieves the previously stored values from local storage when it is created.
+- The service allows for the selection of a light or dark theme.
+- Every component uses the theme service to retrieve the currently selected theme and apply it.
+- Components do not need to subscribe for changes to the selected theme value.
+- The main window refreshes its content when the selected theme is updated.
+# MarkdownCode > services > Selection service
+- The selection service is a global object that tracks the currently selected text.
+- It also keeps track of the active editor from the monaco editor npm package.
+- The service can be monitored for selection changes.
+- Supported actions include:
+  - Cut: Requests the monaco editor to cut the selected text to the clipboard.
+  - Copy: Requests the monaco editor to copy the selected text to the clipboard.
+  - Paste: Requests the monaco editor to paste the clipboard content at the current cursor position.
+  - Delete: Requests the monaco editor to delete the selected text.
+  - Clear selection: Requests the monaco editor to clear the current selection.
+  - Select all: Requests the monaco editor to select all the text.
+# MarkdownCode > services > line parser
+- The line-parser service parses markdown lines and updates text-fragments in the project-service.
+- The line-parser service has an empty array called fragmentsIndex to store text-fragment objects.
+- The line-parser service has a function to create new text-fragments:
+  - Trims and converts the line to lowercase.
+  - Determines the depth-level of the text-fragment based on the number of '#' at the beginning of the line.
+  - Removes the '#' from the line and assigns it as the title of the text-fragment.
+  - Calculates the key for the text-fragment and stores it.
+  - Sets the 'out-of-date' flag to true.
+  - Asks the project-service to insert the text-fragment at the specified index.
+- The line-parser service has a function to calculate the key of a text-fragment:
+  - Uses the depth-level and title of the text-fragment.
+  - Loops through the fragmentsIndex array from a given index position.
+  - Prepends the title of each previous text-fragment to the result if its depth-level is smaller than the current depth.
+- The parse function of the line-parser service:
+  - Accepts a string and the line index.
+  - If the string is empty:
+    - Fills the fragmentsIndex array with nulls until the current line index if it's empty or contains only nulls.
+    - Finds the index of the first occurrence of the json object in the array.
+    - Calculates the index value of the line within the text-fragment.
+    - Adds empty lines to the lines field of the json object until the index value is reached.
+  - If the line starts with a '#':
+    - Creates a new text-fragment if there is nothing at the line index.
+    - Updates the title of the current text-fragment if it already exists.
+    - Moves lines from the old text-fragment to the new one if the index of the first occurrence is different from the line index.
+  - If the line doesn't start with a '#':
+    - Gets the text-fragment at the line index.
+    - Creates a new text-fragment if there is none.
+    - Updates the lines field of the text-fragment if it already exists.
+    - Appends lines to the previous text-fragment if the line changed from title to regular.
+# MarkdownCode > services > position-tracking service
+- The position-tracking service is responsible for tracking the text-fragment that the user is working on.
+- The service keeps track of:
+  - the currently selected line number
+  - the text-fragment related to the currently selected line
+  - an eventTarget that stores events monitoring changes in the selected text-fragment
+- It provides the following methods:
+  - set currently selected line
+    - if the new value is different from the current selected line index:
+      - get the object at the line-index position from the line-parser service
+      - if this object is different from the currently selected text-fragment, store it as the new selected text-fragment and trigger the on-changed event for all registered event handlers.
+# MarkdownCode > services > result-cache service
+- This service manages cached results for transformers.
+- Transformers can store and track the results of calculations on text fragments.
+- The cache can monitor changes in both project fragments and result fragments.
+- Transformers use an instance of this class to cache their results.
+- The cache uses a dictionary to map keys to results.
+- When a transformer calculates a result, it updates the cache's dictionary.
+- The key is calculated by combining the project text-fragment key with any additional result-value keys.
+- If the key is not present, a new cache-item object is created with the result and marked as still-valid.
+- If the key is already present, the cache item is retrieved and its result is updated to still-valid.
+- The cache also maintains a secondary dictionary to track relationships between text-fragment titles and dictionary entries.
+- The cache stores results in a JSON file specified by the transformer.
+- The JSON file contains the primary dictionary, secondary dictionary, overwritten values, and last save date.
+- The cache registers event handlers with input objects to monitor changes.
+- When triggered, the cache checks the secondary dictionary for entries and marks them as out-of-date.
+- The cache can overwrite and retrieve results for specific keys.
+- The cache can determine if a text fragment is out-of-date based on the key.
+
+# MarkdownCode > components > toolbar > home > build section
+- The build-section component contains actions for the build-service.
+- Buttons have icons instead of text.
+- Actions include:
+  - "All" button: Renders code for the entire project.
+    - Enabled when any transformer in the GPT-service's list has an out-of-date or missing result fragment in the result-cache.
+  - "Code for active topic" button: Renders code files for the currently active fragment.
+    - Enabled when the selected fragment is out-of-date or missing in any transformer's result-cache in the GPT-service's list.
+  - "Active topic in active prompt" button: Renders the selected fragment in the currently selected service.
+    - Enabled when the selected fragment is out-of-date or missing in the related service.
+# MarkdownCode > services > compress service
+- The compress service utilizes the gpt service to shorten a given text fragment.
+- The get-result function interacts with the GPT-service using specific parameters:
+  - messages:
+    - role: system, content: the value of resources.MarkdownCode_services_compress_service_0
+    - role: user, content: the text fragment to be processed.
+- It is helpful for verifying if the gpt service comprehends the fragment and can be used as input for other processes.
+- This service employs a result-cache-service to store and track all results, ensuring up-to-date information.
+  - Whenever the get-result function is called, the result-cache is updated.
+  - The output of get-result is saved under the same key as the input parameter of get-result.
+- The gpt-interface is named "compress".
+# MarkdownCode > components > body
+- The body component is the main part of the application.
+- It contains a horizontal splitter that divides its area.
+- On the left side of the horizontal splitter is an outline component.
+- On the right side is a vertical splitter.
+- The vertical splitter has an editor component at the top and a results view component at the bottom.
+- The body component has event handlers for the 'onPositionChanged' callback of both the horizontal and vertical splitters.
+- These event handlers store the new position values.
+- When the body component is unloaded, the last positions of the splitters are stored in local storage.
+- When the body component is loaded:
+  - The last positions of the splitters are restored from local storage.
+  - The clientWidth and clientHeight of the component are retrieved.
+  - If there is no previous value for the vertical splitter or the value is larger than the clientWidth, the value 'clientWidth / 4' is used instead.
+  - If there is no previous value for the horizontal splitter or the value is larger than the clientHeight, the value 'clientHeight / 4' is used instead.

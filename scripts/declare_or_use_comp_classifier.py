@@ -10,7 +10,7 @@ import component_lister
 import primary_component
 import component_descriptions
 import result_loader
-import double_compress
+import triple_compress
 import json
 
 import openai
@@ -113,8 +113,8 @@ def get_other_titles(title):
     for fragment in component_lister.text_fragments:
         fragment_title = fragment.full_title.split('#')[-1].strip()
         if fragment_title != title:
-            description = double_compress.get_fragment(fragment.full_title)
-            result += f'- {fragment_title}:\n{description.content}\n'
+            description = triple_compress.get_fragment(fragment.full_title)
+            result += f'# {fragment_title}:\n{description.content}\n'
     return result
 
 
@@ -168,7 +168,7 @@ def main(prompt, components_list, primary_list, comp_descr, double_comp, file=No
     component_lister.load_results(components_list)
     primary_component.load_results(primary_list)
     component_descriptions.load_results(comp_descr)
-    double_compress.load_results(double_comp)
+    triple_compress.load_results(double_comp)
 
     # save there result to a file while rendering.
     if file is None:

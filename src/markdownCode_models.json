@@ -8,7 +8,8 @@
             "MarkdownCode > components > toolbar > preferences > GPT section": "gpt-4",
             "MarkdownCode > components > toolbar > preferences > view section": "gpt-4", 
             "MarkdownCode > components > toolbar > format > font section": "gpt-4",
-            "MarkdownCode > components > body > editor": "gpt-4"
+            "MarkdownCode > components > body > editor": "gpt-4",
+            "MarkdownCode > components > body > results view > results view tab": "gpt-4"
         }
     },
     "component_descriptions": {
@@ -27,7 +28,7 @@
         "default": "gpt-4",
         "topics": {}
     },
-    "list_component_expansions":{
+    "list_component_props":{
         "default": "gpt-4",
         "topics": {}
     },

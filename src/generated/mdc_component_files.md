@@ -10,8 +10,6 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit section\\EditSection.js"]
 # MarkdownCode > components > toolbar > home > undo section
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\undo section\\UndoSection.js"]
-# MarkdownCode > components > toolbar > home > build section
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build section\\BuildSection.js"]
 # MarkdownCode > components > toolbar > format
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\FormatTab.js"]
 # MarkdownCode > components > toolbar > format > style section
@@ -22,15 +20,19 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\font section\\FontSection.js"]
 # MarkdownCode > components > toolbar > preferences
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\PreferencesTab.js"]
-# MarkdownCode > components > body
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js"]
 # MarkdownCode > components > body > horizontal splitter
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\horizontal splitter\\HorizontalSplitter.js"]
 # MarkdownCode > components > body > vertical splitter
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\vertical splitter\\VerticalSplitter.js"]
-# MarkdownCode > components > body > outline
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js"]
 # MarkdownCode > components > toolbar > preferences > GPT section
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\GPT section\\GPTSection.js", "C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\GPT section\\ModelComboBox.js"]
 # MarkdownCode > components > toolbar > preferences > open-ai configuration dialog
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\open-ai configuration dialog\\OpenAiConfigurationDialog.js"]
+# MarkdownCode > components > toolbar > preferences > view section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\view section\\ViewSection.js"]
+# MarkdownCode > components > body > editor
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js"]
+# MarkdownCode > components > toolbar > home > build section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build section\\BuildSection.js"]
+# MarkdownCode > components > body
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js"]

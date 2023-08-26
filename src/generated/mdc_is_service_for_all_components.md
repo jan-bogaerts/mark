@@ -5,8 +5,6 @@
 {"SelectionService": "no"}
 # MarkdownCode > services > Undo service
 {"UndoService": "no"}
-# MarkdownCode > services > line parser
-{"LineParser": "no"}
 # MarkdownCode > services > position-tracking service
 {"PositionTrackingService": "no"}
 # MarkdownCode > services > gpt service
@@ -21,3 +19,5 @@
 {"DialogService": "yes"}
 # MarkdownCode > services > Theme service
 {"ThemeService": "yes"}
+# MarkdownCode > services > line parser
+{"LineParser": "no"}

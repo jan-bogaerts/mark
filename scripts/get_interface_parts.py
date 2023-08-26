@@ -7,6 +7,7 @@ import project
 import render_component
 import json
 import result_loader
+import list_component_props
 
 import openai
 import tiktoken
@@ -225,6 +226,14 @@ def extract_interface_parts_for(interface, interface_title, code, code_title, is
         known_parts = ' that are not included in: \n' + '\n'.join(known_parts)
     else:
         known_parts = ''
+    props = list_component_props.get_props(interface_title, interface)
+    if props:
+        known_parts_list = []
+        for key, value in props.items():
+            known_parts_list.append(f'- {key}: {value}')
+        if not known_parts:
+            known_parts = ' that are not included in: \n'    
+        known_parts +=  '\n'.join(known_parts_list)
 
     # store each interface together with where it's declared, so we can reconstruct correctly again later on.
     if not interface_title in fragment.data:

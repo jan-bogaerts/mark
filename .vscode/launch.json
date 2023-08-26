@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
        
+        {
+            "name": "list constants mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/constant_lister.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/code/",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
 
         {
             "name": "compress mdc",
@@ -13,6 +26,7 @@
             "program": "scripts/compress.py",
             "args": [
                 "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_constants.md",
                 "${workspaceFolder}/src/generated/mdc_cond"
             ],
             "console": "integratedTerminal",
@@ -31,6 +45,20 @@
             "console": "integratedTerminal",
             "justMyCode": true
         },
+
+        {
+            "name": "triple compress mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/triple_compress.py",
+            "args": [
+                "${workspaceFolder}/src/generated/mdc_double_compress.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
         {
             "name": "list components mdc",
             "type": "python",
@@ -51,19 +79,7 @@
             "program": "scripts/class_lister.py",
             "args": [
                 "${workspaceFolder}/src/markdownCode.md",
-                "${workspaceFolder}/src/generated/mdc"
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-
-        {
-            "name": "list constants mdc",
-            "type": "python",
-            "request": "launch",
-            "program": "scripts/constant_lister.py",
-            "args": [
-                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_constants.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -92,6 +108,7 @@
             "args": [
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_classes.md",
+                "${workspaceFolder}/src/generated/mdc_constants.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -154,7 +171,7 @@
                 "${workspaceFolder}/src/generated/mdc_components.md",
                 "${workspaceFolder}/src/generated/mdc_primary_comp.md",
                 "${workspaceFolder}/src/generated/mdc_comp_descriptions.md",
-                "${workspaceFolder}/src/generated/mdc_double_compress.md",
+                "${workspaceFolder}/src/generated/mdc_triple_compress.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -186,6 +203,7 @@
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
                 "${workspaceFolder}/src/generated/mdc_class_descriptions.md",
+                "${workspaceFolder}/src/generated/mdc_constants.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -200,6 +218,7 @@
             "args": [
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
+                "${workspaceFolder}/src/generated/mdc_constants.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -207,14 +226,14 @@
         },
 
         {
-            "name": "-- get if component is used mdc",
+            "name": "list component properties mdc",
             "type": "python",
             "request": "launch",
-            "program": "scripts/get_if_component_is_used.py",
+            "program": "scripts/list_component_props.py",
             "args": [
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
-                "${workspaceFolder}/src/generated/mdc_comp_descriptions.md",
+                "${workspaceFolder}/src/generated/mdc_comp_descriptions_exact.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -245,6 +264,7 @@
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_class.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_used.md",
+                "${workspaceFolder}/src/generated/mdc_constants.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",
@@ -260,22 +280,6 @@
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_for_all_components.md",
-                "${workspaceFolder}/src/generated/mdc_cond_compress.md",
-                "${workspaceFolder}/src/generated/mdc"
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-
-        {
-            "name": "-- list component expansion mdc",
-            "type": "python",
-            "request": "launch",
-            "program": "scripts/list_component_expansions.py",
-            "args": [
-                "${workspaceFolder}/src/markdownCode.md",
-                "${workspaceFolder}/src/generated/mdc_declare_or_use_comp.md",
-                "${workspaceFolder}/src/generated/mdc_is_component_used.md",
                 "${workspaceFolder}/src/generated/mdc_cond_compress.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
@@ -320,6 +324,7 @@
                 "${workspaceFolder}/src/generated/mdc_interface_parts.md",
                 "${workspaceFolder}/src/generated/mdc_interface_parts_usage.md",
                 "${workspaceFolder}/src/generated/mdc_primary_comp.md",
+                "${workspaceFolder}/src/generated/mdc_component_props.md",
                 "${workspaceFolder}/src/generated/code/",
                 "${workspaceFolder}/src/generated/mdc"
             ],
@@ -372,6 +377,7 @@
                 "${workspaceFolder}/src/generated/mdc_resolve_class_imports.md",
                 "${workspaceFolder}/src/generated/mdc_primary_class.md",
                 "${workspaceFolder}/src/generated/mdc_is_service_singleton.md",
+                "${workspaceFolder}/src/generated/mdc_constants.md",
                 "${workspaceFolder}/src/generated/code/",
                 "${workspaceFolder}/src/generated/mdc"
             ],

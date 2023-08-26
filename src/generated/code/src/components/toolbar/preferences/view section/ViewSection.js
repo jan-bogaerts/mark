@@ -1,78 +1,80 @@
 
-import React, { useState, useEffect } from 'react';
-import { Select, Tooltip } from 'antd';
+import React from 'react';
+import { Select, Button } from 'antd';
 import { ThemeService } from '../../../services/ThemeService/ThemeService';
 import { DialogService } from '../../../services/DialogService/DialogService';
 
 const { Option } = Select;
 
+const FONT_SIZES = Array.from({length: 45}, (_, i) => i + 6);
+const FONTS = ['Consolas', 'Helvetica', 'Arial', 'Arial Black', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Impact', 'Gill Sans', 'Times New Roman', 'Georgia', 'Palatino', 'Baskerville', 'Andalé Mono', 'Courier', 'Lucida', 'Monaco', 'Bradley Hand', 'Brush Script MT', 'Luminari', 'Comic Sans MS'];
+const THEMES = ['light', 'dark'];
+
 /**
  * ViewSection component
  * Contains actions related to the configuration of the appearance of the application
  */
-const ViewSection = () => {
-  const [theme, setTheme] = useState('');
-  const [font, setFont] = useState('');
-  const [fontSize, setFontSize] = useState('');
+class ViewSection extends React.Component {
+  state = {
+    theme: ThemeService.getCurrentTheme(),
+    font: ThemeService.getCurrentFont(),
+    fontSize: ThemeService.getCurrentFontSize(),
+  };
 
-  useEffect(() => {
+  handleThemeChange = (value) => {
     try {
-      const currentTheme = ThemeService.getCurrentTheme();
-      setTheme(currentTheme.theme);
-      setFont(currentTheme.font);
-      setFontSize(currentTheme.fontSize);
+      ThemeService.setCurrentTheme(value);
+      this.setState({ theme: value });
     } catch (error) {
-      DialogService.showErrorDialog(error);
-    }
-  }, []);
-
-  const handleThemeChange = (value) => {
-    try {
-      ThemeService.setTheme(value);
-      setTheme(value);
-    } catch (error) {
-      DialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error setting theme', error);
     }
   };
 
-  const handleFontChange = (value) => {
+  handleFontChange = (value) => {
     try {
-      ThemeService.setFont(value);
-      setFont(value);
+      ThemeService.setCurrentFont(value);
+      this.setState({ font: value });
     } catch (error) {
-      DialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error setting font', error);
     }
   };
 
-  const handleFontSizeChange = (value) => {
+  handleFontSizeChange = (value) => {
     try {
-      ThemeService.setFontSize(value);
-      setFontSize(value);
+      ThemeService.setCurrentFontSize(value);
+      this.setState({ fontSize: value });
     } catch (error) {
-      DialogService.showErrorDialog(error);
+      DialogService.showErrorDialog('Error setting font size', error);
     }
   };
 
-  return (
-    <div className="view-section">
-      <Tooltip title="Change theme">
-        <Select value={theme} onChange={handleThemeChange} className="theme-select">
-          <Option value="light">Light</Option>
-          <Option value="dark">Dark</Option>
+  render() {
+    return (
+      <div className="view-section">
+        <Select value={this.state.theme} onChange={this.handleThemeChange} className="theme-select">
+          {THEMES.map((theme) => (
+            <Option key={theme} value={theme}>
+              {theme}
+            </Option>
+          ))}
         </Select>
-      </Tooltip>
-      <Tooltip title="Change font">
-        <Select value={font} onChange={handleFontChange} className="font-select">
-          {/* Add your font options here */}
+        <Select value={this.state.font} onChange={this.handleFontChange} className="font-select">
+          {FONTS.map((font) => (
+            <Option key={font} value={font}>
+              {font}
+            </Option>
+          ))}
         </Select>
-      </Tooltip>
-      <Tooltip title="Change font size">
-        <Select value={fontSize} onChange={handleFontSizeChange} className="font-size-select">
-          {/* Add your font size options here */}
+        <Select value={this.state.fontSize} onChange={this.handleFontSizeChange} className="font-size-select">
+          {FONT_SIZES.map((size) => (
+            <Option key={size} value={size}>
+              {size}
+            </Option>
+          ))}
         </Select>
-      </Tooltip>
-    </div>
-  );
-};
+      </div>
+    );
+  }
+}
 
 export default ViewSection;

@@ -11,6 +11,7 @@ import get_interface_parts_usage
 import resolve_class_imports
 import list_service_usage
 import primary_class
+import constant_lister
 import json
 import result_loader
 
@@ -141,7 +142,8 @@ def get_to_render_and_used(title, classes):
 def get_description_and_interface_parts(fragment, cl, to_render):
     if len(to_render) > 1:
         print('more than 1 class to render, this is not fully supported yet')
-    feature_description = fragment.content
+    content = constant_lister.get_fragment(fragment.full_title, fragment.content)
+    feature_description = content
     interface_parts = get_interface_parts.get_interface_parts(fragment.full_title, cl) # things this component needs to implement
     if interface_parts:
         to_join = []
@@ -208,8 +210,12 @@ def get_import_service_line(import_def, cur_path):
     return f"The {service_txt} {service} can be imported from {service_path}\n"
 
 
-def get_all_imports(cl_to_render, full_title, cur_path):
+def get_all_imports(cl_to_render, full_title, cur_path, root_path):
     imports_txt = ''
+    has_constants = constant_lister.has_constants(full_title)
+    if has_constants:
+        rel_path = os.path.relpath(constant_lister.get_resource_filename(root_path), cur_path)
+        imports_txt += f"The const 'resources' can be imported from {rel_path}\n"
     cur_path = cur_path.strip()
     imports = resolve_class_imports.get_data(full_title)
     if not imports:
@@ -253,7 +259,7 @@ def render_class(cl, fragment, to_render, root_path, file_names):
         'feature_title': fragment.title,
         'feature_description': feature_description,
         'dev_stack': project.fragments[1].content,
-        'imports': get_all_imports(cl, fragment.full_title, relative_path),
+        'imports': get_all_imports(cl, fragment.full_title, relative_path, root_path),
         'interface_parts': interface_parts,
         # 'global_features': global_features,
     }
@@ -292,7 +298,6 @@ def extract_used_comp_interface_parts(code, fragment, rendered_comp, used_classe
 
 
 def process_data(root_path, writer):
-    dev_stack = project.fragments[1].content
     for fragment in project.fragments:
         if ONLY_MISSING and has_fragment(fragment.full_title):
             continue
@@ -319,7 +324,7 @@ def process_data(root_path, writer):
                     
 
 
-def main(prompt, components_list, declare_or_use_list, expansions, interface_parts, interface_parts_usage, imports, primary, singleton, root_path=None, file=None):
+def main(prompt, components_list, declare_or_use_list, expansions, interface_parts, interface_parts_usage, imports, primary, singleton, constants, root_path=None, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -337,6 +342,7 @@ def main(prompt, components_list, declare_or_use_list, expansions, interface_par
     resolve_class_imports.load_results(imports)
     primary_class.load_results(primary)
     get_if_service_is_singleton.load_results(singleton)
+    constant_lister.load_results(constants)
 
     # save there result to a file while rendering.
     if file is None:
@@ -395,7 +401,7 @@ def get_data(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 11:
+    if len(sys.argv) < 12:
         print("Please provide a prompt and a file containing the components to check")
         sys.exit(1)
     else:
@@ -409,11 +415,12 @@ if __name__ == "__main__":
         imports = sys.argv[7]
         primary = sys.argv[8]
         singleton = sys.argv[9] 
+        constants = sys.argv[10] 
 
     # Pull everything else as normal
-    folder = sys.argv[10] if len(sys.argv) > 10 else None
-    file = sys.argv[11] if len(sys.argv) > 11 else None
+    folder = sys.argv[11] if len(sys.argv) > 11 else None
+    file = sys.argv[12] if len(sys.argv) > 12 else None
 
     # Run the main function
     main(prompt, components_list, declare_or_use_list, expansions, interface_parts, interface_parts_usage,
-         imports, primary, singleton, folder, file)
+         imports, primary, singleton, constants, folder, file)

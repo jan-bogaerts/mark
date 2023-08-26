@@ -3,6 +3,7 @@ from time import sleep
 from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
 import result_loader
+import constant_lister
 
 import openai
 import tiktoken
@@ -23,7 +24,6 @@ user_prompt = """list all the classes declared in:
 term_prompt = """
 Do not include UI components, but only list the classes that need to be custom built.
 return an empty array if you can't detect any classes.
-Any text between ``` and ``` signs should be skipped, do not try to interpret the text between ``` signs.
 don't include any introduction. Don't include any explanation, just write the list of classes as a
 json array.
 
@@ -137,11 +137,12 @@ def process_data(writer):
         # check if 'services' is in the full title, if so, skip it
         if not 'services' in to_check.full_title.lower():
             continue
+        content = constant_lister.get_fragment(to_check.full_title, to_check.content)
         params = {
             'project_name': project_desc.title,
             # 'project_description': project_desc.content,
             'feature_title': to_check.title,
-            'feature_description': to_check.content,
+            'feature_description': content,
             'dev_stack': dev_stack,
         }
         response = generate_response(params, to_check.full_title)
@@ -151,7 +152,7 @@ def process_data(writer):
                     
 
 
-def main(prompt, file=None):
+def main(prompt, constants, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
         with open(prompt, "r") as promptfile:
@@ -161,6 +162,7 @@ def main(prompt, file=None):
 
     # split the prompt into a toolbar, list of components and a list of services, based on the markdown headers
     project.split_standard(prompt)
+    constant_lister.load_results(constants)
 
     # save there result to a file while rendering.
     if file is None:
@@ -224,15 +226,16 @@ def has_fragment(title):
 if __name__ == "__main__":
 
     # Check for arguments
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("Please provide a prompt")
         sys.exit(1)
     else:
         # Set prompt to the first argument
         prompt = sys.argv[1]
+        constants = sys.argv[2]
 
     # Pull everything else as normal
-    file = sys.argv[2] if len(sys.argv) > 2 else None
+    file = sys.argv[3] if len(sys.argv) > 3 else None
 
     # Run the main function
-    main(prompt, file)
+    main(prompt, constants, file)

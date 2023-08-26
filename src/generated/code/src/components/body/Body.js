@@ -1,63 +1,57 @@
 
 import React, { useEffect, useState } from 'react';
-import { Layout } from 'antd';
-import { HorizontalSplitter } from 'horizontal-splitter/HorizontalSplitter';
-import { VerticalSplitter } from 'vertical-splitter/VerticalSplitter';
-import { Outline } from 'outline/Outline';
-import { Editor } from 'editor/Editor';
-import { ResultsView } from 'results-view/ResultsView';
-import { DialogService } from '../../services/dialog-service/DialogService';
-import { ThemeService } from '../../services/theme-service/ThemeService';
+import { HorizontalSplitter } from './horizontal_splitter/HorizontalSplitter';
+import { VerticalSplitter } from './vertical_splitter/VerticalSplitter';
+import { Outline } from './outline/Outline';
+import { Editor } from './editor/Editor';
+import { ResultsView } from './results_view/ResultsView';
+import { ThemeService } from '../../../services/Theme_service/ThemeService';
 
+const LOCAL_STORAGE_HORIZONTAL_SPLITTER_POSITION = 'horizontalSplitterPosition';
+const LOCAL_STORAGE_VERTICAL_SPLITTER_POSITION = 'verticalSplitterPosition';
+
+/**
+ * Body component represents the main body of the application.
+ */
 const Body = () => {
   const [horizontalSplitterPosition, setHorizontalSplitterPosition] = useState(null);
   const [verticalSplitterPosition, setVerticalSplitterPosition] = useState(null);
-  const themeService = ThemeService.getCurrentTheme();
 
   useEffect(() => {
-    const horizontalSplitterPosition = localStorage.getItem('horizontalSplitterPosition');
-    const verticalSplitterPosition = localStorage.getItem('verticalSplitterPosition');
+    const horizontalSplitterPosition = localStorage.getItem(LOCAL_STORAGE_HORIZONTAL_SPLITTER_POSITION);
+    const verticalSplitterPosition = localStorage.getItem(LOCAL_STORAGE_VERTICAL_SPLITTER_POSITION);
+    const clientWidth = document.documentElement.clientWidth;
+    const clientHeight = document.documentElement.clientHeight;
 
-    if (horizontalSplitterPosition && verticalSplitterPosition) {
-      setHorizontalSplitterPosition(horizontalSplitterPosition);
-      setVerticalSplitterPosition(verticalSplitterPosition);
-    } else {
-      setHorizontalSplitterPosition(window.innerHeight / 3);
-      setVerticalSplitterPosition(window.innerWidth / 3);
-    }
+    setHorizontalSplitterPosition(horizontalSplitterPosition && horizontalSplitterPosition < clientHeight ? horizontalSplitterPosition : clientHeight / 4);
+    setVerticalSplitterPosition(verticalSplitterPosition && verticalSplitterPosition < clientWidth ? verticalSplitterPosition : clientWidth / 4);
   }, []);
 
   useEffect(() => {
     return () => {
-      localStorage.setItem('horizontalSplitterPosition', horizontalSplitterPosition);
-      localStorage.setItem('verticalSplitterPosition', verticalSplitterPosition);
+      localStorage.setItem(LOCAL_STORAGE_HORIZONTAL_SPLITTER_POSITION, horizontalSplitterPosition);
+      localStorage.setItem(LOCAL_STORAGE_VERTICAL_SPLITTER_POSITION, verticalSplitterPosition);
     };
   }, [horizontalSplitterPosition, verticalSplitterPosition]);
 
-  const handleHorizontalSplitterPositionChange = (newPosition) => {
-    setHorizontalSplitterPosition(newPosition);
-  };
-
-  const handleVerticalSplitterPositionChange = (newPosition) => {
-    setVerticalSplitterPosition(newPosition);
-  };
+  const theme = ThemeService.getCurrentTheme();
 
   return (
-    <Layout className={`body ${themeService}`}>
+    <div className={`body ${theme}`}>
       <HorizontalSplitter
+        top={<Outline />}
+        bottom={
+          <VerticalSplitter
+            left={<Editor />}
+            right={<ResultsView />}
+            position={verticalSplitterPosition}
+            onPositionChanged={setVerticalSplitterPosition}
+          />
+        }
         position={horizontalSplitterPosition}
-        onPositionChanged={handleHorizontalSplitterPositionChange}
-      >
-        <Outline />
-        <VerticalSplitter
-          position={verticalSplitterPosition}
-          onPositionChanged={handleVerticalSplitterPositionChange}
-        >
-          <Editor />
-          <ResultsView />
-        </VerticalSplitter>
-      </HorizontalSplitter>
-    </Layout>
+        onPositionChanged={setHorizontalSplitterPosition}
+      />
+    </div>
   );
 };
 

@@ -1,56 +1,95 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { Component } from 'react';
 import { Tree } from 'antd';
-import { useTheme } from '@emotion/react';
-import { ipcRenderer } from 'electron';
-import SelectionService from '../../../services/SelectionService/SelectionService';
-import LineParser from '../../../services/line parser/LineParser';
-import PositionTrackingService from '../../../services/position-tracking service/PositionTrackingService';
-import DialogService from '../../../services/dialog service/DialogService';
-import ThemeService from '../../../services/Theme service/ThemeService';
+import { observer } from 'mobx-react';
+import projectservice from '../../../../services/project_service/ProjectService';
+import positiontrackingservice from '../../../../services/position-tracking_service/PositionTrackingService';
+import dialogservice from '../../../../services/dialog_service/DialogService';
+
+const { TreeNode } = Tree;
 
 /**
- * Outline component
- * @component
+ * Outline component class
  */
-function Outline() {
-  const [outlineData, setOutlineData] = useState([]);
-  const [selectedKeys, setSelectedKeys] = useState([]);
-  const theme = ThemeService.getCurrentTheme();
-
-  useEffect(() => {
-    ipcRenderer.on('document-changed', (event, newDocument) => {
-      try {
-        const parsedOutline = LineParser.parse(newDocument);
-        setOutlineData(parsedOutline);
-      } catch (error) {
-        DialogService.showErrorDialog('Error parsing document', error.message);
-      }
-    });
-
-    PositionTrackingService.subscribe((newPosition) => {
-      setSelectedKeys([newPosition]);
-    });
-
-    return () => {
-      PositionTrackingService.unsubscribe();
-      ipcRenderer.removeAllListeners('document-changed');
+@observer
+class Outline extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      treeData: [],
+      selectedKeys: []
     };
-  }, []);
+  }
 
-  const onSelect = (selectedKeys) => {
-    SelectionService.selectTextFragment(selectedKeys[0]);
-  };
+  componentDidMount() {
+    this.loadProjectData();
+    projectservice.on('projectLoaded', this.loadProjectData);
+    projectservice.on('dataItemRemoved', this.removeNode);
+    projectservice.on('dataItemAdded', this.loadProjectData);
+    projectservice.on('dataItemsChanged', this.loadProjectData);
+    positiontrackingservice.on('positionChanged', this.updateSelectedKeys);
+  }
 
-  return (
-    <div className={`outline ${theme}`}>
-      <Tree
-        treeData={outlineData}
-        selectedKeys={selectedKeys}
-        onSelect={onSelect}
-      />
-    </div>
-  );
+  componentWillUnmount() {
+    projectservice.off('projectLoaded', this.loadProjectData);
+    projectservice.off('dataItemRemoved', this.removeNode);
+    projectservice.off('dataItemAdded', this.loadProjectData);
+    projectservice.off('dataItemsChanged', this.loadProjectData);
+    positiontrackingservice.off('positionChanged', this.updateSelectedKeys);
+  }
+
+  loadProjectData = () => {
+    try {
+      const projectData = projectservice.getProjectData();
+      const treeData = this.convertToTreeData(projectData);
+      this.setState({ treeData });
+    } catch (error) {
+      dialogservice.showErrorDialog('Error loading project data', error);
+    }
+  }
+
+  convertToTreeData = (data) => {
+    // Implementation of the conversion logic goes here
+  }
+
+  removeNode = (key) => {
+    // Implementation of the node removal logic goes here
+  }
+
+  updateSelectedKeys = (key) => {
+    this.setState({ selectedKeys: [key] });
+  }
+
+  onSelect = (selectedKeys) => {
+    positiontrackingservice.activeFragment = selectedKeys[0];
+  }
+
+  render() {
+    return (
+      <div className="outline-component">
+        <Tree
+          showLine
+          selectedKeys={this.state.selectedKeys}
+          onSelect={this.onSelect}
+        >
+          {this.renderTreeNodes(this.state.treeData)}
+        </Tree>
+      </div>
+    );
+  }
+
+  renderTreeNodes = (data) => {
+    return data.map(item => {
+      if (item.children) {
+        return (
+          <TreeNode title={item.title} key={item.key} dataRef={item}>
+            {this.renderTreeNodes(item.children)}
+          </TreeNode>
+        );
+      }
+      return <TreeNode {...item} />;
+    });
+  }
 }
 
 export default Outline;

@@ -1,18 +1,10 @@
 
 # MarkdownCode > services > project service
 {"ProjectService": "The ProjectService class is responsible for creating, managing, and updating projects. It handles tasks such as clearing data, recreating cache objects, notifying components of data changes, reading and parsing files, saving projects, and managing user configurations."}
-# MarkdownCode > services > Selection service
-{"SelectionService": "The SelectionService is a global object that manages selected text."}
 # MarkdownCode > services > Undo service
 {"UndoService": "The UndoService is a class that records user text edits in monaco-editors and provides undo and redo functionality."}
-# MarkdownCode > services > line parser
-{"LineParser": "The 'LineParser' service is a class that provides functionality for parsing markdown lines and updating links in a project's data-list items. It includes a 'Parse' function that accepts a string and line index as input, trims and converts the line to lowercase, and performs various operations based on the line type (header or regular line). For headers, it updates or creates a new text-fragment object at the index, updates line-fragments below with the new text-fragment as the parent, determines the level of the text-fragment based on the count of '#' symbols, and finds the first higher text-fragment above as the parent. For regular lines, it stores them as line-objects, updating or creating a new line-object at the index and using the first higher text-fragment as the parent if available."}
-# MarkdownCode > services > position-tracking service
-{"PositionTrackingService": "The PositionTrackingService is a service class that tracks a user's text-fragment, keeps track of the selected line number, related text-fragment, and event monitoring. It provides methods to set the selected line and trigger events for changes in the text-fragment."}
 # MarkdownCode > services > gpt service
 {"GptService": "The 'GptService' class is responsible for communication with the OpenAI API backend. It uses the OpenAI Node.js library to send API requests and retrieve available models. The class also manages a list of available services, allowing them to register and unregister. Registered services should provide a name and a 'get-result' function."}
-# MarkdownCode > services > result-cache service
-{"ResultCacheService": "The 'ResultCacheService' is a service class that manages cached results for other services. It uses a dictionary to map keys to results and allows services to cache their results. The cache updates the dictionary when a result is calculated and tracks relationships between text fragment titles and dictionary entries. Results are stored in a JSON file with a date for validity verification. The cache loads the JSON file during construction and registers event handlers with input objects used by the parent service. When triggered, the cache marks entries as out of date in the dictionary and notifies other cache services."}
 # MarkdownCode > services > build service
 {"BuildService": "The 'BuildService' is a service class that uses gpt-services to convert markdown project data into source code. It can generate conversions on multiple text frames and transform the original markdown code into source code files. Additionally, it utilizes a compress service to render results for each text-fragment in the project."}
 # MarkdownCode > services > compress service
@@ -20,4 +12,12 @@
 # MarkdownCode > services > dialog service
 {"DialogService": "The DialogService is a shared interface that allows for displaying dialog boxes in other components and services. It supports errors, warnings, and information, and can be used to show electron dialog boxes with error details when user-triggered actions encounter errors."}
 # MarkdownCode > services > Theme service
-{"ThemeService": "The ThemeService class is responsible for saving and retrieving the selected theme using local storage. It allows for selecting a light or dark theme and applies the selected theme to components without the need for subscription. Additionally, it triggers a refresh of the main window when the theme is updated."}
+{"ThemeService": "The ThemeService class manages the selected theme font and font-size globally, saving changes to local storage. It allows for light or dark theme selection and applies the selected theme to components without the need for subscription. The main window refreshes content when the theme is updated."}
+# MarkdownCode > services > Selection service
+{"SelectionService": "The SelectionService is a class that tracks selected text and the active editor. It allows monitoring for changes and supports various actions such as cut, copy, paste, delete, clear selection, and select all."}
+# MarkdownCode > services > line parser
+{"LineParser": "The 'LineParser' service is responsible for parsing markdown lines and updating text-fragments in the project-service. It can create new text-fragments, calculate keys, and handle various scenarios related to parsing and updating lines."}
+# MarkdownCode > services > position-tracking service
+{"PositionTrackingService": "The PositionTrackingService is a service that tracks the user's selected text-fragment and provides methods to set and retrieve the currently selected line. It also triggers an on-changed event for registered event handlers when the selected text-fragment changes."}
+# MarkdownCode > services > result-cache service
+{"ResultCacheService": "The ResultCacheService is a service class that manages cached results for transformers. It allows transformers to cache results using a dictionary and maintains a secondary dictionary to track relationships between text-fragment keys and dictionary entries. The cache can create cache-item objects with results, update existing results, and store them in a JSON file specified by the transformer. It also registers event handlers to monitor changes and determine if a text fragment is out-of-date."}

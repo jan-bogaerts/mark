@@ -1,0 +1,3 @@
+{
+    "MarkdownCode_services_compress_service_0": "Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.\nAny text between markdown code blocks (``` or \\\"\"\" signs) are declarations of constant values, do not change them, but replace with the name of the constant. Remove the markdown, but use bullet points where appropriate.\ncompress the following text:"
+}
