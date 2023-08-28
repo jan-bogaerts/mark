@@ -8,7 +8,7 @@ import double_compress
 import openai
 import tiktoken
 
-ONLY_MISSING = False # only check if the fragment has not yet been processed
+ONLY_MISSING = True # only check if the fragment has not yet been processed
 
 system_prompt = """condense the following text to 1 sentence:"""
 user_prompt = """{0}"""

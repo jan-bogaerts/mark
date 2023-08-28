@@ -35,8 +35,6 @@ OpenAiConfigurationDialog
 ViewSection
 # MarkdownCode > components > body > editor
 Editor
-# MarkdownCode > components > body > outline
-Outline
 # MarkdownCode > components > body > results view
 ResultsView
 # MarkdownCode > components > body > results view > results view tab
@@ -45,3 +43,5 @@ ResultsViewTab
 ResultsViewContextMenu
 # MarkdownCode > components > body
 Body
+# MarkdownCode > components > body > outline
+Outline

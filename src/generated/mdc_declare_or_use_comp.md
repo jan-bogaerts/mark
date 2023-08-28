@@ -6,8 +6,6 @@
 {"EditSection": "declare"}
 # MarkdownCode > components > toolbar > home > undo section
 {"UndoSection": "declare", "UndoButton": "declare", "RedoButton": "declare"}
-# MarkdownCode > components > body > outline
-{"Outline": "declare"}
 # MarkdownCode > components > toolbar
 {"Toolbar": "declare", "HomeTab": "MarkdownCode > components > toolbar > home", "FormatTab": "MarkdownCode > components > toolbar > format", "PreferencesTab": "MarkdownCode > components > toolbar > preferences"}
 # MarkdownCode > components > toolbar > home
@@ -45,3 +43,5 @@
 {"BuildSection": "declare"}
 # MarkdownCode > components > body
 {"Body": "declare", "HorizontalSplitter": "MarkdownCode > components > body > horizontal splitter", "Outline": "MarkdownCode > components > body > outline", "VerticalSplitter": "MarkdownCode > components > body > vertical splitter", "Editor": "MarkdownCode > components > body > editor", "ResultsView": "MarkdownCode > components > body > results view"}
+# MarkdownCode > components > body > outline
+{"Outline": "declare"}

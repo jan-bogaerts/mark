@@ -121,10 +121,10 @@ def get_file_path(title, root_path):
     return file_path
 
 def collect_response(title, response, root_path):
-    file_name = title.replace(" > ", "_")
+    file_name = title.replace(" > ", "_").replace(" ", "_")
     if not os.path.exists(root_path):
         os.makedirs(root_path)
-    file_path = os.path.join(root_path, file_name.replace(" ", "_") + ".js")
+    file_path = os.path.join(root_path, file_name + ".js")
     with open(file_path, "w") as writer:
         writer.write(response)
     return file_path
@@ -309,6 +309,7 @@ def render_component(component, fragment, to_render, root_path, file_names):
     # calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
     title_to_path = fragment.full_title.replace(":", "").replace('?', '').replace('!', '')
     path_items = title_to_path.split(" > ")
+    path_items = [part.replace(" ", "_") for part in path_items]
     path_items[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
     path_section = os.path.join(root_path, *path_items)
 

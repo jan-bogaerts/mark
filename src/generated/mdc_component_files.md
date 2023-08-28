@@ -36,3 +36,11 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build section\\BuildSection.js"]
 # MarkdownCode > components > body
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js"]
+# MarkdownCode > components > body > outline
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js"]
+# MarkdownCode > components > body > results view
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\ResultsView.js"]
+# MarkdownCode > components > body > results view > results view tab
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\results view tab\\ResultsViewTab.js"]
+# MarkdownCode > components > body > results view > results view context menu
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\results view context menu\\ResultsViewContextMenu.js"]

@@ -6,8 +6,6 @@
 {"EditSection": {}}
 # MarkdownCode > components > toolbar > home > undo section
 {"UndoSection": {}, "UndoButton": {}, "RedoButton": {}}
-# MarkdownCode > components > body > outline
-{"Outline": {}}
 # MarkdownCode > components > toolbar
 {"Toolbar": {}}
 # MarkdownCode > components > toolbar > home
@@ -44,3 +42,5 @@
 {"BuildSection": {}}
 # MarkdownCode > components > body
 {"Body": {}}
+# MarkdownCode > components > body > outline
+{"Outline": {}}

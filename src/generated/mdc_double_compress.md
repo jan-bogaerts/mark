@@ -85,16 +85,6 @@ The view-section component configures the app's appearance. Buttons have icon-on
   - onDidChangeCursorPosition: if selection service references this editor, position-tracking service updated with new cursor position.
   - onDidChangeCursorSelection: if selection service references this editor, subscribers of selection-service informed of selection change.
 - Editor always occupies all available space.
-# MarkdownCode > components > body > outline
-- The outline component is positioned to the left of the editor and displays a tree representing the outline of the active project, updated when new projects are loaded or changes are made to the project data.
-- The tree structure is created by converting the project data into a hierarchical format, with nodes representing markdown headings.
-- Nodes in the tree have title and key fields corresponding to the associated data item.
-- The tree structure is rebuilt when data items are added, removed, or changed.
-- When a data item is removed, the corresponding node is removed from the tree.
-- When a data item is added or changed, the tree structure is updated accordingly.
-- When a tree item is selected, the key is assigned to the position-tracking service's activeFragment.
-- The outline component monitors changes to the selected text-fragment and updates the tree's selectedKeys property.
-- The tree is displayed with lines to indicate the hierarchical structure.
 # MarkdownCode > components > body > results view
 - Results-view component is at the bottom of the main body, showing results from registered transformers.
 - Each transformer creates a tab at the top left of the view, displaying a results-view-tab component.
@@ -125,3 +115,12 @@ This service manages cached results for transformers, which store and track calc
     - Enabled when the selected fragment is out-of-date or missing in the related service.
 # MarkdownCode > components > body
 The body component is the main part of the application, containing a horizontal splitter that divides its area. On the left side is an outline component, and on the right side is a vertical splitter. The vertical splitter has an editor component at the top and a results view component at the bottom. The body component has event handlers for the 'onPositionChanged' callback of both splitters, storing the new position values. When unloaded, the last splitter positions are stored in local storage. When loaded, the last positions are restored from local storage. The clientWidth and clientHeight of the component are retrieved. If there is no previous value for the vertical splitter or it is larger than the clientWidth, 'clientWidth / 4' is used. If there is no previous value for the horizontal splitter or it is larger than the clientHeight, 'clientHeight / 4' is used.
+# MarkdownCode > components > body > outline
+- The outline component is on the left side of the editor and displays a tree structure of headings.
+- Project data is retrieved from the project service and converted into a tree structure using 'convertToTreeData'.
+- Removing a data item removes the corresponding node from the tree.
+- Adding or changing a data item rebuilds the tree structure.
+- Selecting a tree item assigns its key to the activeFragment in the position-tracking service.
+- The component updates the tree based on changes to the selected text-fragment.
+- The tree is displayed with lines.
+- 'convertToTreeData' creates a tree structure with parent and child nodes based on item levels.
