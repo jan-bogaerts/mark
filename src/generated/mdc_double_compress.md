@@ -14,7 +14,6 @@ The file-section component manages project and file actions. Actions include cre
 The edit-section component handles clipboard and selected data actions. It supports cut, copy, paste, delete, select all, and clear selection. These actions are enabled based on the presence of selected data or text in the clipboard.
 # MarkdownCode > components > toolbar > home > undo section
 The undo-section component has actions for the undo/redo service. It supports undo and redo buttons that are enabled based on the project's undo-service actions.
-
 # MarkdownCode > services > project service
 The project service creates and manages projects by clearing data, recreating cache objects, and notifying components of data changes. It opens existing projects by reading and parsing files, recreating cache objects, and notifying the project editor. It saves projects by writing parsed objects to a file, resetting the change indicator, and enabling auto-save. It updates the data list when the user makes changes in the markdown editor. It manages user configurations such as auto-save settings and code style for rendering source code.
 # MarkdownCode > services > Undo service
@@ -90,8 +89,6 @@ The view-section component configures the app's appearance. Buttons have icon-on
 - Each transformer creates a tab at the top left of the view, displaying a results-view-tab component.
 # MarkdownCode > components > body > results view > results view tab
 The results-view-tab component displays the results of a transformer for a specific text fragment. It uses the monaco editor npm package to display the results in various formats. The editor fills the available space and is styled based on the theme-service. The results-cache is monitored for changes and the text is shown accordingly. User changes in the editor are saved and marked as overwritten. The monaco editor events are monitored and the selection service is updated accordingly. A results-view-context-menu component is placed on top of the editor. It monitors the position-tracking service for changes and updates the key and text in the editor.
-# MarkdownCode > components > body > results view > results view context menu
-The results-view-context-menu is a component that wraps the Dropdown antd component. It requires the properties 'transformer' and 'key' to be provided. The dropdown displays a 'more' button icon and is triggered by a click. It is positioned in the top-right corner with a 16px margin. The menu items include "Model for all" and "Model for fragment" which allow selection of the GPT model to be used by the transformer. The submenu items are provided by the GPT service's list of available models and the currently selected model is highlighted. When a different model is selected, the GPT service is asked to update the model name for the transformer. There is also a "Refresh" option that recalculates the result when pressed.
 # MarkdownCode > services > Theme service
 The theme service globally manages the selected theme font and font-size, saving changes to local storage. It retrieves stored values on creation and allows for light or dark theme selection. Components use the service to apply the selected theme without needing to subscribe for changes. The main window refreshes content when the theme is updated.
 # MarkdownCode > services > Selection service
@@ -102,7 +99,6 @@ The line-parser service parses markdown lines and updates text-fragments in the 
 The position-tracking service tracks the user's selected text-fragment. It keeps track of the selected line number, the related text-fragment, and an eventTarget for monitoring changes. It provides a method to set the currently selected line, which retrieves the object at that line index from the line-parser service. If the object is different from the currently selected text-fragment, it is stored as the new selected text-fragment and triggers the on-changed event for registered event handlers.
 # MarkdownCode > services > result-cache service
 This service manages cached results for transformers, which store and track calculation results on text fragments. The cache monitors changes in project and result fragments. Transformers use this class to cache results using a dictionary. The cache creates cache-item objects with results if the key is not present, or updates the result if the key is already present. The cache also maintains a secondary dictionary to track relationships between text-fragment titles and dictionary entries. Results are stored in a JSON file specified by the transformer, which includes the primary and secondary dictionaries, overwritten values, and last save date. The cache registers event handlers to monitor changes and marks entries in the secondary dictionary as out-of-date. It can overwrite and retrieve results for specific keys and determine if a text fragment is out-of-date based on the key.
-
 # MarkdownCode > components > toolbar > home > build section
 - The build-section component has build-service actions.
 - Buttons use icons instead of text.
@@ -124,3 +120,5 @@ The body component is the main part of the application, containing a horizontal 
 - The component updates the tree based on changes to the selected text-fragment.
 - The tree is displayed with lines.
 - 'convertToTreeData' creates a tree structure with parent and child nodes based on item levels.
+# MarkdownCode > components > body > results view > results view context menu
+The results-view-context-menu is a component that wraps the Dropdown antd component. It requires the properties 'transformer' and 'key' to be provided. The dropdown's content consists of a 'more' button icon, positioned in the top-right corner of its parent with a margin of 16px. The menu contains options for selecting the GPT model to be used by the transformer. The submenu items are fetched from the GPT service's list of available models. The currently selected model is indicated as selected. When a different model is selected, the GPT service is asked to update the model name for the transformer. There is also an option to refresh the result by pressing a button.

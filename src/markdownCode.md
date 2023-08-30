@@ -288,10 +288,10 @@ the function 'convertToTreeData' is described as:
 - this results-view-context-menu is a component that is a wrapper for the Dropdown antd component.
 - it has the properties 'transformer' and 'key' that needs to be supplied 
 - The dropdown's content is a 'more' button icon and the trigger for the dropdown is 'click'.
-- the dropdown is positioned in the top-right corner (with a margin of 16px)
+- the 'more' button is positioned in the top-right corner (with a margin of 16px) of the parent as a floating button.
 - it contains the following menu items:
   - model for all: select the gpt model to be used by the transformer.
-    - the sub menu items are provided by the gpt-service's list of available models.
+    - the sub menu items are provided by the gpt-service's list of available models (fetched from the internet).
     - the menu item that contains the name of the currently selected model, is shown as selected.
       - Get the value for the current model, registered under the name of the current transformer, from the gpt-service
     - when an other model is selected, ask the gpt-service to update the model-name of the transformer related to the results-view.

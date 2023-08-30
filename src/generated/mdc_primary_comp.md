@@ -14,7 +14,6 @@ UndoSection
 BuildSection
 # MarkdownCode > components > toolbar > preferences
 PreferencesTab
-
 # MarkdownCode > components > body > horizontal splitter
 HorizontalSplitter
 # MarkdownCode > components > body > vertical splitter
@@ -39,9 +38,9 @@ Editor
 ResultsView
 # MarkdownCode > components > body > results view > results view tab
 ResultsViewTab
-# MarkdownCode > components > body > results view > results view context menu
-ResultsViewContextMenu
 # MarkdownCode > components > body
 Body
 # MarkdownCode > components > body > outline
 Outline
+# MarkdownCode > components > body > results view > results view context menu
+ResultsViewContextMenu

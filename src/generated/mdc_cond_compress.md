@@ -36,7 +36,6 @@
     - Enabled when the project's undo-service has undo actions.
   - Redo: A button to repeat the last action performed by the project's undo-service.
     - Enabled when the undo-service has redo actions.
-
 # MarkdownCode > services > project service
 - The project service is responsible for:
   - Creating a new project:
@@ -123,7 +122,6 @@
   - position: the width assigned to the left component
   - onPositionChanged: a callback function that updates the position value. It takes one parameter: the new position value (number)
 - The splitter includes a div component of 8 pixels width between the left and right components. When the user drags this bar, the onPositionChanged callback is triggered (if provided) with the new position value.
-
 # MarkdownCode > components > toolbar > format
 - The format-tab component is a wrapper that arranges its children in a row.
 - Child components of the format-tab component include:
@@ -168,8 +166,6 @@
   - Theme: A combobox where the user can choose between light or dark mode. This value is linked to the theme-service, which manages the currently selected theme.
   - Font: A combobox for selecting the font of the markdown text. This value is also linked to the theme-service.
   - Font size: A combobox for selecting the font size of the markdown text. This value is also linked to the theme-service.
-
-
 # MarkdownCode > components > toolbar > preferences > GPT section
 - GPT-section component handles GPT service configuration actions.
 - Buttons in the component have icon content, no text.
@@ -218,24 +214,6 @@
 - A results-view-context-menu component is placed on top of the monaco editor.
 - The component monitors the position-tracking service for changes to the currently selected text fragment.
   - When this changes, the key value is updated and the text is retrieved from the result-cache and shown in the monaco editor.
-# MarkdownCode > components > body > results view > results view context menu
-- The results-view-context-menu is a component that wraps the Dropdown antd component.
-- It requires the properties 'transformer' and 'key' to be provided.
-- The dropdown displays a 'more' button icon and is triggered by a click.
-- The dropdown is positioned in the top-right corner with a 16px margin.
-- The menu items in the dropdown are as follows:
-  - "Model for all": Allows selection of the GPT model to be used by the transformer.
-    - The submenu items are provided by the GPT service's list of available models.
-    - The currently selected model is highlighted.
-      - The value for the current model, registered under the name of the current transformer, is obtained from the GPT service.
-    - When a different model is selected, the GPT service is asked to update the model name for the transformer related to the results-view.
-  - "Model for fragment": Allows selection of the GPT model to be used by the transformer for the current key.
-    - The submenu items are provided by the GPT service's list of available models.
-    - The currently selected model is highlighted.
-      - The value for the current model, registered under the name of the current transformer and current key, is obtained from the GPT service.
-    - When a different model is selected, the GPT service is asked to update the model name for the transformer and the current title.
-  - A splitter
-  - "Refresh": When pressed, the transformer associated with the current tab recalculates the result.
 # MarkdownCode > services > Theme service
 - The theme service manages the currently selected theme font and font-size globally.
 - It saves the new values to local storage when the selected theme, font, or font-size is changed.
@@ -313,7 +291,6 @@
 - When triggered, the cache checks the secondary dictionary for entries and marks them as out-of-date.
 - The cache can overwrite and retrieve results for specific keys.
 - The cache can determine if a text fragment is out-of-date based on the key.
-
 # MarkdownCode > components > toolbar > home > build section
 - The build-section component contains actions for the build-service.
 - Buttons have icons instead of text.
@@ -359,3 +336,21 @@
 - The component monitors changes to the selected text-fragment and updates the tree accordingly.
 - The tree is displayed with lines.
 - The 'convertToTreeData' function creates a tree structure based on the data items, setting the parent node and adding child nodes based on the level count of each item.
+# MarkdownCode > components > body > results view > results view context menu
+- The results-view-context-menu is a component that wraps the Dropdown antd component.
+- It requires the properties 'transformer' and 'key' to be provided.
+- The dropdown's content consists of a 'more' button icon, and it is triggered by a click.
+- The 'more' button is positioned as a floating button in the top-right corner of its parent, with a margin of 16px.
+- The menu contains the following items:
+  - "Model for all": Allows selection of the GPT model to be used by the transformer.
+    - The submenu items are provided by the GPT service's list of available models, fetched from the internet.
+    - The currently selected model is indicated as selected.
+      - The value for the current model, registered under the name of the current transformer, is obtained from the GPT service.
+    - When a different model is selected, the GPT service is asked to update the model name for the transformer related to the results-view.
+  - "Model for fragment": Allows selection of the GPT model to be used by the transformer for the current key.
+    - The submenu items are provided by the GPT service's list of available models.
+    - The currently selected model is indicated as selected.
+      - The value for the current model, registered under the name of the current transformer and key, is obtained from the GPT service.
+    - When a different model is selected, the GPT service is asked to update the model name for the transformer and the current title.
+  - A splitter
+  - "Refresh": When pressed, the transformer associated with the current tab recalculates the result.

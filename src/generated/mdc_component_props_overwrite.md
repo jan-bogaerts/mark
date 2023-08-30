@@ -14,6 +14,6 @@
 # MarkdownCode > components > toolbar > preferences > view section
 {"ViewSection": {}}
 # MarkdownCode > components > body > results view > results view context menu
-{"ResultsViewContextMenu": {"transformer": "The transformer to be used for the results view. This is the current transformer associated with the results view.", "key": "The key for the current fragment. This is used to select the GPT model for the current fragment."}}
+{"ResultsViewContextMenu": {"transformer": "The transformer to be used for the results view. This is a required property.", "key": "The key for the current context. This is a required property."}}
 # MarkdownCode > components > body > results view
 {"ResultsView": {}}

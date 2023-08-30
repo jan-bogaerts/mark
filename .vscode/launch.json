@@ -4,6 +4,18 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+        {
+            "name": "rebuild component mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/rebuild_component.py",
+            "args": [
+                "${input:fragment}"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
        
         {
             "name": "list constants mdc",
@@ -441,7 +453,15 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": true
-        },
+        }
 
+    ],
+    "inputs": [
+        {
+            "id": "fragment",
+            "type":"promptString",
+            "description": "fragment title",
+            "default": ""
+        }
     ]
 }

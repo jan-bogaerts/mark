@@ -43,4 +43,4 @@
 # MarkdownCode > components > body > results view > results view tab
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\results view tab\\ResultsViewTab.js"]
 # MarkdownCode > components > body > results view > results view context menu
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\results view context menu\\ResultsViewContextMenu.js"]
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js"]

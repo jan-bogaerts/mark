@@ -134,10 +134,10 @@ def main(prompt, components, file=None):
 text_fragments = []  # the list of text fragments representing all the results that were rendered.
 loaded_from_filename = None
 
-def load_results(filename, overwrite_file_name=None):
+def load_results(filename, overwrite_file_name=None, overwrite=True):
     global loaded_from_filename
     loaded_from_filename = filename
-    if not overwrite_file_name:
+    if not overwrite_file_name and overwrite:
         # modify the filename so that the filename without extension ends on _overwrite
         overwrite_file_name = filename.split('.')[0] + '_overwrite.' + filename.split('.')[1]
     if os.path.exists(filename):
