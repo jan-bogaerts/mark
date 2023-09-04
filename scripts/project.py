@@ -130,6 +130,8 @@ def split_standard(prompt):
 
         elif line != '\n' and line != '': # skip empty lines
             current_content += line + "\n"
+        else:
+            current_content += "\n"
     if current_title:
         fragments.append(TextFragment(current_title, current_content, ' > '.join(parents)))
 

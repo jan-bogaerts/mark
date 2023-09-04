@@ -16,6 +16,18 @@
             "console": "integratedTerminal",
             "justMyCode": true
         },
+
+        {
+            "name": "rebuild service mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/rebuild_service.py",
+            "args": [
+                "${input:fragment}"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
        
         {
             "name": "list constants mdc",
@@ -352,6 +364,20 @@
             "args": [
                 "${workspaceFolder}/src/markdownCode.md",
                 "${workspaceFolder}/src/generated/mdc_component_files.md",
+                "${workspaceFolder}/src/generated/mdc"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
+        {
+            "name": "render styling mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/render_styling.py",
+            "args": [
+                "${workspaceFolder}/src/markdownCode.md",
+                "${workspaceFolder}/src/generated/mdc_styling_names.md",
                 "${workspaceFolder}/src/generated/mdc"
             ],
             "console": "integratedTerminal",

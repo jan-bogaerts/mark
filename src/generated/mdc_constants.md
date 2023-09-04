@@ -32,7 +32,6 @@
 []
 # MarkdownCode > components > toolbar > preferences > view section
 []
-
 # MarkdownCode > components > body > horizontal splitter
 []
 # MarkdownCode > components > body > vertical splitter
@@ -51,21 +50,31 @@
 []
 # MarkdownCode > services > Theme service
 []
-# MarkdownCode > services > project service
-[]
 # MarkdownCode > services > Selection service
 []
 # MarkdownCode > services > Undo service
 []
-# MarkdownCode > services > line parser
-[]
 # MarkdownCode > services > position-tracking service
 []
-# MarkdownCode > services > gpt service
+# MarkdownCode > components > body
+[]
+# MarkdownCode > services > line parser
+[]
+# MarkdownCode > services > line parser > line parser helpers
+[]
+# MarkdownCode > services > folder service
 []
 # MarkdownCode > services > result-cache service
 []
+# MarkdownCode > services > gpt service
+[]
 # MarkdownCode > services > build service
 []
+# MarkdownCode > services > cybertron service
+[]
+# MarkdownCode > services > transformer-base service
+[]
 # MarkdownCode > services > compress service
-[{"start": 4, "end": 8, "name": "MarkdownCode_services_compress_service_0"}]
+[{"start": 10, "end": 14, "name": "MarkdownCode_services_compress_service_0"}]
+# MarkdownCode > services > project service
+[]

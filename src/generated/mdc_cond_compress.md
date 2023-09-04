@@ -36,54 +36,9 @@
     - Enabled when the project's undo-service has undo actions.
   - Redo: A button to repeat the last action performed by the project's undo-service.
     - Enabled when the undo-service has redo actions.
-# MarkdownCode > services > project service
-- The project service is responsible for:
-  - Creating a new project:
-    - Clears all data from the project's data list.
-    - Recreates cache objects for all registered GPT services.
-    - Raises an event to indicate data change for the project editor and results view components if they are open.
-  - Opening an existing project:
-    - Reads the specified file as a string.
-    - Splits the file into lines.
-    - Parses each line and stores the result object in the project's data list.
-    - Recreates cache objects for each registered GPT service using the name of the existing cached file.
-    - Raises an event to indicate data change for the project editor.
-  - Saving the currently opened project:
-    - Opens the specified file for writing.
-    - Converts all parsed objects in the data list to a string and writes them to the file.
-    - Resets the project's change indicator.
-    - Saves the filename in the project service for auto-save functionality.
-  - Updating the project's data list when the user makes changes in the markdown editor:
-    - The markdown editor calls an update function provided by the project.
-    - Updates the item in the data list at the specified line and updates any links to and from other items.
-  - Managing a data list of the currently loaded data and providing functions to work with it:
-    - Retrieves a tree structure representing project headers for use in the outline or drop-down boxes on the results view.
-    - Converts a header to its full text.
-- The project service also tracks user configurations:
-  - Auto-save setting stored in local storage.
-  - If auto-save is on, triggers or resets an auto-save timer when the update function is called.
-  - Automatically saves the project when the auto-save timer goes off, using a temporary filename if necessary.
-  - Code style for rendering source code declared in a markdown text file.
 # MarkdownCode > services > Undo service
 - The undo service records user text edits in different monaco-editors.
 - It includes both an undo and redo list.
-# MarkdownCode > services > gpt service
-- Responsible for communication with the open-ai api backend, primarily used by other services.
-- Uses the openai node.js library for communication.
-- Provides a function for sending api requests to open-ai.
-  - Function accepts a list of json objects with `role` and `content` fields.
-  - Sends the list to openai using the `createChatCompletion` function.
-  - Retries the request 3 times before raising an error.
-- Provides a method to retrieve the list of available models using the openai nodejs library.
-- Manages a list of available services.
-  - Services can register and unregister themselves.
-  - Registered services should provide a name and a `get-result` function.
-# MarkdownCode > services > build service
-- Converts markdown project data list into source code using a set of gpt-services
-- Iteratively generates conversions on different text frames
-- Starts with original markdown code and ends with source code files stored on disk
-- Performs the following actions to build the project:
-  - Asks the compress service to render the result for each text-fragment in the project.
 # MarkdownCode > services > dialog service
 - The dialog service is a shared interface for displaying dialog boxes in other components and services.
 - It supports dialog boxes for errors, warnings, and information.
@@ -233,36 +188,6 @@
   - Delete: Requests the monaco editor to delete the selected text.
   - Clear selection: Requests the monaco editor to clear the current selection.
   - Select all: Requests the monaco editor to select all the text.
-# MarkdownCode > services > line parser
-- The line-parser service parses markdown lines and updates text-fragments in the project-service.
-- The line-parser service has an empty array called fragmentsIndex to store text-fragment objects.
-- The line-parser service has a function to create new text-fragments:
-  - Trims and converts the line to lowercase.
-  - Determines the depth-level of the text-fragment based on the number of '#' at the beginning of the line.
-  - Removes the '#' from the line and assigns it as the title of the text-fragment.
-  - Calculates the key for the text-fragment and stores it.
-  - Sets the 'out-of-date' flag to true.
-  - Asks the project-service to insert the text-fragment at the specified index.
-- The line-parser service has a function to calculate the key of a text-fragment:
-  - Uses the depth-level and title of the text-fragment.
-  - Loops through the fragmentsIndex array from a given index position.
-  - Prepends the title of each previous text-fragment to the result if its depth-level is smaller than the current depth.
-- The parse function of the line-parser service:
-  - Accepts a string and the line index.
-  - If the string is empty:
-    - Fills the fragmentsIndex array with nulls until the current line index if it's empty or contains only nulls.
-    - Finds the index of the first occurrence of the json object in the array.
-    - Calculates the index value of the line within the text-fragment.
-    - Adds empty lines to the lines field of the json object until the index value is reached.
-  - If the line starts with a '#':
-    - Creates a new text-fragment if there is nothing at the line index.
-    - Updates the title of the current text-fragment if it already exists.
-    - Moves lines from the old text-fragment to the new one if the index of the first occurrence is different from the line index.
-  - If the line doesn't start with a '#':
-    - Gets the text-fragment at the line index.
-    - Creates a new text-fragment if there is none.
-    - Updates the lines field of the text-fragment if it already exists.
-    - Appends lines to the previous text-fragment if the line changed from title to regular.
 # MarkdownCode > services > position-tracking service
 - The position-tracking service is responsible for tracking the text-fragment that the user is working on.
 - The service keeps track of:
@@ -274,23 +199,6 @@
     - if the new value is different from the current selected line index:
       - get the object at the line-index position from the line-parser service
       - if this object is different from the currently selected text-fragment, store it as the new selected text-fragment and trigger the on-changed event for all registered event handlers.
-# MarkdownCode > services > result-cache service
-- This service manages cached results for transformers.
-- Transformers can store and track the results of calculations on text fragments.
-- The cache can monitor changes in both project fragments and result fragments.
-- Transformers use an instance of this class to cache their results.
-- The cache uses a dictionary to map keys to results.
-- When a transformer calculates a result, it updates the cache's dictionary.
-- The key is calculated by combining the project text-fragment key with any additional result-value keys.
-- If the key is not present, a new cache-item object is created with the result and marked as still-valid.
-- If the key is already present, the cache item is retrieved and its result is updated to still-valid.
-- The cache also maintains a secondary dictionary to track relationships between text-fragment titles and dictionary entries.
-- The cache stores results in a JSON file specified by the transformer.
-- The JSON file contains the primary dictionary, secondary dictionary, overwritten values, and last save date.
-- The cache registers event handlers with input objects to monitor changes.
-- When triggered, the cache checks the secondary dictionary for entries and marks them as out-of-date.
-- The cache can overwrite and retrieve results for specific keys.
-- The cache can determine if a text fragment is out-of-date based on the key.
 # MarkdownCode > components > toolbar > home > build section
 - The build-section component contains actions for the build-service.
 - Buttons have icons instead of text.
@@ -301,17 +209,6 @@
     - Enabled when the selected fragment is out-of-date or missing in any transformer's result-cache in the GPT-service's list.
   - "Active topic in active prompt" button: Renders the selected fragment in the currently selected service.
     - Enabled when the selected fragment is out-of-date or missing in the related service.
-# MarkdownCode > services > compress service
-- The compress service utilizes the gpt service to shorten a given text fragment.
-- The get-result function interacts with the GPT-service using specific parameters:
-  - messages:
-    - role: system, content: the value of resources.MarkdownCode_services_compress_service_0
-    - role: user, content: the text fragment to be processed.
-- It is helpful for verifying if the gpt service comprehends the fragment and can be used as input for other processes.
-- This service employs a result-cache-service to store and track all results, ensuring up-to-date information.
-  - Whenever the get-result function is called, the result-cache is updated.
-  - The output of get-result is saved under the same key as the input parameter of get-result.
-- The gpt-interface is named "compress".
 # MarkdownCode > components > body
 - The body component is the main part of the application.
 - It contains a horizontal splitter that divides its area.
@@ -354,3 +251,123 @@
     - When a different model is selected, the GPT service is asked to update the model name for the transformer and the current title.
   - A splitter
   - "Refresh": When pressed, the transformer associated with the current tab recalculates the result.
+# MarkdownCode > services > line parser
+- The line-parser service is a global singleton object used to parse markdown lines and update the text-fragments stored in the project-service.
+- The line-parser service maintains an array of text-fragment objects called fragmentsIndex, which is initially empty.
+- The line-parser has a function for creating new text-fragments (json objects) based on the input line:
+  - Trim and convert the line to lowercase.
+  - Determine the depth-level of the text-fragment based on the number of '#' characters at the beginning of the line.
+  - Remove the '#' characters from the line and assign the result to the title value of the text-fragment.
+  - Calculate the key for the text-fragment and store it.
+  - Set the 'out-of-date' flag to true.
+  - Initialize an empty array for the 'lines' field.
+  - Ask the project-service to add the text-fragment to its list of text-fragments.
+- The line-parser has a function to calculate the key of a text-fragment, which takes a text-fragment and an index position as input:
+  - Set the current depth to the depth-level of the text-fragment.
+  - Set the result value to the title of the text-fragment.
+  - Loop from the given index position to 0 using the field idx:
+    - Get the previous text-fragment at position 'idx' from the project-service.
+    - If the depth-level of the previous text-fragment is smaller than the current depth:
+      - Update the current depth.
+      - Prepend the title of the previous text-fragment followed by ' > ' to the result.
+      - If the new current depth is 1, stop the loop.
+- Pseudo code for the parse function and related:
+  ```python (pseudo)
+    def parse(line, index):
+      if line == '':
+        lineParserHelpers.handleEmptyLine(index)
+      elif line.startsWith('#'):
+        lineParserHelpers.handleTitleLine(line, index)
+      else:
+        lineParserHelpers.handleRegularLine(line, index)
+  ```
+# MarkdownCode > services > line parser > line parser helpers
+The 'LineParserHelpers' module contains helper functions described in pseudo code:
+
+- `getFragmentAt(service, index)`: Retrieves the fragment at the specified index, handling cases where the fragment is null or the index is empty.
+- `handleEmptyLine(service, index)`: Handles empty lines by checking if the fragments index is empty or contains null values, and adds null values to the index if necessary. If a fragment is found at the index, it updates the fragment's lines accordingly.
+- `updateFragmentTitle(service, fragment, line, fragmentPrjIndex)`: Updates the title of a fragment by calculating its depth and replacing the '#' characters with an empty string. It also emits an event when the fragment's key changes.
+- `removeFragmentTitle(service, fragment, index)`: Removes the title of a fragment by inserting the line at the beginning of the fragment's lines. If the previous fragment is null, it sets the title to empty. Otherwise, it copies all the lines from the current fragment to the previous fragment and updates the index accordingly.
+- `insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index)`: Inserts a new fragment at the specified index by creating a new text fragment and adjusting the lines and index accordingly.
+- `handleTitleLine(service, line, index)`: Handles title lines by checking if the fragments index is empty or null at the specified index. If it is, it creates a new text fragment and adds it to the index. Otherwise, it updates the title of the fragment at the index or inserts a new fragment if the index is different from the fragment's start.
+- `updateFragmentLines(service, fragment, index, fragmentStart)`: Updates the lines of a fragment at the specified index by replacing an existing line or adding a new line if the index is greater than the fragment's line length.
+- `handleRegularLine(service, line, index)`: Handles regular lines by creating a new fragment if there is no fragment at the index or in front of it. If the fragment's start is equal to the index, it removes the fragment's title. Otherwise, it updates the fragment's lines.
+# MarkdownCode > services > folder service
+- The folder service is a global singleton that manages the location of the currently active project.
+- It has the following properties:
+  - folder: the root folder of the project
+  - project-name: the name of the active project (default is 'new project' if not provided)
+  - project-file: the project file path (folder + project name + '.json')
+  - cache: the cache folder path (folder + '\cache')
+  - project-config: the configuration file path (folder + project name + '_config.json')
+- It can perform the following actions:
+  - clear: creates a temporary folder, sets it as the folder value, creates a temporary name, creates the cache folder
+  - move to (new project file): moves the current project and related files to the new location
+  - copy (new project file): saves the current project to a new location
+  - set location (location): stores the new folder and project name
+# MarkdownCode > services > result-cache service
+- This service manages cached results for transformers.
+- Transformers can store their results for each text fragment and track if the result has become out of date.
+- The cache can monitor changes in both project fragments and result fragments.
+- Transformers use an instance of this class to cache their results.
+- The cache uses a dictionary to map keys to results.
+- When a transformer calculates a result, it asks the cache to update its dictionary:
+  - The key is calculated based on the project text fragment and any additional result values from other transformers.
+  - If the key is not present, a new cache item is created with the result and marked as still valid.
+  - If the key is already present, the cache item is retrieved and its result is updated to still valid.
+  - The cache also updates a secondary dictionary to track the relationships between text fragment titles and dictionary entries.
+- The cache stores the results in a JSON file specified by the transformer.
+- The cache registers event handlers to monitor changes in text fragments and input objects.
+- When triggered, the cache checks the secondary dictionary for entries and marks them as out of date.
+- The cache can overwrite results for a key and retrieve results for a key.
+- The cache can determine if a text fragment is out of date.
+- The cache has a function to retrieve all results related to a specific fragment.
+# MarkdownCode > services > gpt service
+- GPT service is a global singleton responsible for communicating with the open-ai api backend, mainly used by transformers for specific tasks.
+- It utilizes the openai node.js library to interact with the backend.
+- The service offers a function for other services or components to make api requests to open-ai.
+  - This function accepts a list of json objects called `messages`, containing `role` and `content` fields.
+  - The `messages` list is sent to openai using the `createChatCompletion` function.
+  - In case of failure, the service retries the request 3 times before raising an error.
+- Additionally, the service provides a method to retrieve the available models list, utilizing the openai nodejs library.
+# MarkdownCode > services > build service
+- The build service is a single instance that converts a list of markdown project data into source code.
+- It utilizes transformers to generate conversions on different text frames, starting from the original markdown code and ending with source code files stored on disk.
+- To build the project, the service performs the following actions:
+  - For each text fragment in the project's data list:
+    - For every transformer in the entry points list of the cybertron service:
+      - Asynchronously request the transformer to render its result.
+# MarkdownCode > services > project service
+- The project service is responsible for creating and opening projects, saving projects, updating project data, and managing user configurations.
+- When creating a new project, the project service clears all data from the project's data list, clears the folder service, asks the GPT service to empty its cache, and raises an event to indicate data changes.
+- When opening an existing project, the project service sets the folder location, reads the file contents, parses each line, reloads the data file for registered transformers, and raises an event for data changes.
+- When saving a project, the project service moves or copies the file, opens it for writing, converts parsed objects to a string, writes to the file, resets the project change indicator, and saves the filename for auto-save.
+- When the user makes changes in the markdown editor, the project service updates the data list and any related links.
+- The project service manages a data list and provides functions to work with it, such as retrieving a tree structure for the outline or drop-down boxes.
+- The project service also tracks user configurations, such as auto-save settings stored in local storage.
+# MarkdownCode > services > cybertron service
+- Cybertron-service is a global singleton that manages available transformers.
+- The service maintains a sub-list of entry-points, which are transformers used as starting points for building text-fragments.
+- Transformers register themselves, adding them to the list. An additional parameter determines if they should be added as entry-points.
+- Transformers can unregister themselves, removing them from the available transformers and entry-points list.
+# MarkdownCode > services > transformer-base service
+- The transformer-base service is a base class for transformers, providing a common interface and functionality.
+- The constructor of this service takes in the name of the transformer and a list of transformer names as dependencies. It replaces each name in the list with the corresponding object from the list of transformers. If a name cannot be found, an exception is raised with the necessary information. The list of objects is stored as 'dependencies'.
+- This service utilizes a result-cache-service (field: cache) to store all the results and keep track of when the build becomes outdated. The constructor parameters for the result-cache-service are the transformer name (this.name) and the dependencies (this.dependencies).
+- The render-result function (pseudo code) takes in a text fragment and performs the following steps:
+  - Calls the buildMessage function to generate a message and a list of keys.
+  - Sends a request to the GPT-service with the transformer name, text fragment key, and the generated message.
+  - Joins the list of keys with a separator and sets the result in the cache using the joined keys as the key and the received result.
+# MarkdownCode > services > compress service
+- The compress service shortens a given text fragment.
+- It can be used to test if the system understands the fragment and as input for other processes.
+- The compress service is a subclass of the transformer-base service.
+- The constructor parameters for the compress service are:
+  - name: 'compress'
+  - dependencies: []
+- During application startup, an instance of the compress service is created and registered as an entry-point transformer using `cybertron-service.register(this, true)`.
+- The `build-message` function takes a text fragment as input.
+- It returns a JSON array called `result` with the following elements:
+  - role: system, content: the value of the constant `resources.MarkdownCode_services_compress_service_0`
+  - role: user, content: the joined lines of the `text-fragment`
+- The function also returns `[ text-fragment.key ]`

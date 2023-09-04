@@ -31,11 +31,11 @@ user_prompt = """The class '{0}' is described as follows:
 {2}
 {3}"""
 term_prompt = """
-Any text between ``` or \""" signs are declarations of constant values, assign them to constants and use the constants in the code.
 Use small functions.
 A file always contains the definition for 1 component, service or object, no more.
 Add documentation to your code.
-only write valid code
+Only write valid code.
+Fully implement all pseudo code.
 do not include any intro or explanation, only write code"""
 
 
@@ -221,10 +221,14 @@ def get_all_imports(cl_to_render, full_title, cur_path, root_path):
     if not imports:
         return imports_txt
     primary = primary_class.get_primary(full_title) # only the primary component imports other components declared in the same fragment. this is to prevent confusion from gpt
+    already_imported = {}
     for comp, items in imports.items():
         if comp == cl_to_render:
             for import_def in items:
+                if import_def['service'] in already_imported:
+                    continue
                 imports_txt += get_import_service_line(import_def, cur_path)
+                already_imported[import_def['service']] = True
         else:
             is_declare = declare_or_use_class_classifier.get_is_declared(full_title, comp)
             if is_declare:
@@ -233,8 +237,11 @@ def get_all_imports(cl_to_render, full_title, cur_path, root_path):
                     # another component declared in the same fragment, so import from local path
                     imports_txt += f"The class {comp} can be imported from ./{comp}\n"
             else:
+                if comp in already_imported:
+                    continue
                 rel_path = os.path.relpath(items.strip(), cur_path)
                 imports_txt += f"The class {comp} can be imported from {rel_path}\n"
+                already_imported[comp] = True
     return imports_txt  
 
 
