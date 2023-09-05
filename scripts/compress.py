@@ -81,6 +81,7 @@ def generate_response(params, key):
     # Get the reply from the API response
     if response:
         reply = response.choices[0]["message"]["content"] # type: ignore
+        print("response: ", reply)
         return reply
     return None
 

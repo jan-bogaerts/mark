@@ -54,9 +54,9 @@
 {"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > folder service": {"FolderService": {"FolderService.cache": "A property that represents the path to the cache directory. It is used to construct the file path where the cache data will be stored."}}}
 # MarkdownCode > services > project service
 {"# MarkdownCode > services > line parser": {"LineParser": {"LineParser.parse": "A method that takes a line of text and an index as arguments, parses the line, and returns a parsed line object. This method is used to convert raw text into a structured format that can be easily manipulated and stored."}}, "# MarkdownCode > services > folder service": {"FolderService": {"clear": "A method to clear the current folder in the FolderService.", "setLocation": "A method to set the location of the folder in the FolderService.", "move": "A method to move the current folder to a new location in the FolderService.", "copy": "A method to copy the current folder to a new location in the FolderService."}}}
-# MarkdownCode > services > build service
-{"# MarkdownCode > services > cybertron service": {"CybertronService": {"getEntryPoints": "A method that returns an array of transformers. Each transformer has a 'render' method that takes a fragment as an argument and processes it."}}}
 # MarkdownCode > services > transformer-base service
 {"# MarkdownCode > services > result-cache service": {"ResultCacheService": {}}}
 # MarkdownCode > services > compress service
-{"# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
+{"# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {"constructor": "A method that is automatically called when a new object of a class is created. In this case, it initializes the 'compress' service and registers it to the 'cybertronService'.", "buildMessage": "A method that takes a text fragment as an argument and returns a compressed message and the text fragment key. This method is likely to be overridden in each subclass of TransformerBaseService."}}, "# MarkdownCode > services > cybertron service": {"CybertronService": {}}}
+# MarkdownCode > services > build service
+{"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > cybertron service": {"CybertronService": {"entryPoints": "An array of transformer objects. Each transformer has a 'renderResult' method that takes a text fragment as input and processes it."}}}

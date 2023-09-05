@@ -4,7 +4,7 @@ import os
 from time import sleep
 from constants import get_model_config, DEFAULT_MAX_TOKENS, OPENAI_API_KEY
 import project
-import render_component
+# import render_component
 import json
 import result_loader
 
@@ -83,6 +83,7 @@ def generate_response(params, key):
     # Get the reply from the API response
     if response:
         reply = response.choices[0]["message"]["content"] # type: ignore
+        print("response: ", reply)
         return reply
     return None
 

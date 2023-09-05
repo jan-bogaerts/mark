@@ -1,52 +1,53 @@
 
-const { ipcRenderer } = require('electron');
-const { ProjectService } = require('../project_service/ProjectService');
-const { CybertronService } = require('../cybertron_service/CybertronService');
+// Importing required services
+const ProjectService = require('../project_service/ProjectService');
+const CybertronService = require('../cybertron_service/CybertronService');
 
 /**
  * BuildService class
- * This class is responsible for turning the markdown project data list into source code.
+ * Processes all the text-fragments of the project-service using a set of transformers
  */
 class BuildService {
   constructor() {
-    this.projectService = new ProjectService();
-    this.cybertronService = new CybertronService();
+    if (!BuildService.instance) {
+      BuildService.instance = this;
+    }
+    return BuildService.instance;
   }
 
   /**
-   * Method to trigger the building process for all code in the project.
+   * Triggers the building process for all code in the project
    */
   async buildAll() {
-    const dataList = this.projectService.getDataList();
-
-    for (const fragment of dataList) {
-      for (const transformer of this.cybertronService.getEntryPoints()) {
-        await transformer.render(fragment);
+    for (let fragment of ProjectService.textFragments) {
+      for (let transformer of CybertronService.entryPoints) {
+        await transformer.renderResult(fragment);
       }
     }
   }
 
   /**
-   * Method to trigger the building process for all code files related to the currently active fragment.
-   * @param {Object} activeFragment - The currently active fragment.
+   * Triggers the building process for all code files related to the currently active fragment
+   * @param {Object} activeFragment - The currently active fragment
    */
   async buildForActiveTopic(activeFragment) {
-    for (const transformer of this.cybertronService.getEntryPoints()) {
-      await transformer.render(activeFragment);
+    for (let transformer of CybertronService.entryPoints) {
+      await transformer.renderResult(activeFragment);
     }
   }
 
   /**
-   * Method to trigger the building process for the selected fragment in the service related to the currently selected.
-   * @param {Object} activeFragment - The currently active fragment.
+   * Triggers the building process for the selected fragment in the service related to the currently selected
+   * @param {Object} activeFragment - The currently active fragment
    */
   async buildForActivePrompt(activeFragment) {
-    const selectedFragment = this.projectService.getSelectedFragment(activeFragment);
-
-    for (const transformer of this.cybertronService.getEntryPoints()) {
-      await transformer.render(selectedFragment);
+    for (let transformer of CybertronService.entryPoints) {
+      await transformer.renderResult(activeFragment);
     }
   }
 }
 
-module.exports = { BuildService };
+const instance = new BuildService();
+Object.freeze(instance);
+
+module.exports = instance;

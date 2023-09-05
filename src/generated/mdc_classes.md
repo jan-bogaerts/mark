@@ -43,10 +43,6 @@
 [
     "GPTService"
 ]
-# MarkdownCode > services > build service
-[
-  "BuildService"
-]
 # MarkdownCode > services > cybertron service
 [
     "CybertronService"
@@ -58,4 +54,8 @@
 # MarkdownCode > services > compress service
 [
   "CompressService"
+]
+# MarkdownCode > services > build service
+[
+  "BuildService"
 ]

@@ -54,3 +54,7 @@
 {"# MarkdownCode > services > folder service": {"FolderService": {}}}
 # MarkdownCode > services > transformer-base service
 {"# MarkdownCode > services > result-cache service": {"ResultCacheService": {"setResult": "A method that sets the result associated with a specific transformer and editor key to a new value. Used to store the result of a transformation in the cache."}}}
+# MarkdownCode > services > compress service
+{"# MarkdownCode > services > cybertron service": {"CybertronService": {}}}
+# MarkdownCode > services > build service
+{"# MarkdownCode > services > project service": {"ProjectService": {"textFragments": "An array that stores all text fragments of the project. Used to manage and manipulate project data."}}}

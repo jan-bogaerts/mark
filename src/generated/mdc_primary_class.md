@@ -20,11 +20,11 @@ ResultCacheService
 ProjectService
 # MarkdownCode > services > gpt service
 GPTService
-# MarkdownCode > services > build service
-BuildService
 # MarkdownCode > services > cybertron service
 CybertronService
 # MarkdownCode > services > transformer-base service
 TransformerBaseService
 # MarkdownCode > services > compress service
 CompressService
+# MarkdownCode > services > build service
+BuildService

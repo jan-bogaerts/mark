@@ -100,6 +100,7 @@ def generate_response(params, key):
     # Get the reply from the API response
     if response:
         reply = response.choices[0]["message"]["content"] # type: ignore
+        print("response: ", reply)
         return reply
     return None
 
@@ -214,7 +215,7 @@ def get_all_imports(cl_to_render, full_title, cur_path, root_path):
     imports_txt = ''
     has_constants = constant_lister.has_constants(full_title)
     if has_constants:
-        rel_path = os.path.relpath(constant_lister.get_resource_filename(root_path), cur_path)
+        rel_path = os.path.relpath(constant_lister.get_resource_filename(root_path), os.path.join(root_path, cur_path))
         imports_txt += f"The const 'resources' can be imported from {rel_path}\n"
     cur_path = cur_path.strip()
     imports = resolve_class_imports.get_data(full_title)

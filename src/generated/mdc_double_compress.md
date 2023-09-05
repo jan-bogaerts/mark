@@ -131,8 +131,6 @@ The folder service is a global singleton that manages the location of the active
 - The `messages` list is sent to openai using the `createChatCompletion` function.
 - If the request fails, the service retries it 3 times before raising an error.
 - The service also provides a method to retrieve the available models list using the openai nodejs library.
-# MarkdownCode > services > build service
-The build service converts markdown project data into source code using transformers. It performs actions for each text fragment in the project's data list by requesting transformers to render their results asynchronously.
 # MarkdownCode > services > project service
 The project service creates, opens, saves, updates, and manages projects. When creating a project, it clears data, folder service, GPT cache, and raises an event. When opening a project, it sets location, reads file contents, reloads data, and raises an event. When saving a project, it moves/copies the file, writes data, resets indicator, and saves filename. It updates data and links when changes are made in the markdown editor. It manages a data list and provides functions for the outline and drop-down boxes. It tracks user configurations like auto-save settings.
 # MarkdownCode > services > cybertron service
@@ -144,3 +142,5 @@ The project service creates, opens, saves, updates, and manages projects. When c
 The transformer-base service is a base class for transformers, providing a common interface and functionality. Its constructor takes in the transformer name and a list of dependencies, replacing each name with the corresponding object from the list of transformers. If a name is not found, an exception is raised. The service uses a result-cache-service to store results and track when the build becomes outdated. The render-result function generates a message and a list of keys, sends a request to the GPT-service with the transformer name, text fragment key, and the message, and sets the result in the cache using the joined keys as the key and the received result.
 # MarkdownCode > services > compress service
 The compress service shortens text fragments and can be used for testing and other processes. It is a subclass of the transformer-base service. The constructor parameters are name and dependencies. During startup, an instance of the compress service is created and registered. The build-message function takes a text fragment as input and returns a JSON array called result with system and user roles. It also returns the text fragment key.
+# MarkdownCode > services > build service
+The build service handles all text fragments in the project service using transformers to generate conversions. To build the project, the service requests each transformer to asynchronously render its result for each text fragment in the project service's data list.

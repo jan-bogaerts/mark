@@ -20,11 +20,11 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\project_service\\ProjectService.js"]
 # MarkdownCode > services > gpt service
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\gpt_service\\GPTService.js"]
-# MarkdownCode > services > build service
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\build_service\\BuildService.js"]
 # MarkdownCode > services > cybertron service
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\cybertron_service\\CybertronService.js"]
 # MarkdownCode > services > transformer-base service
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformer-base_service\\TransformerBaseService.js"]
 # MarkdownCode > services > compress service
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\compress_service\\CompressService.js"]
+# MarkdownCode > services > build service
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\build_service\\BuildService.js"]

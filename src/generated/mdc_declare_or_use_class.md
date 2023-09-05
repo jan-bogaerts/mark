@@ -20,11 +20,11 @@
 {"ProjectService": "declare"}
 # MarkdownCode > services > gpt service
 {"GPTService": "declare"}
-# MarkdownCode > services > build service
-{"BuildService": "declare"}
 # MarkdownCode > services > cybertron service
 {"CybertronService": "declare"}
 # MarkdownCode > services > transformer-base service
 {"TransformerBaseService": "declare"}
 # MarkdownCode > services > compress service
 {"CompressService": "declare"}
+# MarkdownCode > services > build service
+{"BuildService": "declare"}

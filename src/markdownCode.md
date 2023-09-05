@@ -637,11 +637,11 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   ```
 
 ### build service
-- the build service is a global singleton that turns the markdown project data list into source code. It uses a set of transformers to iteratively generate conversions on the different text frames, starting with the original markdown code and finally ending with source code files that are stored on disk.
+- the build service is a global singleton that processes all the text-fragments of the project-service. It uses a set of transformers to iteratively generate conversions on the different text-fragments.
 - to build the project, the service performs the following actions:
   - for each text-fragment in project-service.data-list:
     - for every transformer in the list of entry-points of the cybertron-service:
-      - ask the transformer to render it's result (async).
+      - ask the transformer to render it's result (renderResult) (async).
   
 
 ### cybertron service
@@ -677,7 +677,8 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - inherits from transformer-base service. Constructor parameters:
   - name: 'compress'
   - dependencies: []
-- at startup of the application, an instance of this service is created and registered as an entry-point transformer: `cybertron-service.register(this, true)`
+- create a global instance of the service
+- register the global instance of the service as an entry-point transformer with the cybertron-service: `cybertronService.register(this, true)`
 
 - function build-message(text-fragment):
   - result (json array):

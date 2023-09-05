@@ -68,8 +68,6 @@
 []
 # MarkdownCode > services > gpt service
 []
-# MarkdownCode > services > build service
-[]
 # MarkdownCode > services > cybertron service
 []
 # MarkdownCode > services > transformer-base service
@@ -77,4 +75,6 @@
 # MarkdownCode > services > compress service
 [{"start": 10, "end": 14, "name": "MarkdownCode_services_compress_service_0"}]
 # MarkdownCode > services > project service
+[]
+# MarkdownCode > services > build service
 []

@@ -20,11 +20,11 @@
 {"ProjectService": "yes"}
 # MarkdownCode > services > gpt service
 {"GPTService": "yes"}
-# MarkdownCode > services > build service
-{"BuildService": "yes"}
 # MarkdownCode > services > cybertron service
 {"CybertronService": "yes"}
 # MarkdownCode > services > transformer-base service
 {"TransformerBaseService": "no"}
 # MarkdownCode > services > compress service
 {"CompressService": "no"}
+# MarkdownCode > services > build service
+{"BuildService": "yes"}

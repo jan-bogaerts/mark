@@ -330,13 +330,6 @@ The 'LineParserHelpers' module contains helper functions described in pseudo cod
   - The `messages` list is sent to openai using the `createChatCompletion` function.
   - In case of failure, the service retries the request 3 times before raising an error.
 - Additionally, the service provides a method to retrieve the available models list, utilizing the openai nodejs library.
-# MarkdownCode > services > build service
-- The build service is a single instance that converts a list of markdown project data into source code.
-- It utilizes transformers to generate conversions on different text frames, starting from the original markdown code and ending with source code files stored on disk.
-- To build the project, the service performs the following actions:
-  - For each text fragment in the project's data list:
-    - For every transformer in the entry points list of the cybertron service:
-      - Asynchronously request the transformer to render its result.
 # MarkdownCode > services > project service
 - The project service is responsible for creating and opening projects, saving projects, updating project data, and managing user configurations.
 - When creating a new project, the project service clears all data from the project's data list, clears the folder service, asks the GPT service to empty its cache, and raises an event to indicate data changes.
@@ -371,3 +364,9 @@ The 'LineParserHelpers' module contains helper functions described in pseudo cod
   - role: system, content: the value of the constant `resources.MarkdownCode_services_compress_service_0`
   - role: user, content: the joined lines of the `text-fragment`
 - The function also returns `[ text-fragment.key ]`
+# MarkdownCode > services > build service
+- The build service is a single instance that handles all the text fragments in the project service. It utilizes a group of transformers to generate conversions on the text fragments.
+- To build the project, the service follows these steps:
+  - For each text fragment in the project service's data list:
+    - For every transformer in the entry points list of the cybertron service:
+      - Request the transformer to asynchronously render its result (renderResult).
