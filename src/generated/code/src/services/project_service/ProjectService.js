@@ -1,49 +1,19 @@
 
-const { ipcRenderer } = require('electron');
-const { LineParser } = require('../line_parser/LineParser');
-const { FolderService } = require('../folder_service/FolderService');
+import FolderService from '../folder_service/FolderService';
+import CybertronService from '../cybertron_service/CybertronService';
+import LineParser from '../line_parser/LineParser';
 
 class ProjectService {
   constructor() {
-    this.autoSave = localStorage.getItem('autoSave') === 'true';
-    this.filename = '';
     this.textFragments = [];
+    this.content = '';
+    this.filename = '';
+    this.autoSave = localStorage.getItem('autoSave') === 'true';
+    this.eventTarget = new EventTarget();
   }
 
   getAutoSaveState() {
     return this.autoSave;
-  }
-
-  newProject() {
-    this.textFragments = [];
-    FolderService.clear();
-    ipcRenderer.send('project-data-changed');
-  }
-
-  loadProject(filePath) {
-    FolderService.setLocation(filePath);
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const lines = fileContent.split('\n');
-    lines.forEach((line, index) => {
-      const parsedLine = LineParser.parse(line, index);
-      this.textFragments.push(parsedLine);
-    });
-    ipcRenderer.send('project-data-changed');
-  }
-
-  getFilename() {
-    return this.filename;
-  }
-
-  saveProject(filePath) {
-    if (!this.filename) {
-      FolderService.move(filePath);
-    } else if (this.filename !== filePath) {
-      FolderService.copy(filePath);
-    }
-    const fileContent = this.textFragments.map(fragment => fragment.toString()).join('\n');
-    fs.writeFileSync(filePath, fileContent);
-    this.filename = filePath;
   }
 
   setAutoSaveState(state) {
@@ -51,63 +21,111 @@ class ProjectService {
     localStorage.setItem('autoSave', state);
   }
 
-  subscribe(callback) {
-    ipcRenderer.on('project-data-changed', callback);
+  getFilename() {
+    return this.filename;
   }
 
-  unsubscribe(callback) {
-    ipcRenderer.removeListener('project-data-changed', callback);
+  getContent() {
+    return this.content;
   }
 
-  setCode(code) {
-    this.textFragments = LineParser.parse(code);
-    ipcRenderer.send('project-data-changed');
+  newProject() {
+    this.clear();
+    FolderService.clear();
+    CybertronService.transformers.forEach(transformer => transformer.cache.clearCache());
+    this.emit('content-changed');
   }
 
-  getProjectData() {
-    return this.textFragments.map((fragment, index) => ({
-      title: fragment.title,
-      key: this.calculateKey(fragment, index),
-      levelCount: fragment.levelCount,
-    }));
+  loadProject(filePath) {
+    this.clear();
+    FolderService.setLocation(filePath);
+    this.content = fs.readFileSync(filePath, 'utf-8');
+    this.content.split('\n').forEach((line, index) => LineParser.parse(line, index));
+    CybertronService.transformers.forEach(transformer => transformer.cache.loadCacheFromFile());
+    this.emit('content-changed');
   }
 
-  on(eventName, callback) {
-    ipcRenderer.on(eventName, callback);
+  saveProject(file) {
+    if (!this.filename) {
+      FolderService.move(file);
+    } else if (this.filename !== file) {
+      FolderService.copy(file);
+    }
+    fs.writeFileSync(file, this.textFragments.map(fragment => `${fragment.title}\n${fragment.lines.join('\n')}`).join('\n'));
+    this.filename = file;
   }
 
-  addTextFragment(textFragment) {
-    this.textFragments.push(textFragment);
-    ipcRenderer.send('project-data-changed');
+  processChanges(changes, full) {
+    changes.forEach(change => {
+      const lines = change.text.split('\n');
+      let curLine = change.range.startLineNumber - 1;
+      let lineEnd = change.range.endLineNumber - 1;
+      let lineIdx = 0;
+      while (lineIdx < lines.length && curLine < lineEnd) {
+        LineParser.parse(lines[lineIdx], curLine);
+        lineIdx++;
+        curLine++;
+      }
+      while (curLine < lineEnd) {
+        LineParser.deleteLine(curLine);
+        curLine++;
+      }
+      while (lineIdx < lines.length) {
+        LineParser.insert(lines[lineIdx], curLine);
+        lineIdx++;
+        curLine++;
+      }
+    });
+    this.content = full;
+    this.markDirty();
   }
 
-  getTextFragmentAt(index) {
-    return this.textFragments[index];
+  markDirty() {
+    if (this.autoSave && this.filename) {
+      setTimeout(() => this.saveProject(this.filename), 5000);
+    }
   }
 
-  emit(eventName, ...args) {
-    ipcRenderer.send(eventName, ...args);
+  clear() {
+    this.textFragments = [];
+    this.content = '';
+    LineParser.clear();
+    PositionTrackingService.clear();
   }
 
-  calculateKey(fragment, index) {
-    return `${fragment.title}-${index}`;
+  deleteTextFragment(fragment) {
+    const index = this.textFragments.indexOf(fragment);
+    if (index > -1) {
+      this.textFragments.splice(index, 1);
+      this.emit('fragment-deleted', fragment.key);
+    }
   }
 
-  deleteTextFragment(index) {
-    this.textFragments.splice(index, 1);
-    ipcRenderer.send('project-data-changed');
+  addTextFragment(fragment, index) {
+    if (index >= this.textFragments.length) {
+      this.textFragments.push(fragment);
+    } else {
+      this.textFragments.splice(index, 0, fragment);
+    }
+    this.emit('fragment-inserted', fragment.key);
   }
 
-  markOutOfDate(index) {
-    this.textFragments[index].outOfDate = true;
-    ipcRenderer.send('project-data-changed');
+  markOutOfDate(fragment) {
+    fragment.isOutOfDate = true;
+    this.emit('fragment-out-of-date', fragment.key);
   }
 
-  createTextFragment(line, index) {
-    const textFragment = LineParser.parse(line, index);
-    this.textFragments.push(textFragment);
-    ipcRenderer.send('project-data-changed');
+  emit(eventName, detail) {
+    this.eventTarget.dispatchEvent(new CustomEvent(eventName, { detail }));
+  }
+
+  subscribe(eventName, callback) {
+    this.eventTarget.addEventListener(eventName, callback);
+  }
+
+  unsubscribe(eventName, callback) {
+    this.eventTarget.removeEventListener(eventName, callback);
   }
 }
 
-module.exports = new ProjectService();
+export default new ProjectService();

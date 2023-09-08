@@ -6,18 +6,10 @@
 {"SelectionService": []}
 # MarkdownCode > services > Undo service
 {"UndoService": []}
-# MarkdownCode > services > position-tracking service
-{"PositionTrackingService": [{"service": "SelectionService", "path": "src\\services\\Selection_service\\SelectionService", "service_loc": "# MarkdownCode > services > Selection service"}]}
-# MarkdownCode > services > line parser
-{"LineParser": [{"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}, {"service": "LineParserHelpers", "path": "src\\services\\line_parser\\line_parser_helpers\\LineParserHelpers", "service_loc": "# MarkdownCode > services > line parser > line parser helpers"}], "lineParserHelpers": "src\\services\\line parser\\line parser helpers\\LineParserHelpers"}
 # MarkdownCode > services > line parser > line parser helpers
 {"LineParserHelpers": [{"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}]}
 # MarkdownCode > services > folder service
 {"FolderService": []}
-# MarkdownCode > services > result-cache service
-{"ResultCacheService": [{"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}, {"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}]}
-# MarkdownCode > services > project service
-{"ProjectService": [{"service": "LineParser", "path": "src\\services\\line_parser\\LineParser", "service_loc": "# MarkdownCode > services > line parser"}, {"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}]}
 # MarkdownCode > services > gpt service
 {"GPTService": []}
 # MarkdownCode > services > cybertron service
@@ -28,3 +20,11 @@
 {"CompressService": [{"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
 # MarkdownCode > services > build service
 {"BuildService": [{"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}, {"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}]}
+# MarkdownCode > services > project service
+{"ProjectService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}, {"service": "LineParser", "path": "src\\services\\line_parser\\LineParser", "service_loc": "# MarkdownCode > services > line parser"}]}
+# MarkdownCode > services > line parser
+{"LineParser": [{"service": "LineParserHelpers", "path": "src\\services\\line_parser\\line_parser_helpers\\LineParserHelpers", "service_loc": "# MarkdownCode > services > line parser > line parser helpers"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}]}
+# MarkdownCode > services > position-tracking service
+{"PositionTrackingService": []}
+# MarkdownCode > services > result-cache service
+{"ResultCacheService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}]}

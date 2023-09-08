@@ -1,91 +1,81 @@
 
-import React, { useEffect, useState } from 'react';
-import { Layout } from 'antd';
-import MonacoEditor from 'react-monaco-editor';
-import ProjectService from '../../../services/project-service/ProjectService';
-import ThemeService from '../../../services/theme-service/ThemeService';
-import SelectionService from '../../../services/selection-service/SelectionService';
-import PositionTrackingService from '../../../services/position-tracking-service/PositionTrackingService';
-import DialogService from '../../../services/dialog-service/DialogService';
+import React, { useEffect, useRef } from 'react';
+import { MonacoEditor } from 'react-monaco-editor';
+import { dialogService } from '../../../../services/dialog_service/DialogService';
+import { themeService } from '../../../../services/Theme_service/ThemeService';
+import { selectionService } from '../../../../services/Selection_service/SelectionService';
+import { projectService } from '../../../../services/project_service/ProjectService';
+import { positionTrackingService } from '../../../../services/position-tracking_service/PositionTrackingService';
 
-const Editor = () => {
-  const [editor, setEditor] = useState(null);
-  const [code, setCode] = useState('');
-  const [theme, setTheme] = useState(ThemeService.getCurrentTheme());
-  const [font, setFont] = useState(ThemeService.getCurrentFont());
-  const [fontSize, setFontSize] = useState(ThemeService.getCurrentFontSize());
+/**
+ * Editor component
+ */
+function Editor() {
+  const editorRef = useRef(null);
 
   useEffect(() => {
-    ProjectService.subscribe((newCode) => {
-      setCode(newCode);
-    });
-
-    ThemeService.subscribe((newTheme, newFont, newFontSize) => {
-      setTheme(newTheme);
-      setFont(newFont);
-      setFontSize(newFontSize);
-    });
-
+    projectService.subscribe('content-changed', handleContentChanged);
     return () => {
-      ProjectService.unsubscribe();
-      ThemeService.unsubscribe();
+      projectService.unsubscribe('content-changed', handleContentChanged);
     };
   }, []);
 
-  const handleEditorDidMount = (editor) => {
-    setEditor(editor);
-    SelectionService.setEditor(editor);
-  };
-
-  const handleEditorChange = (newValue) => {
-    setCode(newValue);
-    ProjectService.setCode(newValue);
-  };
-
-  const handleEditorFocus = () => {
-    SelectionService.setEditor(editor);
-  };
-
-  const handleEditorBlur = () => {
-    if (SelectionService.getEditor() === editor) {
-      SelectionService.setEditor(null);
+  const handleContentChanged = () => {
+    if (editorRef.current) {
+      editorRef.current.setValue(projectService.getContent());
     }
   };
 
-  const handleCursorPositionChange = (e) => {
-    if (SelectionService.getEditor() === editor) {
-      PositionTrackingService.updatePosition(e.position);
+  const handleDidChangeModelContent = (ev) => {
+    try {
+      if (!editorRef.current) {
+        return;
+      }
+      projectService.processChanges(ev.changes, editorRef.current.getValue());
+    } catch (e) {
+      dialogService.showErrorDialog(e);
     }
   };
 
-  const handleCursorSelectionChange = () => {
-    if (SelectionService.getEditor() === editor) {
-      SelectionService.notifySubscribers();
+  const handleDidFocusEditorWidget = () => {
+    selectionService.setEditor(editorRef.current);
+  };
+
+  const handleDidBlurEditorWidget = () => {
+    if (selectionService.getEditor() === editorRef.current) {
+      selectionService.setEditor(null);
+    }
+  };
+
+  const handleDidChangeCursorPosition = (ev) => {
+    if (selectionService.getEditor() === editorRef.current) {
+      positionTrackingService.updatePosition(ev.position);
+    }
+  };
+
+  const handleDidChangeCursorSelection = () => {
+    if (selectionService.getEditor() === editorRef.current) {
+      selectionService.notifySelectionChanged();
     }
   };
 
   return (
-    <Layout className="editor-layout">
-      <MonacoEditor
-        width="100%"
-        height="100%"
-        language="markdown"
-        theme={theme}
-        value={code}
-        options={{
-          selectOnLineNumbers: true,
-          fontFamily: font,
-          fontSize: fontSize,
-        }}
-        onChange={handleEditorChange}
-        editorDidMount={handleEditorDidMount}
-        onFocusChange={handleEditorFocus}
-        onBlur={handleEditorBlur}
-        onCursorPositionChange={handleCursorPositionChange}
-        onCursorSelectionChange={handleCursorSelectionChange}
-      />
-    </Layout>
+    <MonacoEditor
+      ref={editorRef}
+      language="markdown"
+      theme={themeService.getCurrentTheme()}
+      options={{
+        fontFamily: themeService.getCurrentFont(),
+        fontSize: themeService.getCurrentFontSize(),
+      }}
+      onChange={handleDidChangeModelContent}
+      onFocus={handleDidFocusEditorWidget}
+      onBlur={handleDidBlurEditorWidget}
+      onCursorPositionChange={handleDidChangeCursorPosition}
+      onSelectionChange={handleDidChangeCursorSelection}
+      style={{ width: '100%', height: '100%' }}
+    />
   );
-};
+}
 
 export default Editor;

@@ -6,18 +6,10 @@
 {"ThemeService": "yes"}
 # MarkdownCode > services > Selection service
 {"SelectionService": "yes"}
-# MarkdownCode > services > position-tracking service
-{"PositionTrackingService": "yes"}
-# MarkdownCode > services > line parser
-{"LineParser": "yes"}
 # MarkdownCode > services > line parser > line parser helpers
 {"LineParserHelpers": "yes"}
 # MarkdownCode > services > folder service
 {"FolderService": "yes"}
-# MarkdownCode > services > result-cache service
-{"ResultCacheService": "no"}
-# MarkdownCode > services > project service
-{"ProjectService": "yes"}
 # MarkdownCode > services > gpt service
 {"GPTService": "yes"}
 # MarkdownCode > services > cybertron service
@@ -28,3 +20,11 @@
 {"CompressService": "no"}
 # MarkdownCode > services > build service
 {"BuildService": "yes"}
+# MarkdownCode > services > project service
+{"ProjectService": "yes"}
+# MarkdownCode > services > line parser
+{"LineParser": "yes"}
+# MarkdownCode > services > position-tracking service
+{"PositionTrackingService": "yes"}
+# MarkdownCode > services > result-cache service
+{"ResultCacheService": "no"}

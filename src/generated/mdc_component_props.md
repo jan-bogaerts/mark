@@ -30,8 +30,6 @@
 {"OpenAiConfigurationDialog": {}}
 # MarkdownCode > components > toolbar > preferences > view section
 {"ViewSection": {"Theme": "A combobox where the user can choose between light or dark mode. Linked to the theme-service.", "Font": "A combobox for selecting the font of the markdown text. Linked to the theme-service.", "Font size": "A combobox for selecting the font size of the markdown text. Linked to the theme-service."}}
-# MarkdownCode > components > body > editor
-{"Editor": {}}
 # MarkdownCode > components > body > results view > results view tab
 {"ResultsViewTab": {}}
 # MarkdownCode > components > body > results view
@@ -40,7 +38,7 @@
 {"BuildSection": {}}
 # MarkdownCode > components > body
 {"Body": {}}
+# MarkdownCode > components > body > editor
+{"Editor": {}}
 # MarkdownCode > components > body > outline
 {"Outline": {}}
-
-

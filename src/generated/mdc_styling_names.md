@@ -58,10 +58,6 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\horizontal splitter\\HorizontalSplitter.js": ["horizontal-splitter", "splitter"]}
 # MarkdownCode > components > body > vertical splitter
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\vertical splitter\\VerticalSplitter.js": ["vertical-splitter", "left-panel", "splitter", "right-panel"]}
-# MarkdownCode > components > body > editor
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": ["editor-layout", "markdown"]}
-# MarkdownCode > components > body > outline
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js": []}
 # MarkdownCode > components > body > results view
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\ResultsView.js": ["results-view"]}
 # MarkdownCode > components > body > results view > results view tab
@@ -69,4 +65,16 @@
 # MarkdownCode > components > body > results view > results view context menu
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js": ["more-button", "selected"]}
 # MarkdownCode > services > line parser
+{}
+# MarkdownCode > components > body > editor
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": ["MonacoEditor", "language", "theme", "options", "fontFamily", "fontSize", "onChange", "onFocus", "onBlur", "onCursorPositionChange", "onSelectionChange", "style", "width", "height"]}
+# MarkdownCode > components > body > outline
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js": ["outline"]}
+# MarkdownCode > services > folder service
+{}
+# MarkdownCode > services > line parser > line parser helpers
+{}
+# MarkdownCode > services > cybertron service
+{}
+# MarkdownCode > services > transformer-base service
 {}

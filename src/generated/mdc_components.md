@@ -30,8 +30,6 @@
 ["OpenAiConfigurationDialog"]
 # MarkdownCode > components > toolbar > preferences > view section
 ["ViewSection"]
-# MarkdownCode > components > body > editor
-["Editor"]
 # MarkdownCode > components > body > results view
 ["ResultsView", "ResultsViewTab"]
 # MarkdownCode > components > body > results view > results view tab
@@ -40,7 +38,9 @@
 ["BuildSection"]
 # MarkdownCode > components > body
 ["Body", "HorizontalSplitter", "Outline", "VerticalSplitter", "Editor", "ResultsView"]
-# MarkdownCode > components > body > outline
-["Outline"]
 # MarkdownCode > components > body > results view > results view context menu
 ["ResultsViewContextMenu"]
+# MarkdownCode > components > body > editor
+["Editor"]
+# MarkdownCode > components > body > outline
+["Outline"]

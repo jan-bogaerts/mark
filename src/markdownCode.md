@@ -224,9 +224,19 @@ Remember that each button needs it's own appropriate icon.
 - When the editor is loaded:
   - the text for the monaco editor is retrieved from the project service.
   - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
-- Whenever the project service raises the 'data-changed' event, the editor will reload the text
-- when the user changes the text in the monaco editor, the new text is saved to the project service.
+- Whenever the project service triggers the 'content-changed' event, the editor will reload the text
+  - note: register using `projectService.subscribe('content-changed', handleContentChanged)`
 - monitor the following events on the monaco editor:
+  - onDidChangeModelContent: ask the project service to process the content changes. in pseudo:
+  ```python (pseudo)
+  def handleDidChangeModelContent(ev):
+      try:
+        if not editor: # ref to the editor needs to be loaded, should be the case cause event is triggered
+          return
+        projectService.processChanges(ev.changes, editor.getValue())
+      catch (e):
+        dialogService.showErrorDialog(e)
+  ```
   - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
   - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
   - onDidChangeCursorPosition: if the selection service currently references this monaco editor, update the position-tracking service with the new cursor position
@@ -236,15 +246,17 @@ Remember that each button needs it's own appropriate icon.
 #### outline
 - the outline component is positioned to the left of the editor
 - it contains a tree representing the outline of the currently active project: all markdown headings in the document are present in the outline
-- When the component is loaded and whenever the project-service raises an event to indicate that a new project was loaded, the project data is retrieved from the project-service and converted into a tree structure using the function 'convertToTreeData'.
-- Whenever the project service raises an event that a data item was removed, look up the key in the tree structure and remove the node from the tree. Note: also search in the 'children' list of every node recursively until the key is found or at end of tree.
-- Whenever the project service raises an event that a data item was added or (multiple) item(s) were changed, rebuild the tree structure.
+- When the component is loaded and whenever the project-service raises the 'content-changed' event to indicate that a new project was loaded, the project data is retrieved from the project-service and converted into a tree structure using the function 'convertToTreeData'.
+  - note: register using `projectService.subscribe('content-changed', handleContentChanged)`
+- Whenever the project service raises an event that a data item was removed (event: fragment-deleted), call the 'removeNode' function
+- Whenever the project service raises an event that a data item was added (fragment-inserted) or (multiple) item(s) were changed (the event 'key-changed'), rebuild the tree structure.
 - when the user selects a tree item, the key of the first selected item is assigned to the position-tracking service's activeFragment
 - this component monitors the position-tracking service for changes to the currently selected text-fragment.
+  - use `positionTrackingService.subscribe(eventHandler)` to attach the event handler
   - when the position changes, set the tree's selectedKeys property to the key of the selected text-fragment so that the corresponding tree node becomes selected.
 - show the tree with lines
 
-the function 'convertToTreeData' is described as:
+- the function 'convertToTreeData' is described as:
   set parent to null
   for every data item:
     create a new node for the data item. Set the title & key of the node to the title & key of the data item. also keep a reference to the data item itself in the node
@@ -253,6 +265,22 @@ the function 'convertToTreeData' is described as:
     if the item's level count is higher then parent.data.level-count: add the new node to the parent's children. make the new node parent 
     if the item's level count equals parent.data.level-count or is lower:
       get the parent of the current parent until the level count of this new parent is 1 higher then the level count of the item and add the item as a child of this new parent. Make the item the new parent.
+  
+- pseudo for removeNodeFromTree:
+  ```javascript (pseudo)
+  removeNode = (key) => {
+    const treeData = this.removeNodeByKey(this.state.treeData, key);
+    this.setState({ treeData });
+  };
+
+  removeNodeByKey = (nodes, key) => {
+    return nodes.reduce((result, node) => {
+      if (node.key === key) return result;
+      return [...result, { ...node, children: this.removeNodeByKey(node.children || [], key) }];
+    }, []);
+  }
+
+  ```
 
 
 #### results view
@@ -319,17 +347,20 @@ the function 'convertToTreeData' is described as:
 ### project service
 - the project service is a global singleton that is responsible for:
   - creating a new project
-    - all data is cleared from the project's data list
+    - call this.clear
     - call folder-service.clear
-    - ask the gpt=service to have all registered gpt-transformers recreate their cache object (to empty the data).
-    - an event is raised to indicate that the data has changed (for the project-editor & and results-view components, if they are opened)
+    - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file:
+      `transformer.cache.clearCache()`
+    - raise the content-changed event to indicate that the data has changed
   - opening an existing project.
+    - call this.clear
     - call folder-service.set-location(file-path)
-    - read the contents of the file that is specified as a parameter. Read it as a string.
+    - read the contents of the file that is specified as a parameter. Read it as a string. save with the field 'content'
     - split the file in lines
     - for each line in the file, call line-parser-service.parse(line, index).
-    - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file.
-    - raise an event to indicate that the data has changed (for the project editor)
+    - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file:
+      `transformer.cache.loadCacheFromFile()`
+    - raise an event (content-changed) to indicate that the data has changed
   - saving the currently opened project (param: file).
     - if there was no previous file path (first time project is saved), call folder-service.move(file)
     - if the previous file path is different from the new file (save-as was called), call folder-service.copy(file)
@@ -338,13 +369,49 @@ the function 'convertToTreeData' is described as:
       - each object has a title and a list of lines.
     - reset the indicator that the project has changed
     - save the filename in the project service if the auto-save function needs to use it.
-  - updating the project's data list whenever the user makes changes in the markdown editor. 
-    - The markdown editor calls an update function provided by the project, whenever the user edits the document.
-    - the item in the data-list at the specified line is updated and any possible links to and from other items in the data list are updated.
-  - manage a data-list of the currently loaded data and provide the following functions to work with this data list:
+  - processing data changes whenever the user makes changes in the markdown editor. in pseudo:
+  ```python (pseudo)
+    def processChanges(changes, full):
+      for change in changes:
+        lines = change.text.split('\n')
+        curLine = change.range.startLineNumber - 1
+        lineEnd = change.range.endLineNumber - 1
+        lineIdx = 0
+        # first replace lines that are overwritten
+        while lineIdx < len(lines) and curLine < lineEnd:
+          lineParser.parse(lines[lineIdx], curLine)
+          lineIdx += 1
+          curLine += 1
+        # now there are either lines to delete or to insert
+        while curLine < lineEnd:
+          lineParser.deleteLine(curLine)
+          curLine += 1
+        while lineIdx < len(lines):
+          LineParser.insert(line, index)
+        this.content = full
+        this.markDirty()
+  ``` 
+  - manage a data-list of the currently loaded data (field: text-fragments) and provide the following functions to work with this data list:
     - retrieve a tree-structure (where each item in the tree represents a header that is used in the project) to be used in the outline or in drop-down boxes on the results-view.
+    - deleteTextFragment(fragment): remove the object from the text-fragments list & raise the fragment-deleted event, parameter = fragment.key
+    - addTextFragment(fragment, index): if index is at end of the text-fragments list, add to list, otherwise insert the fragment at the specified position in the text-fragments list. raise the fragment-inserted event.
+    - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date
+    - clear():
+      - clear the text-fragments
+      - the content field is reset
+      - call line-parser.clear
+      - call position-tracking-service.clear
 - the project service also keeps track of some user configs like:
-  - wether auto-save is on or not. This value is stored in the local storage. If it is turned on, whenever the update function is called, an auto-save timer is triggered or reset. When this auto-save timer goes off, the project is automatically saved. 
+  - wether auto-save is on or not. This value is stored in the local storage. 
+- Whenever 'markDirty' is called, a timer is started, if it isn't already running, the auto-save is on and filename is known. This timer will call the save function when it goes off.
+- The project service uses an EventTarget to dispatch events that others can subscribe to / unsubscribe from. it raises the following events:
+  - content-changed: when the project is loaded or a new project is created.
+  - fragment-deleted: when a text fragment is removed from the list
+  - fragment-inserted: when a text fragment is added to the list
+  - fragment-out-of-date: when a fragment is marked as out of date.
+  - key-changed: when the key of a fragment was changed (raised externally)
+
+
 
 
 ### folder service
@@ -398,25 +465,28 @@ the function 'convertToTreeData' is described as:
 
 ### line parser
 - the line-parser service is a global singleton object used to parse markdown lines and update the the text-fragments stored in the project-service.
-- the line-parser service maintains an array of text-fragment objects (called fragmentsIndex). When the service is created, this list is empty.
-- the line-parser has a function for creating new text-fragments (json objects). it accepts as input a string which is the line that is being processed.
-  - trim the line and convert it to lower case.
-  - count the nr of '#' that are in front of the title and assign to the depth-level of the text-fragment. so '#' is level 1, '##' is level 2, '###' is level 3 and so on.
-  - remove all the '#' from the line and assign to the title value of the text-fragment.
-  - calculate the key for the text-fragment and store in the text-fragment.
-  - set the 'out-of-date' flag to true, indicating that this fragment hasn't been processed yet
-  - initialize an empty array for the 'lines' field
-  - ask the project-service to add the text-fragment in it's list of text-fragments.
-- the line-parser has a function to calculate the key of a text-fragment, which accepts as input a text-fragment and an index position. it goes as follows:
-  - the current depth = the depth-level of the text-fragment
-  - the result value = the title of the text-fragment
-  - loop from the given index position until 0 using the field idx
-    - prev-fragment = the text-fragment that the project-service has at position 'idx'
-    - if the depth-level of the prev-fragment is smaller then the current depth:
-      - store the new current depth
-      - prepend the title of the prev-fragment + ' > ' to the result
-      - if the new current depth == 1, stop the loop
-- pseudo code for the parse function and related:
+- It has:
+  - fragmentIndex: the line-parser service maintains an array of text-fragment objects. When the service is created, this list is empty.
+  - createTextFragment: a function for creating new text-fragments (json objects). it accepts as input a string which is the line that is being processed and the index nr at which the object should be placed.
+    - trim the line and convert it to lower case.
+    - count the nr of '#' that are in front of the title and assign to the depth-level of the text-fragment. so '#' is level 1, '##' is level 2, '###' is level 3 and so on.
+    - remove all the '#' from the line and assign to the title value of the text-fragment.
+    - calculate the key for the text-fragment and store in the text-fragment.
+    - set the 'out-of-date' flag to true, indicating that this fragment hasn't been processed yet
+    - initialize an empty array for the 'lines' field
+    - ask the project-service to add the text-fragment in it's list of text-fragments (projectService.addTextFragment(textFragment, index)).
+    - do not add to the fragmentsIndex (is done separately)
+  - calculateKey: for calculating the key of a text-fragment. It accepts as input a text-fragment and an index position. it goes as follows:
+    - the current depth = the depth-level of the text-fragment
+    - the result value = the title of the text-fragment
+    - loop from the given index position until 0 using the field idx
+      - prev-fragment = the text-fragment that the project-service has at position 'idx'
+      - if the depth-level of the prev-fragment is smaller then the current depth:
+        - store the new current depth
+        - prepend the title of the prev-fragment + ' > ' to the result
+        - if the new current depth == 1, stop the loop
+  - clear: clear the fragmentsIndex list.
+  - pseudo code for the parse function and related:
     ```python (pseudo)
 
       def parse(line, index):
@@ -471,7 +541,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         fragment.title = line.replace(/#/g, '');
         fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
         eventParams = { fragment, oldKey }
-        projectService.emit('keyChanged', eventParams)
+        projectService.emit('key-changed', eventParams)
 
 
       def removeFragmentTitle(service, fragment, index):
@@ -505,7 +575,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
       def handleTitleLine(service, line, index):
         if fragmentsIndex.length == 0 or fragmentsIndex.length < index or fragmentsIndex[index] == null:
-          toAdd = createTextFragment(service, line, projectService.textFragments.length)
+          toAdd = service.createTextFragment(line, projectService.textFragments.length)
           while service.fragmentsIndex.length < index:
              service.fragmentsIndex.push(null)
           service.fragmentsIndex.push(toAdd)
@@ -560,6 +630,9 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       - if the new value is different from the current selected line index:
         - get the object at the line-index position found on the fragmentsIndex array of the line-parser service.
         - If this object differs from currently selected text-fragment, then store the object as the new currently selected text-fragment and trigger the on-changed event for all the registered event handlers.
+  - clear:
+    - set activeFragment & currentLine to null
+  
 
 ### gpt service
 - the GPT service is a global singleton that is responsible for communicating with the open-ai api backend. It is primarily used by transformers that perform more specific tasks.
@@ -602,8 +675,15 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     - the secondary dictionary that contains the relationships between keys of text-fragments and full dictionary entries in the primary dict (which can consist out of multiple keys cause 1 result value can have multiple inputs).
     - a third dictionary that contains all the overwritten values of the results (if any)
     - a date that specifies the last save date of the project file. This is used when loading the dictionary back from file to verify if the results are still valid or not (when this date doesn't match the last-modified date of the project, something is out-of sync and consider the results in the file out-of-date).
-  - the cache tries to load this json file during construction of the instance.
-- When the result-cache-service is created, it:registers an event handler with the project service to monitor when text fragments have changed and with each object that the parent transformer uses as input (provided in the constructor as a list of transformer services, each service has a field 'cache')
+  - the cache tries to load this json file during construction of the instance. If the file doesn't exist, clearCache() is called to make certain that the cache is empty again.
+- When the result-cache-service is created, it:
+  - registers the event handler 'handleKeyChanged' with the project service to monitor when the key of a fragment changes
+    - register using pseudo: `projectService.subscribe('fragment-deleted', handleKeyChanged)`
+  - registers the event handler 'handleFragmentDeleted' with the project service to monitor when a fragment is deleted
+    - register using pseudo: `projectService.subscribe('key-changed', handleFragmentDeleted)`
+  - registers an event handler with the project service to monitor when text fragments have changed
+    - register using pseudo: `projectService.subscribe('fragment-out-of-date', handleTextFragmentChanged)`
+  - and registers the same event handler with each object that the parent transformer uses as input (provided in the constructor as a list of transformer services, each service has a field 'cache')
   - whenever the event handler is triggered, the cache service checks in the secondary dictionary if there are any entries. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
     - for each entry in the list:
       - search in the primary dictionary
@@ -613,6 +693,12 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - the result-cache has a function to overwrite the result for a key. this overwritten text value is stored in the 'overwrites' dictionary, under the supplied key.
 - the result-cache has a function to retrieve the result for a particular key: the key is first searched in the 'overwrites' dictionary. if this has a result, return this value, otherwise try to return the value found in the results dictionary.
 - the result-cache has a function to retrieve if a text fragment is out-of-date or not (from the key): if the result is marked as out-of-date, returns true
+- clearCache(): a function to clear the cache, secondary cache & overwrites
+- handleFragmentDeleted: an event handler called when a fragment is deleted. in pseudo:
+  ```python (pseudo)
+  def handleFragmentDeleted(fragment):
+    fragment.state = 'deleted'
+  ```
 - getFragmentResults: a function to retrieve all the results related to a particular fragment. Definition in pseudo:
 
   ```python (pseudo)
@@ -634,6 +720,20 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           addTo = nextAddTo
         addTo[keyParts[-1]] = cacheValue
     return result
+  ```
+- handleKeyChanged: an event handler, called when the key of a text-fragment has changed, definition in pseudo:
+  ```python (pseudo)
+  def handlekeyChanged(params):
+    oldKeys = this.secondaryCache[params.oldKey]
+    if oldKeys:
+      newKeys = []
+      for oldKey in oldKeys:
+        newKey = oldKey.replace(params.oldKey, params.fragment.key)
+        newKeys.push(newKey)
+        this.cache[newKey] = this.cache[oldKey]
+        delete this.cache[oldKey]
+      this.secondaryCache[params.fragment.key] = newKeys
+      delete this.secondaryCache[params.oldKey] 
   ```
 
 ### build service

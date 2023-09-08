@@ -64,7 +64,7 @@ class LineParserHelpers {
     fragment.title = line.replace(/#/g, '');
     fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
     const eventParams = { fragment, oldKey };
-    ProjectService.emit('keyChanged', eventParams);
+    ProjectService.emit('key-changed', eventParams);
   }
 
   /**
