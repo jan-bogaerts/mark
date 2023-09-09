@@ -26,6 +26,9 @@ the following tabs are available:
 - format
 - preferences
 
+- create a json structure for all the tabs (fields: key, label, children).
+- assign the json structure to the items property.
+
 #### home
 - the home-tab component is a wrapper that displays it's children in a row.
 - This component contains the following child components :
@@ -300,9 +303,9 @@ Remember that each button needs it's own appropriate icon.
   - the text for the monaco editor is retrieved from the result-cache of the transformer that is assigned to this component using the currently assigned key, if available (could be that it's null)
   - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
 - the results-cache of the transformer is monitored for changes in the result (only for changes in the result with the current key).
-  - if the result is marked as out-of-date, show the text as grayed-out.
+  - if the result is marked as 'out-of-date' or 'deleted', show the text as grayed-out.
   - if the result is marked as 'overwritten', show the text in red 
-- when the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer, marked as overwritten.
+- when the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer, marked as overwritten. In pseudo: ```transformer.cache.overwriteResult(editorKey, newValue)```
 - monitor the following events on the monaco editor:
   - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
   - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
@@ -359,16 +362,17 @@ Remember that each button needs it's own appropriate icon.
     - split the file in lines
     - for each line in the file, call line-parser-service.parse(line, index).
     - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file:
-      `transformer.cache.loadCacheFromFile()`
+      `transformer.cache.loadCache()`
     - raise an event (content-changed) to indicate that the data has changed
   - saving the currently opened project (param: file).
-    - if there was no previous file path (first time project is saved), call folder-service.move(file)
-    - if the previous file path is different from the new file (save-as was called), call folder-service.copy(file)
-    - open the file that was specified in the argument, for writing
-    - convert all the parsed objects in the data list to a string and write to file
-      - each object has a title and a list of lines.
+    - if there was no previous file path (first time project is saved), call folder-service.moveTo(file)
+    - if the previous file path is different from the new file (save-as was called), call folder-service.copyTo(file)
+    - open the file that was specified in the argument, for writing and write 'this.content' to the file as an utf string.
+    - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file:
+      `transformer.cache.saveCache()`
     - reset the indicator that the project has changed
     - save the filename in the project service if the auto-save function needs to use it.
+    - this.saveTimer = null
   - processing data changes whenever the user makes changes in the markdown editor. in pseudo:
   ```python (pseudo)
     def processChanges(changes, full):
@@ -390,12 +394,16 @@ Remember that each button needs it's own appropriate icon.
           LineParser.insert(line, index)
         this.content = full
         this.markDirty()
+
+    def markDirty():
+      if this.autoSave and this.filename and not this.saveTimer:
+        this.saveTimer = setTimeout(() => this.saveProject(this.filename), 5000)
+  
   ``` 
   - manage a data-list of the currently loaded data (field: text-fragments) and provide the following functions to work with this data list:
-    - retrieve a tree-structure (where each item in the tree represents a header that is used in the project) to be used in the outline or in drop-down boxes on the results-view.
     - deleteTextFragment(fragment): remove the object from the text-fragments list & raise the fragment-deleted event, parameter = fragment.key
     - addTextFragment(fragment, index): if index is at end of the text-fragments list, add to list, otherwise insert the fragment at the specified position in the text-fragments list. raise the fragment-inserted event.
-    - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date
+    - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date, param = fragment.key
     - clear():
       - clear the text-fragments
       - the content field is reset
@@ -403,7 +411,6 @@ Remember that each button needs it's own appropriate icon.
       - call position-tracking-service.clear
 - the project service also keeps track of some user configs like:
   - wether auto-save is on or not. This value is stored in the local storage. 
-- Whenever 'markDirty' is called, a timer is started, if it isn't already running, the auto-save is on and filename is known. This timer will call the save function when it goes off.
 - The project service uses an EventTarget to dispatch events that others can subscribe to / unsubscribe from. it raises the following events:
   - content-changed: when the project is loaded or a new project is created.
   - fragment-deleted: when a text fragment is removed from the list
@@ -649,25 +656,10 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - because some transformers work on text fragments that come from the project directly and others that come from the result of other transformers, the result cache must be able to monitor changes in a project fragment and result fragment.
 - A transformer that wants to cache it's results uses an instance of this class to perform these tasks on it's results.
 - internally, the cache uses a dictionary that maps the keys to their results.
-- whenever the transformer calculates a result, it asks the cache to update it's dictionary:
-  - first the key is calculated (by the transformer):
-    - the first part of the key is the key of the project text-fragment which was the primary input for the transformer.
-    - for every extra result-value coming from other transformers that the transformer uses to calculate its result, the key of the result value is appended to the new key, separated with a '|'.
-    example: 
-      - if the transformer is processing text-fragment with key 'a > b' 
-      - and the transformer uses the result of the 'class lister' transformer, where the result, for this calculation, comes from the text-fragment with the key 'c > d'
-      - than the key would become 'a > b | c > d' 
-  - if the key is not yet present, a new cache-item object is created which contains:
-    - the result of the transformer
-    - the current state: still-valid (instead of out-of-date)
-  - if the key is already present:
-    - the cache item is retrieved,
-    - it's result is updated to still-valid
-  - for each text-fragment in the inputs of the transformer (each section separated with '|'), the cache will also:
-    - search for the title of the text-fragment in a secondary dictionary.
-    - if the title is not yet in this secondary dictionary, add the key, and use as value, a list containing the key for the primary dictionary.
-    - if it already has the title, add the key for the primary dictionary at the end of the list.
+- whenever the transformer calculates a result, it asks the cache to update it's dictionary by calling 'setResult'.
 - the cache stores the results in a json file.
+  - if the 'is-dirty' flag is not set, no need to save the results
+  - after saving the cache, the 'is-dirty' flag is reset.
   - the name of this file is specified by the transformer that creates the class instance (constructor parameter)
   - the location of the file (folder) is provided by folder-service.cache
   - the json file contains:
@@ -677,6 +669,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     - a date that specifies the last save date of the project file. This is used when loading the dictionary back from file to verify if the results are still valid or not (when this date doesn't match the last-modified date of the project, something is out-of sync and consider the results in the file out-of-date).
   - the cache tries to load this json file during construction of the instance. If the file doesn't exist, clearCache() is called to make certain that the cache is empty again.
 - When the result-cache-service is created, it:
+  - initializes the 'is-dirty' flag to false
   - registers the event handler 'handleKeyChanged' with the project service to monitor when the key of a fragment changes
     - register using pseudo: `projectService.subscribe('fragment-deleted', handleKeyChanged)`
   - registers the event handler 'handleFragmentDeleted' with the project service to monitor when a fragment is deleted
@@ -684,13 +677,14 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - registers an event handler with the project service to monitor when text fragments have changed
     - register using pseudo: `projectService.subscribe('fragment-out-of-date', handleTextFragmentChanged)`
   - and registers the same event handler with each object that the parent transformer uses as input (provided in the constructor as a list of transformer services, each service has a field 'cache')
-  - whenever the event handler is triggered, the cache service checks in the secondary dictionary if there are any entries. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
+  - whenever the event handler is triggered (event param = fragment-key), the cache service checks in the secondary dictionary if there are any entries for that key. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
     - for each entry in the list:
       - search in the primary dictionary
       - if not yet marked as out-of-date:
         - mark as out-of-date
+        - set the 'is-dirty' flag
         - if there are any other cache services that monitor this cache-service (instead of the project service directly), then let them know that the specified text-fragment (from the result) has gone out-of-date.
-- the result-cache has a function to overwrite the result for a key. this overwritten text value is stored in the 'overwrites' dictionary, under the supplied key.
+- the result-cache has a function to overwrite the result for a key. this overwritten text value is stored in the 'overwrites' dictionary, under the supplied key. When called, set the 'is-dirty' flag.
 - the result-cache has a function to retrieve the result for a particular key: the key is first searched in the 'overwrites' dictionary. if this has a result, return this value, otherwise try to return the value found in the results dictionary.
 - the result-cache has a function to retrieve if a text fragment is out-of-date or not (from the key): if the result is marked as out-of-date, returns true
 - clearCache(): a function to clear the cache, secondary cache & overwrites
@@ -698,6 +692,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   ```python (pseudo)
   def handleFragmentDeleted(fragment):
     fragment.state = 'deleted'
+    this.isDirty = True
   ```
 - getFragmentResults: a function to retrieve all the results related to a particular fragment. Definition in pseudo:
 
@@ -734,7 +729,31 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         delete this.cache[oldKey]
       this.secondaryCache[params.fragment.key] = newKeys
       delete this.secondaryCache[params.oldKey] 
+      this.isDirty = True
   ```
+- setResult: stores the result in the cache. in pseudo:
+  ```python (pseudo)
+  def setResult(key, result):
+    isModified = True
+    if not key in this.cache:
+      this.cache[key] = { result, state: 'still-valid' }
+      keyParts = key.split(' | ')
+      for part in keyParts:
+        if not part in this.secondaryCache:
+          this.secondaryCache[part] = [key]
+        else:
+          this.secondaryCache[part].push(key)
+    elif this.cache[key].result != result:
+      this.cache[key].result = result
+      this.cache[key].state = 'still-valid'
+    else:
+      isModified = False
+    if isModified:
+      this.isDirty = True
+      this.emit(key)
+  ```
+
+
 
 ### build service
 - the build service is a global singleton that processes all the text-fragments of the project-service. It uses a set of transformers to iteratively generate conversions on the different text-fragments.
