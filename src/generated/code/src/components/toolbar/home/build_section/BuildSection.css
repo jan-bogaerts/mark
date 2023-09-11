@@ -1,0 +1,63 @@
+.build-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.ant-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.ant-btn-icon-only {
+  margin-right: 8px;
+}
+
+.ant-btn-primary {
+  background-color: #1890ff;
+  color: #fff;
+}
+
+.ant-btn-default {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.ant-divider {
+  margin: 0 8px;
+  height: 16px;
+  border-left: 1px solid #ccc;
+}
+
+.anticon {
+  font-size: 16px;
+}
+
+.anticon-build:before {
+  content: "\e6a1";
+}
+
+.anticon-code:before {
+  content: "\e6a2";
+}
+
+.anticon-sync:before {
+  content: "\e6a3";
+}
+
+.anticon-bug:before {
+  content: "\e6a4";
+}
+
+.anticon-step-forward:before {
+  content: "\e6a5";
+}

@@ -1,7 +1,7 @@
 
-import FolderService from '../folder_service/FolderService';
-import CybertronService from '../cybertron_service/CybertronService';
-import LineParser from '../line_parser/LineParser';
+const FolderService = require('../folder_service/FolderService');
+const LineParser = require('../line_parser/LineParser');
+const PositionTrackingService = require('../position-tracking_service/PositionTrackingService');
 
 class ProjectService {
   constructor() {
@@ -9,6 +9,7 @@ class ProjectService {
     this.content = '';
     this.filename = '';
     this.autoSave = localStorage.getItem('autoSave') === 'true';
+    this.saveTimer = null;
     this.eventTarget = new EventTarget();
   }
 
@@ -32,27 +33,30 @@ class ProjectService {
   newProject() {
     this.clear();
     FolderService.clear();
-    CybertronService.transformers.forEach(transformer => transformer.cache.clearCache());
+    // Assuming cybertron-service and transformers are globally available
+    cybertronService.transformers.forEach(transformer => transformer.cache.clearCache());
     this.emit('content-changed');
   }
 
   loadProject(filePath) {
     this.clear();
     FolderService.setLocation(filePath);
-    this.content = fs.readFileSync(filePath, 'utf-8');
+    this.content = fs.readFileSync(filePath, 'utf8');
     this.content.split('\n').forEach((line, index) => LineParser.parse(line, index));
-    CybertronService.transformers.forEach(transformer => transformer.cache.loadCacheFromFile());
+    cybertronService.transformers.forEach(transformer => transformer.cache.loadCache());
     this.emit('content-changed');
   }
 
   saveProject(file) {
     if (!this.filename) {
-      FolderService.move(file);
+      FolderService.moveTo(file);
     } else if (this.filename !== file) {
-      FolderService.copy(file);
+      FolderService.copyTo(file);
     }
-    fs.writeFileSync(file, this.textFragments.map(fragment => `${fragment.title}\n${fragment.lines.join('\n')}`).join('\n'));
+    fs.writeFileSync(file, this.content, 'utf8');
+    cybertronService.transformers.forEach(transformer => transformer.cache.saveCache());
     this.filename = file;
+    this.saveTimer = null;
   }
 
   processChanges(changes, full) {
@@ -81,16 +85,9 @@ class ProjectService {
   }
 
   markDirty() {
-    if (this.autoSave && this.filename) {
-      setTimeout(() => this.saveProject(this.filename), 5000);
+    if (this.autoSave && this.filename && !this.saveTimer) {
+      this.saveTimer = setTimeout(() => this.saveProject(this.filename), 5000);
     }
-  }
-
-  clear() {
-    this.textFragments = [];
-    this.content = '';
-    LineParser.clear();
-    PositionTrackingService.clear();
   }
 
   deleteTextFragment(fragment) {
@@ -115,6 +112,13 @@ class ProjectService {
     this.emit('fragment-out-of-date', fragment.key);
   }
 
+  clear() {
+    this.textFragments = [];
+    this.content = '';
+    LineParser.clear();
+    PositionTrackingService.clear();
+  }
+
   emit(eventName, detail) {
     this.eventTarget.dispatchEvent(new CustomEvent(eventName, { detail }));
   }
@@ -128,4 +132,4 @@ class ProjectService {
   }
 }
 
-export default new ProjectService();
+module.exports = new ProjectService();

@@ -21,7 +21,7 @@ write out all the styling classes:
 based on the user's text
 only return styling, no code. Don't return any explanation or introduction or editor formatting."""
 user_prompt = "{0}"
-term_prompt = """remember: only return styling"""
+term_prompt = """remember: only return properly formatted css styling, no code, no explanation, no introduction."""
 
 
 def generate_response(params, key):
@@ -110,7 +110,7 @@ def collect_response(filename, response):
 
 
 
-def process_data(root_path, writer):
+def process_data(writer):
     result = []
     dev_stack = project.fragments[1].content
     for fragment in project.fragments:

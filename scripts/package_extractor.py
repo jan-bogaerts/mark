@@ -114,26 +114,24 @@ def process_data(writer):
         if ONLY_MISSING and has_fragment(fragment.full_title):
             continue
         fragment_results = {}
-        for to_check in render_classes.get_data(fragment.full_title):
-            for file_path in to_check:
-                with open(file_path, "r") as reader:
-                    code = reader.read()
-                params = {
-                    'code': code,
-                }
-                response = generate_response(params, fragment.full_title)
-                if response:
-                    fragment_results[file_path] = response
-        for to_check in render_component.get_data(fragment.full_title): 
-            for file_path in to_check:
-                with open(file_path, "r") as reader:
-                    code = reader.read()
-                params = {
-                    'code': code,
-                }
-                response = generate_response(params, fragment.full_title)
-                if response:
-                    fragment_results[file_path] = response
+        for file_path in render_classes.get_data(fragment.full_title):
+            with open(file_path, "r") as reader:
+                code = reader.read()
+            params = {
+                'code': code,
+            }
+            response = generate_response(params, fragment.full_title)
+            if response:
+                fragment_results[file_path] = response
+        for file_path in render_component.get_data(fragment.full_title): 
+            with open(file_path, "r") as reader:
+                code = reader.read()
+            params = {
+                'code': code,
+            }
+            response = generate_response(params, fragment.full_title)
+            if response:
+                fragment_results[file_path] = response
         collect_response(fragment.full_title, json.dumps(fragment_results), writer)
                     
 

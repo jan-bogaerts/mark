@@ -42,19 +42,19 @@
 [
   "BuildService"
 ]
-# MarkdownCode > services > project service
-[
-  "ProjectService"
-]
 # MarkdownCode > services > line parser
 [
   "LineParser"
 ]
-# MarkdownCode > services > position-tracking service
+# MarkdownCode > services > project service
 [
-  "PositionTrackingService"
+  "ProjectService"
 ]
 # MarkdownCode > services > result-cache service
 [
   "ResultCacheService"
+]
+# MarkdownCode > services > position-tracking service
+[
+  "PositionTrackingService"
 ]

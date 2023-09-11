@@ -173,8 +173,8 @@ def get_data(title):
         to_search = '# ' + to_search
     for fragment in text_fragments:
         if fragment.title == to_search:
-            return fragment.data or []
-    return []
+            return fragment.data or {}
+    return {}
 
 if __name__ == "__main__":
 

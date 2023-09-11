@@ -52,8 +52,6 @@
 []
 # MarkdownCode > services > Theme service
 []
-# MarkdownCode > services > project service
-[]
 # MarkdownCode > services > folder service
 []
 # MarkdownCode > services > Selection service
@@ -64,11 +62,7 @@
 []
 # MarkdownCode > services > line parser > line parser helpers
 []
-# MarkdownCode > services > position-tracking service
-[]
 # MarkdownCode > services > gpt service
-[]
-# MarkdownCode > services > result-cache service
 []
 # MarkdownCode > services > build service
 []
@@ -78,3 +72,9 @@
 []
 # MarkdownCode > services > compress service
 [{"start": 11, "end": 15, "name": "MarkdownCode_services_compress_service_0"}]
+# MarkdownCode > services > project service
+[]
+# MarkdownCode > services > result-cache service
+[]
+# MarkdownCode > services > position-tracking service
+[]

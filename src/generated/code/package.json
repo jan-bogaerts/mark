@@ -1,20 +1,68 @@
-
 {
-  "name": "my_package",
-  "description": "",
-  "version": "1.0.0",
+  "name": "markdowncode",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Jan Bogaerts",
+  "description": "An ideation and code generation tool that uses markdown syntax and transformers to generate code.",
+  "homepage": "./",
+  "main": "./public/electron.js",
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "electron-is-dev": "^2.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron:start": "concurrently -k \"cross-env BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electronmon .\"",
+    "electron:package:mac": "yarn build && electron-builder -m -c.extraMetadata.main=build/electron.js",
+    "electron:package:win": "yarn build && electron-builder -w -c.extraMetadata.main=build/electron.js",
+    "electron:package:linux": "yarn build && electron-builder -l -c.extraMetadata.main=build/electron.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/monatheoctocat/my_package.git"
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/monatheoctocat/my_package/issues"
+  "browserslist": {
+    "production": [
+      "last 1 electron version"
+    ],
+    "development": [
+      "last 1 electron version"
+    ]
   },
-  "homepage": "https://github.com/monatheoctocat/my_package"
+  "devDependencies": {
+    "concurrently": "^8.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^26.2.0",
+    "electron-builder": "^24.6.4",
+    "electronmon": "^2.0.2",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+       "appId": "com.elastetic.markdowncode",
+       "productName": "Markdown Code",
+       "files": ["build/**/*", "node_modules/**/*"],
+       "directories": {
+         "buildResources": "public"
+       },
+       "mac": {
+         "target": "dmg"
+       },
+       "win": {
+         "target": "nsis"
+       },
+      "linux": {
+         "target": "deb"
+       }
+    }
 }

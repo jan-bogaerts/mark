@@ -18,6 +18,7 @@ import triple_compress
 import list_component_props
 import project
 import list_service_usage
+import list_how_service_describes_components
 import json
 import sys
 
@@ -33,6 +34,7 @@ transformers = [
     (get_if_service_is_used, 'mdc_is_service_used.md'),
     (list_component_props, 'mdc_component_props.md'),
     (list_service_usage, 'mdc_class_usage.md'),
+    (list_how_service_describes_components, 'mdc_service_describes_components.md'), # need this to clean it's results cause the render module uses it and otherwise would load it 2 times 
     (resolve_component_imports, 'mdc_resolve_component_imports.md'),
     (render_component, 'mdc_component_files.md'),
     (get_interface_parts, 'mdc_interface_parts.md'),

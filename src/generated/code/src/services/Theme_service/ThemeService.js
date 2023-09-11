@@ -1,6 +1,5 @@
 
 const electron = require('electron');
-const { ipcMain } = electron;
 const storage = electron.storage || electron.remote.storage;
 
 /**

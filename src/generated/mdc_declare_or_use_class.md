@@ -20,11 +20,11 @@
 {"CompressService": "declare"}
 # MarkdownCode > services > build service
 {"BuildService": "declare"}
-# MarkdownCode > services > project service
-{"ProjectService": "declare"}
 # MarkdownCode > services > line parser
 {"LineParser": "declare"}
-# MarkdownCode > services > position-tracking service
-{"PositionTrackingService": "declare"}
+# MarkdownCode > services > project service
+{"ProjectService": "declare"}
 # MarkdownCode > services > result-cache service
 {"ResultCacheService": "declare"}
+# MarkdownCode > services > position-tracking service
+{"PositionTrackingService": "declare"}

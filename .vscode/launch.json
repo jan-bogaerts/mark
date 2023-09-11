@@ -451,6 +451,18 @@
             "justMyCode": true
         },
 
+        {
+            "name": "list all packages mdc",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/list_all_packages.py",
+            "args": [
+                
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+
 
         {
             "name": "get packages file mdc",

@@ -20,11 +20,11 @@ TransformerBaseService
 CompressService
 # MarkdownCode > services > build service
 BuildService
-# MarkdownCode > services > project service
-ProjectService
 # MarkdownCode > services > line parser
 LineParser
-# MarkdownCode > services > position-tracking service
-PositionTrackingService
+# MarkdownCode > services > project service
+ProjectService
 # MarkdownCode > services > result-cache service
 ResultCacheService
+# MarkdownCode > services > position-tracking service
+PositionTrackingService

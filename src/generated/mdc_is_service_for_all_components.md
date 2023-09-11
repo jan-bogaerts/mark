@@ -20,11 +20,11 @@
 {"CompressService": "no"}
 # MarkdownCode > services > build service
 {"BuildService": "no"}
-# MarkdownCode > services > project service
-{"ProjectService": "o"}
 # MarkdownCode > services > line parser
 {"LineParser": "no"}
-# MarkdownCode > services > position-tracking service
-{"PositionTrackingService": "no"}
+# MarkdownCode > services > project service
+{"ProjectService": "no"}
 # MarkdownCode > services > result-cache service
 {"ResultCacheService": "no"}
+# MarkdownCode > services > position-tracking service
+{"PositionTrackingService": "no"}

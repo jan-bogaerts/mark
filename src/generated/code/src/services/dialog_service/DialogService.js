@@ -1,6 +1,5 @@
 
 const { dialog } = require('electron').remote;
-const React = require('react');
 const { Modal } = require('antd');
 
 /**

@@ -2,7 +2,7 @@
 // Importing required modules and components
 import React, { useEffect, useState } from 'react';
 import { Layout } from 'antd';
-import ThemeService from '../../services/ThemeService/ThemeService';
+import ThemeService from '../../services/Theme_service/ThemeService';
 import Toolbar from '../toolbar/Toolbar';
 import Body from '../body/Body';
 

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dropdown, Menu, Button } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
-import GptService from '../../../../services/gpt_service/GptService';
+import GptService from '../../../../services/gpt_service/GPTService';
 import DialogService from '../../../../services/dialog_service/DialogService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
 

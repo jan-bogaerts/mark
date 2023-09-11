@@ -131,9 +131,9 @@ def collect_response(title, response, root_path):
     return file_path
 
 
-def get_import_service_line(import_def, cur_path):
+def get_import_service_line(import_def, cur_path, root_path):
     service = import_def['service']
-    service_path = import_def['path']
+    service_path = os.path.join(root_path, import_def['path'])
     service_path = os.path.relpath(service_path, cur_path)
     is_global = get_if_service_is_singleton.is_singleton(import_def['service_loc'], service)
     if is_global:
@@ -152,7 +152,7 @@ def get_all_imports(component, full_title, cur_path, root_path):
     for comp, items in imports.items():
         if comp == component:
             for import_def in items:
-                imports_txt += get_import_service_line(import_def, cur_path)
+                imports_txt += get_import_service_line(import_def, cur_path, root_path)
         else:
             is_declare = declare_or_use_comp_classifier.get_is_declared(full_title, comp)
             if is_declare:
@@ -207,7 +207,7 @@ def get_global_features(full_title, component):
                 result += '\n'
             for service, features in fragment.data.items():
                 if service in services_to_include:
-                    result += f' - {service}\n{features}'
+                    result += f'- {service}\n{features}'
     return result
 
 

@@ -1,0 +1,8 @@
+.home-tab {
+  display: flex;
+  flex-direction: row;
+}
+
+.theme {
+  /* add your theme styles here */
+}

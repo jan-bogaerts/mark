@@ -17,3 +17,8 @@
 {"ResultsViewContextMenu": {"transformer": "The transformer to be used for the results view. This is a required property.", "key": "The key for the current context. This is a required property."}}
 # MarkdownCode > components > body > results view
 {"ResultsView": {}}
+# MarkdownCode > components > toolbar
+{"Toolbar": {}}
+# MarkdownCode > components > toolbar > home > build section
+{"BuildSection": {}}
+

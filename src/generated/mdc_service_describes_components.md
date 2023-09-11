@@ -20,11 +20,11 @@
 {}
 # MarkdownCode > services > build service
 {}
-# MarkdownCode > services > project service
-{}
 # MarkdownCode > services > line parser
 {}
-# MarkdownCode > services > position-tracking service
+# MarkdownCode > services > project service
 {}
 # MarkdownCode > services > result-cache service
+{}
+# MarkdownCode > services > position-tracking service
 {}

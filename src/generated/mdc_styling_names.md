@@ -3,21 +3,15 @@
 # MarkdownCode > development stack
 {}
 # MarkdownCode > components > main window
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\main window\\MainWindow.js": ["main-window", "main-window-toolbar", "main-window-body"]}
-# MarkdownCode > components > toolbar
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\Toolbar.js": ["toolbar", "theme", "Tabs", "TabPane", "Tooltip", "HomeTab", "FormatTab", "PreferencesTab"]}
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\main window\\MainWindow.js": ["main-window", "toolbar", "body"]}
 # MarkdownCode > components > toolbar > home
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\HomeTab.js": ["home-tab", "theme"]}
-# MarkdownCode > components > toolbar > home > file section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\file section\\FileSection.js": ["file-section", "primary", "default"]}
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\HomeTab.js": ["home-tab", "theme"]}
 # MarkdownCode > components > toolbar > home > edit section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\edit section\\EditSection.js": ["edit-section", "ant-tooltip", "ant-btn", "anticon", "cut-outlined", "copy-outlined", "paste-outlined", "delete-outlined", "select-outlined", "clear-outlined"]}
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.js": ["edit-section", "ant-tooltip", "ant-btn", "anticon", "cut-outlined", "copy-outlined", "paste-outlined", "delete-outlined", "select-outlined", "clear-outlined"]}
 # MarkdownCode > components > toolbar > home > undo section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\undo section\\UndoSection.js": ["undo-section", "undo-button", "redo-button"]}
-# MarkdownCode > components > toolbar > home > build section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\home\\build section\\BuildSection.js": ["build-section", "ant-btn", "ant-btn-icon-only", "ant-tooltip", "ant-btn-primary", "ant-btn-disabled"]}
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\undo_section\\UndoSection.js": ["undo-section", "undo-button", "redo-button"]}
 # MarkdownCode > components > toolbar > preferences
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\components\\toolbar\\preferences\\PreferencesTab.js": ["preferences-tab", "preferences-tab", "gpt", "view"]}
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/MarkdownCode\\src\\toolbar\\preferences\\PreferencesTab.js": ["preferences-tab", "preferences-tab", "gpt", "view"]}
 # MarkdownCode > services > dialog service
 {}
 # MarkdownCode > services > Theme service
@@ -27,8 +21,6 @@
 # MarkdownCode > services > Selection service
 {}
 # MarkdownCode > services > Undo service
-{}
-# MarkdownCode > services > position-tracking service
 {}
 # MarkdownCode > services > gpt service
 {}
@@ -58,10 +50,6 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\horizontal splitter\\HorizontalSplitter.js": ["horizontal-splitter", "splitter"]}
 # MarkdownCode > components > body > vertical splitter
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\vertical splitter\\VerticalSplitter.js": ["vertical-splitter", "left-panel", "splitter", "right-panel"]}
-# MarkdownCode > components > body > results view
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\ResultsView.js": ["results-view"]}
-# MarkdownCode > components > body > results view > results view tab
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results view\\results view tab\\ResultsViewTab.js": ["results-view-tab", "results-view-context-menu", "monaco-editor"]}
 # MarkdownCode > components > body > results view > results view context menu
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js": ["more-button", "selected"]}
 # MarkdownCode > services > line parser
@@ -78,3 +66,15 @@
 {}
 # MarkdownCode > services > transformer-base service
 {}
+# MarkdownCode > components > body > results view > results view tab
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.js": ["results-view-tab", "markdown"]}
+# MarkdownCode > components > body > results view
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js": ["results-view", "ant-tabs", "ant-tabs-tabpane", "results-view-tab"]}
+# MarkdownCode > components > toolbar > home > file section
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.js": ["file-section", "primary", "default"]}
+# MarkdownCode > components > toolbar
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.js": ["toolbar-home", "toolbar-format", "toolbar-preferences"]}
+# MarkdownCode > services > position-tracking service
+{}
+# MarkdownCode > components > toolbar > home > build section
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js": ["build-section", "ant-btn", "ant-btn-icon-only", "ant-btn-primary", "ant-btn-default", "ant-divider", "anticon", "anticon-build", "anticon-code", "anticon-sync", "anticon-bug", "anticon-step-forward"]}

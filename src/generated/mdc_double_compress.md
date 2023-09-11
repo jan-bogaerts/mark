@@ -6,10 +6,6 @@ MarkdownCode is a machine learning tool for ideation and software building. User
 - UI made with React and Ant Design (antd)
 # MarkdownCode > components > main window
 The main window is the first window shown when the app starts. It has a toolbar at the top and the rest of the space is the body.
-# MarkdownCode > components > toolbar
-The app has a toolbar like mS Access, Excel, Word, or Draw, with a single menu and toolbar. It has multiple tabs at the top, including Home, Format, and Preferences. Each component on the toolbar has a tooltip for a brief description.
-# MarkdownCode > components > toolbar > home > file section
-The file-section component manages project and file actions. Actions include creating a new project, opening an existing project, saving the current project, saving the current project to a new location, and toggling the auto-save state. Error handlers are included to display any errors.
 # MarkdownCode > components > toolbar > home > edit section
 The edit-section component handles clipboard and selected data actions. It supports cut, copy, paste, delete, select all, and clear selection. These actions are enabled based on the presence of selected data or text in the clipboard.
 # MarkdownCode > components > toolbar > home > undo section
@@ -52,25 +48,10 @@ The view-section component configures the app's appearance. Buttons have icon-on
     - Available models are fetched from gpt-service.
     - Initial value is obtained from gpt-service using getDefaultModel function.
     - When value is changed, it is saved to gpt-service using setDefaultModel function.
-# MarkdownCode > components > body > results view
-- Results-view component is at the bottom of the main body, showing results from registered transformers.
-- Each transformer creates a tab at the top left of the view, displaying a results-view-tab component.
-# MarkdownCode > components > body > results view > results view tab
-The results-view-tab component displays the results of a transformer for a specific text fragment. It uses the monaco editor npm package to display the results in various formats. The editor fills the available space and is styled based on the theme-service. The results-cache is monitored for changes and the text is shown accordingly. User changes in the editor are saved and marked as overwritten. The monaco editor events are monitored and the selection service is updated accordingly. A results-view-context-menu component is placed on top of the editor. It monitors the position-tracking service for changes and updates the key and text in the editor.
 # MarkdownCode > services > Theme service
 The theme service globally manages the selected theme font and font-size, saving changes to local storage. It retrieves stored values on creation and allows for light or dark theme selection. Components use the service to apply the selected theme without needing to subscribe for changes. The main window refreshes content when the theme is updated.
 # MarkdownCode > services > Selection service
 The selection service tracks selected text and the active editor. It can be monitored for changes. Supported actions include cut, copy, paste, delete, clear selection, and select all.
-# MarkdownCode > components > toolbar > home > build section
-- The build-section component has build-service actions.
-- Buttons use icons instead of text.
-- Actions:
-  - "All" button: Renders code for the entire project.
-    - Enabled when any transformer in GPT-service's list has an out-of-date or missing result fragment in the result-cache.
-  - "Code for active topic" button: Renders code files for the active fragment.
-    - Enabled when the selected fragment is out-of-date or missing in any transformer's result-cache in GPT-service's list.
-  - "Active topic in active prompt" button: Renders selected fragment in the selected service.
-    - Enabled when the selected fragment is out-of-date or missing in the related service.
 # MarkdownCode > components > body
 The body component is the main part of the application, containing a horizontal splitter that divides its area. On the left side is an outline component, and on the right side is a vertical splitter. The vertical splitter has an editor component at the top and a results view component at the bottom. The body component has event handlers for the 'onPositionChanged' callback of both splitters, storing the new position values. When unloaded, the last splitter positions are stored in local storage. When loaded, the last positions are restored from local storage. The clientWidth and clientHeight of the component are retrieved. If there is no previous value for the vertical splitter or it is larger than the clientWidth, 'clientWidth / 4' is used. If there is no previous value for the horizontal splitter or it is larger than the clientHeight, 'clientHeight / 4' is used.
 # MarkdownCode > components > body > results view > results view context menu
@@ -115,22 +96,51 @@ The editor uses the monaco editor npm package to display markdown text. It retri
 - The position-tracking service selects the corresponding tree node when the selected text-fragment changes.
 - The tree is displayed with lines.
 - 'convertToTreeData' creates a tree structure based on data items and sets parent-child relationships based on the level count.
-# MarkdownCode > services > project service
-The project service creates, opens, and saves projects. When creating a project, it clears the cache, reloads data files for transformers, and raises a content-changed event. When opening a project, it clears the cache, sets the file location, reads the file contents, parses the lines, reloads data files for transformers, and raises a content-changed event. When saving a project, it moves or copies the file, writes parsed objects to the file, and saves the filename. The service processes data changes in the markdown editor and manages a data list of text fragments. It also handles user configs and uses events to notify others of changes.
 # MarkdownCode > services > line parser
 The line-parser service is a global singleton object that parses markdown lines and updates text-fragments in the project-service. It has functions to create text-fragments, calculate keys, and clear the fragmentsIndex list. The parse function and pseudo code demonstrate its usage for different line types.
-# MarkdownCode > services > position-tracking service
-The position-tracking service tracks the user's current text-fragment, including the selected line number and related text. It also stores events monitoring changes in the selected text-fragment and offers methods to set the current line and clear the active fragment.
+# MarkdownCode > components > body > results view > results view tab
+The results-view-tab component displays transformer results for a specific text fragment. It uses the monaco editor npm package to display results in various formats. The editor adjusts to the component's size. When loaded, the component retrieves text from the result-cache and applies theme settings. The cache is monitored for changes, and text is displayed accordingly. User changes are saved to the cache. The monaco editor events are monitored and the selection service is used. A results-view-context-menu component is placed on top of the editor and tracks selected text changes.
+# MarkdownCode > components > body > results view
+- Results-view component is located at the bottom of the main body, displaying results from registered transformers for the selected text block.
+- Each transformer in the list has a tab at the top left of the view, showing the transformer's name.
+- The tab content contains a results-view-tab component.
+# MarkdownCode > services > project service
+The project service creates, opens, and saves projects. It clears data, reloads cache, and raises events when creating or opening a project. It moves or copies files, writes content, and saves filenames when saving a project. It processes data changes in the markdown editor and marks projects as dirty. It manages a data list of text fragments and provides functions for deletion, addition, and marking as out of date. It stores user configs in local storage. It uses events to notify others of changes.
 # MarkdownCode > services > result-cache service
 - This service manages cached results for transformers, storing and tracking results for text fragments.
 - The cache monitors changes in both project and result fragments.
-- Transformers use this class to cache their results, updating a dictionary.
-- The cache also tracks relationships between text fragment keys in a secondary dictionary.
-- Results are stored in a JSON file specified by the transformer.
-- The cache registers event handlers with the project service to monitor fragment changes.
-- It can mark results as out of date and notify other cache services.
-- Results can be overwritten or retrieved for a specific key.
-- The cache checks if a text fragment is out of date.
-- It can be cleared using the clearCache() function.
-- All results related to a fragment can be retrieved using the getFragmentResults() function.
-- Fragment deletion and key changes are handled using event handlers.
+- Transformers use this class to cache their results, stored in a dictionary.
+- Results are saved in a JSON file specified by the transformer, loaded during construction.
+- Event handlers are registered to monitor changes in text fragments.
+- When a fragment changes, the cache marks related entries as out of date.
+- The cache can overwrite and retrieve results for a key.
+- It can determine if a text fragment is out of date and clear the cache.
+- It can retrieve all results related to a fragment.
+- Event handlers are present for fragment deletion and key changes.
+- Results are stored in a dictionary, updating the 'is-dirty' flag when modified.
+# MarkdownCode > components > toolbar > home > file section
+The file-section component manages project and file actions using icon buttons. Supported actions include creating a new project, opening an existing project with error handling, saving the current project with error handling, saving the current project to a new location with error handling, and toggling the auto-save state. The buttons' state is updated based on changes in the undo service.
+# MarkdownCode > services > position-tracking service
+The position-tracking service tracks the user's current text-fragment, including the selected line number and related text. It also stores events monitoring changes in the selected text-fragment. The service offers methods to set the selected line and clear the active fragment and current line.
+# MarkdownCode > components > toolbar
+- The application's toolbar has a similar design to MS Access, Excel, Word, or Draw.
+- It consists of a single integrated menu and toolbar with tabs at the top.
+- Each component on the toolbar displays a tooltip with a brief description.
+- The available tabs are Home, Format, and Preferences.
+- A JSON structure should be created for all tabs, including key, label, and children fields.
+- The JSON structure should be assigned to the items property.
+# MarkdownCode > components > toolbar > home > build section
+- The build-section component has actions for the build-service.
+- Buttons have icons instead of text.
+- Actions include:
+  - "All" button for rendering code for the entire project.
+    - Disabled when project-service.isAnyFragmentOutOfDate() is false.
+  - "Code for active fragment" button for rendering code files for the currently active fragment.
+    - Disabled when `!positionTrackingService.activeFragment.isOutOfDate`.
+  - "Active fragment with active transformer" button.
+    - Disabled when `positionTrackingService.activeFragment && positionTrackingService.activeTransformer && !positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)`.
+  - Separator.
+  - "Debug" toggle button to update the debug state.
+    - The toggle button's state follows the build-service's debug state.
+  - "Run next" button to continue rendering to the next transformer.
+    - Disabled when `!debug`.

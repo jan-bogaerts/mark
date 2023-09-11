@@ -1,11 +1,7 @@
 # MarkdownCode > components > main window
 ["MainWindow", "Toolbar", "Body"]
-# MarkdownCode > components > toolbar > home > file section
-["FileSection"]
 # MarkdownCode > components > toolbar > home > edit section
 ["EditSection"]
-# MarkdownCode > components > toolbar
-["Toolbar", "HomeTab", "FormatTab", "PreferencesTab"]
 # MarkdownCode > components > toolbar > preferences
 ["PreferencesTab", "GPT", "View"]
 # MarkdownCode > components > toolbar > home > undo section
@@ -30,12 +26,6 @@
 ["OpenAiConfigurationDialog"]
 # MarkdownCode > components > toolbar > preferences > view section
 ["ViewSection"]
-# MarkdownCode > components > body > results view
-["ResultsView", "ResultsViewTab"]
-# MarkdownCode > components > body > results view > results view tab
-["ResultsViewTab", "ResultsViewContextMenu"]
-# MarkdownCode > components > toolbar > home > build section
-["BuildSection"]
 # MarkdownCode > components > body
 ["Body", "HorizontalSplitter", "Outline", "VerticalSplitter", "Editor", "ResultsView"]
 # MarkdownCode > components > body > results view > results view context menu
@@ -44,3 +34,13 @@
 ["Editor"]
 # MarkdownCode > components > body > outline
 ["Outline"]
+# MarkdownCode > components > body > results view > results view tab
+["ResultsViewTab", "ResultsViewContextMenu"]
+# MarkdownCode > components > body > results view
+["ResultsView", "ResultsViewTab"]
+# MarkdownCode > components > toolbar > home > file section
+["FileSection"]
+# MarkdownCode > components > toolbar
+["Toolbar", "HomeTab", "FormatTab", "PreferencesTab"]
+# MarkdownCode > components > toolbar > home > build section
+["BuildSection"]

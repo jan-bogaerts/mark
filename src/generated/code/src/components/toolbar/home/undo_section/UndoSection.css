@@ -1,0 +1,23 @@
+.undo-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.undo-button,
+.redo-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+.undo-button {
+  margin-right: 8px;
+}
+
+.redo-button {
+  margin-left: 8px;
+}

@@ -1,63 +1,68 @@
 
 const fs = require('fs');
 const path = require('path');
-const { FolderService } = require('../folder_service/FolderService');
-const { ProjectService } = require('../project_service/ProjectService');
+const { EventEmitter } = require('events');
+const FolderService = require('../folder_service/FolderService');
+const ProjectService = require('../project_service/ProjectService');
 
-class ResultCacheService {
+/**
+ * ResultCacheService class
+ */
+class ResultCacheService extends EventEmitter {
   constructor(transformerName, inputTransformers) {
+    super();
     this.transformerName = transformerName;
-    this.inputTransformers = inputTransformers;
     this.cache = {};
     this.secondaryCache = {};
     this.overwrites = {};
-    this.lastSaveDate = null;
-    this.subscribers = [];
-
-    this.loadCache();
+    this.isDirty = false;
+    this.inputTransformers = inputTransformers;
+    this.cacheFilePath = path.join(FolderService.cache, `${transformerName}.json`);
 
     ProjectService.subscribe('fragment-deleted', this.handleFragmentDeleted.bind(this));
     ProjectService.subscribe('key-changed', this.handleKeyChanged.bind(this));
     ProjectService.subscribe('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
 
-    this.inputTransformers.forEach(transformer => {
-      transformer.cache.subscribe(this.handleTextFragmentChanged.bind(this));
+    inputTransformers.forEach(transformer => {
+      transformer.cache.subscribe('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
     });
+
+    this.loadCacheFromFile();
   }
 
-  loadCache() {
-    const cacheFilePath = path.join(FolderService.cache, `${this.transformerName}.json`);
-    if (fs.existsSync(cacheFilePath)) {
-      const cacheData = JSON.parse(fs.readFileSync(cacheFilePath));
+  loadCacheFromFile() {
+    if (fs.existsSync(this.cacheFilePath)) {
+      const cacheData = JSON.parse(fs.readFileSync(this.cacheFilePath));
       this.cache = cacheData.cache;
       this.secondaryCache = cacheData.secondaryCache;
       this.overwrites = cacheData.overwrites;
-      this.lastSaveDate = cacheData.lastSaveDate;
     } else {
       this.clearCache();
     }
   }
 
-  saveCache() {
-    const cacheFilePath = path.join(FolderService.cache, `${this.transformerName}.json`);
-    const cacheData = {
-      cache: this.cache,
-      secondaryCache: this.secondaryCache,
-      overwrites: this.overwrites,
-      lastSaveDate: this.lastSaveDate,
-    };
-    fs.writeFileSync(cacheFilePath, JSON.stringify(cacheData));
+  saveCacheToFile() {
+    if (this.isDirty) {
+      const cacheData = {
+        cache: this.cache,
+        secondaryCache: this.secondaryCache,
+        overwrites: this.overwrites,
+      };
+      fs.writeFileSync(this.cacheFilePath, JSON.stringify(cacheData));
+      this.isDirty = false;
+    }
   }
 
   clearCache() {
     this.cache = {};
     this.secondaryCache = {};
     this.overwrites = {};
-    this.lastSaveDate = null;
+    this.isDirty = true;
   }
 
   handleFragmentDeleted(fragment) {
     fragment.state = 'deleted';
+    this.isDirty = true;
   }
 
   handleKeyChanged(params) {
@@ -72,19 +77,57 @@ class ResultCacheService {
       }
       this.secondaryCache[params.fragment.key] = newKeys;
       delete this.secondaryCache[params.oldKey];
+      this.isDirty = true;
     }
   }
 
-  handleTextFragmentChanged(fragment) {
-    const cacheKeys = this.secondaryCache[fragment.key];
+  handleTextFragmentChanged(fragmentKey) {
+    const cacheKeys = this.secondaryCache[fragmentKey];
     if (cacheKeys) {
       for (const key of cacheKeys) {
         if (this.cache[key].state !== 'out-of-date') {
           this.cache[key].state = 'out-of-date';
-          this.emit('fragment-out-of-date', { key });
+          this.isDirty = true;
+          this.emit('fragment-out-of-date', key);
         }
       }
     }
+  }
+
+  setResult(key, result) {
+    let isModified = true;
+    if (!this.cache[key]) {
+      this.cache[key] = { result, state: 'still-valid' };
+      const keyParts = key.split(' | ');
+      for (const part of keyParts) {
+        if (!this.secondaryCache[part]) {
+          this.secondaryCache[part] = [key];
+        } else {
+          this.secondaryCache[part].push(key);
+        }
+      }
+    } else if (this.cache[key].result !== result) {
+      this.cache[key].result = result;
+      this.cache[key].state = 'still-valid';
+    } else {
+      isModified = false;
+    }
+    if (isModified) {
+      this.isDirty = true;
+      this.emit(key);
+    }
+  }
+
+  getResult(key) {
+    if (this.overwrites[key]) {
+      return this.overwrites[key];
+    }
+    return this.cache[key] ? this.cache[key].result : null;
+  }
+
+  overwriteResult(key, value) {
+    this.overwrites[key] = value;
+    this.isDirty = true;
   }
 
   getFragmentResults(fragmentKey) {
@@ -106,32 +149,6 @@ class ResultCacheService {
     }
     return result;
   }
-
-  getResult(key) {
-    return this.overwrites[key] || this.cache[key];
-  }
-
-  setResult(key, value) {
-    this.cache[key] = value;
-    this.saveCache();
-  }
-
-  overwriteResult(key, value) {
-    this.overwrites[key] = value;
-    this.saveCache();
-  }
-
-  subscribe(callback) {
-    this.subscribers.push(callback);
-  }
-
-  unsubscribe(callback) {
-    this.subscribers = this.subscribers.filter(subscriber => subscriber !== callback);
-  }
-
-  emit(event, params) {
-    this.subscribers.forEach(subscriber => subscriber(event, params));
-  }
 }
 
-module.exports = { ResultCacheService };
+module.exports = ResultCacheService;
