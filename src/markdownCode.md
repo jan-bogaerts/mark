@@ -316,7 +316,8 @@ Remember that each button needs it's own appropriate icon.
 - When the results-view-tab is loaded:
   - the text for the monaco editor is retrieved from the result-cache of the transformer that is assigned to this component using the currently assigned key, if available (could be that it's null): 
   ```python
-  toDisplay = this.props.transformer.cache.getFragmentResults(this.state.editorKey)
+  editorKey = positionTrackingService.activeFragment.key
+  toDisplay = this.props.transformer.cache.getFragmentResults(editorKey)
   if this.props.transformer.isJson:
     toDisplay = JSON.stringify(toDisplay, 0, 2) # do a pretty format with 2 tabs spacing
   ```
@@ -716,7 +717,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     ```
   
 ### position-tracking service
-- the position-tracking service is a global singleton object responsible for tracking the text-fragment that the user is currently working on.
+- the position-tracking service is a global singleton object responsible for tracking the text-fragment and transformer that the user is currently working on / with.
 - The service keeps track of:
   - the currently selected line nr
   - the text-fragment related to the currently selected line. This is an object that can be assigned (property: activeFragment). When this value changes, an event needs to be raised so that other parts of the application can move to the new active fragment.

@@ -9,6 +9,9 @@ To solve this, the prompt engine splits up the markdown text into smaller chunks
 - not all applications or environments have the same structure (backend web servers usually don't have much use of UI components), so not all application descriptions can be processed with the same prompts, flexibility in the translation process is needed.
 - I am a software developer, so I want some control and debug ability over the entire conversion process. This is why the output of every step can be examined and manually overwritten.
 
+## an example
+Take a look at the [definition of the markdown-code editor & compiler](https://github.com/jan-bogaerts/markdownCode/blob/main/src/markdownCode.md). A pretty strong use-case.
+
 ## Supported Languages
 
 MarkdownCode is currently tested on JavaScript, but it should work with most other programming languages as well, especially with custom prompt pipeline configurations.
