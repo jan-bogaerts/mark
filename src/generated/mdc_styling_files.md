@@ -12,8 +12,6 @@
 []
 # MarkdownCode > services > Theme service
 []
-# MarkdownCode > services > project service
-[]
 # MarkdownCode > services > Selection service
 []
 # MarkdownCode > services > Undo service
@@ -50,17 +48,15 @@
 []
 # MarkdownCode > services > line parser
 []
-# MarkdownCode > components > body > editor
-[]
 # MarkdownCode > components > body > outline
 []
-# MarkdownCode > components > toolbar > home > file section
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.css"]
 # MarkdownCode > components > body > results view
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.css"]
-# MarkdownCode > components > body > results view > results view tab
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.css"]
 # MarkdownCode > components > toolbar
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.css"]
-# MarkdownCode > components > toolbar > home > build section
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.css"]
+# MarkdownCode > components > toolbar > home > file section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.css"]
+# MarkdownCode > components > body > editor
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.css"]
+# MarkdownCode > components > body > results view > results view tab
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.css"]

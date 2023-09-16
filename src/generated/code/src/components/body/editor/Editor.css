@@ -1,0 +1,13 @@
+.editor {
+  width: 100%;
+  height: 100%;
+}
+
+.editorDidMount {
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+}
+
+.className {
+  /* add your custom styling here */
+}

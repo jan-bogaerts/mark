@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from 'antd';
-import DialogService from '../../../services/dialog service/DialogService';
-import ThemeService from '../../../services/Theme service/ThemeService';
+import ThemeService from '../../../services/Theme_service/ThemeService';
 
 const { Sider, Content } = Layout;
 

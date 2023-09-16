@@ -1,80 +1,82 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button, Tooltip } from 'antd';
-import { UndoOutlined, RedoOutlined, SaveOutlined, FileAddOutlined, FileOutlined, FileSyncOutlined } from '@ant-design/icons';
+import { SaveOutlined, FolderOpenOutlined, FileAddOutlined, SaveFilled, SyncOutlined } from '@ant-design/icons';
 import { remote } from 'electron';
-import UndoService from '../../../../services/Undo_service/UndoService';
-import ProjectService from '../../../../services/project_service/ProjectService';
-import DialogService from '../../../../services/dialog_service/DialogService';
-import ThemeService from '../../../../services/Theme_service/ThemeService';
+import UndoService from '../../../services/Undo_service/UndoService';
+import ProjectService from '../../../services/project_service/ProjectService';
+import StorageService from '../../../services/project_service/storage_service/StorageService';
+import DialogService from '../../../services/dialog_service/DialogService';
+import ThemeService from '../../../services/Theme_service/ThemeService';
 
 /**
  * FileSection component
- * Contains actions related to the project and file management
  */
 function FileSection() {
-  const [canUndo, setCanUndo] = useState(UndoService.canUndo());
   const [autoSave, setAutoSave] = useState(ProjectService.getAutoSaveState());
 
   useEffect(() => {
     const undoSubscription = UndoService.subscribe(() => {
-      setCanUndo(UndoService.canUndo());
+      setAutoSave(ProjectService.getAutoSaveState());
     });
 
     return () => {
-      UndoService.unsubscribe(undoSubscription);
+      undoSubscription.unsubscribe();
     };
   }, []);
 
   const newProject = async () => {
-    if (canUndo && !await DialogService.showSaveDialog()) {
-      return;
+    if (UndoService.hasUndoData()) {
+      const save = await DialogService.confirm('Save changes before creating a new project?');
+      if (save) {
+        await saveProject();
+      }
     }
-    ProjectService.newProject();
+    StorageService.new();
   };
 
   const openProject = async () => {
-    try {
-      const { filePaths } = await remote.dialog.showOpenDialog({ properties: ['openFile'] });
-      if (filePaths.length > 0) {
-        await ProjectService.loadProject(filePaths[0]);
+    const filePath = await remote.dialog.showOpenDialog({ properties: ['openFile'] });
+    if (filePath.filePaths[0]) {
+      try {
+        await StorageService.load(filePath.filePaths[0]);
+      } catch (error) {
+        DialogService.error('Error loading project', error.message);
       }
-    } catch (error) {
-      DialogService.showErrorDialog(error.message);
     }
   };
 
   const saveProject = async () => {
-    try {
-      let filename = ProjectService.getFilename();
-      if (!filename) {
-        const { filePath } = await remote.dialog.showSaveDialog({});
-        if (!filePath) {
-          return;
-        }
-        filename = filePath;
+    let fileName = ProjectService.filename;
+    if (!fileName) {
+      const filePath = await remote.dialog.showSaveDialog({});
+      if (filePath.filePath) {
+        fileName = filePath.filePath;
+      } else {
+        return;
       }
-      await ProjectService.saveProject(filename);
+    }
+    try {
+      await StorageService.save(fileName);
     } catch (error) {
-      DialogService.showErrorDialog(error.message);
+      DialogService.error('Error saving project', error.message);
     }
   };
 
   const saveProjectAs = async () => {
-    try {
-      const { filePath } = await remote.dialog.showSaveDialog({});
-      if (filePath) {
-        await ProjectService.saveProject(filePath);
+    const filePath = await remote.dialog.showSaveDialog({});
+    if (filePath.filePath) {
+      try {
+        await StorageService.save(filePath.filePath);
+      } catch (error) {
+        DialogService.error('Error saving project', error.message);
       }
-    } catch (error) {
-      DialogService.showErrorDialog(error.message);
     }
   };
 
   const toggleAutoSave = () => {
-    const newAutoSave = !autoSave;
-    ProjectService.setAutoSaveState(newAutoSave);
-    setAutoSave(newAutoSave);
+    ProjectService.setAutoSaveState(!autoSave);
+    setAutoSave(!autoSave);
   };
 
   const theme = ThemeService.getCurrentTheme();
@@ -85,16 +87,16 @@ function FileSection() {
         <Button icon={<FileAddOutlined />} onClick={newProject} />
       </Tooltip>
       <Tooltip title="Open Project">
-        <Button icon={<FileOutlined />} onClick={openProject} />
+        <Button icon={<FolderOpenOutlined />} onClick={openProject} />
       </Tooltip>
       <Tooltip title="Save Project">
-        <Button icon={<SaveOutlined />} onClick={saveProject} disabled={!canUndo || !ProjectService.getFilename()} />
+        <Button icon={<SaveOutlined />} onClick={saveProject} disabled={!ProjectService.filename || !UndoService.hasUndoData()} />
       </Tooltip>
       <Tooltip title="Save Project As">
-        <Button icon={<SaveOutlined />} onClick={saveProjectAs} disabled={!canUndo} />
+        <Button icon={<SaveFilled />} onClick={saveProjectAs} disabled={!UndoService.hasUndoData()} />
       </Tooltip>
       <Tooltip title="Toggle Auto Save">
-        <Button icon={<FileSyncOutlined />} onClick={toggleAutoSave} type={autoSave ? 'primary' : 'default'} />
+        <Button icon={<SyncOutlined />} onClick={toggleAutoSave} type={autoSave ? 'primary' : 'default'} />
       </Tooltip>
     </div>
   );

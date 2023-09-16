@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
-import { HorizontalSplitter } from './horizontal_splitter/HorizontalSplitter';
-import { VerticalSplitter } from './vertical_splitter/VerticalSplitter';
-import { Outline } from './outline/Outline';
-import { Editor } from './editor/Editor';
-import { ResultsView } from './results_view/ResultsView';
-import { ThemeService } from '../../../services/Theme_service/ThemeService';
+import HorizontalSplitter from './horizontal_splitter/HorizontalSplitter';
+import VerticalSplitter from './vertical_splitter/VerticalSplitter';
+import Outline from './outline/Outline';
+import Editor from './editor/Editor';
+import ResultsView from './results_view/ResultsView';
+import ThemeService from '../../services/Theme_service/ThemeService';
 
 const LOCAL_STORAGE_HORIZONTAL_SPLITTER_POSITION = 'horizontalSplitterPosition';
 const LOCAL_STORAGE_VERTICAL_SPLITTER_POSITION = 'verticalSplitterPosition';

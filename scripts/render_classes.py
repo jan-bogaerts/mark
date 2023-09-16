@@ -208,7 +208,7 @@ def get_import_service_line(import_def, cur_path):
         service = service.lower()
     else:
         service_txt = "service"
-    return f"The {service_txt} {service} can be imported from {service_path}\n"
+    return f"The {service_txt} {service} can be imported from {service_path} (exported as default)\n"
 
 
 def get_all_imports(cl_to_render, full_title, cur_path, root_path):

@@ -169,17 +169,6 @@
     - When a different model is selected, the GPT service is asked to update the model name for the transformer and the current title.
   - A splitter
   - "Refresh": When pressed, the transformer associated with the current tab recalculates the result.
-# MarkdownCode > services > line parser > line parser helpers
-The 'LineParserHelpers' module contains helper functions described in pseudo code:
-
-- `getFragmentAt(service, index)`: Retrieves the fragment at the specified index, handling cases where the fragment is null or the index is empty.
-- `handleEmptyLine(service, index)`: Handles empty lines by checking if the fragments index is empty or contains null values, and adds null values to the index if necessary. If a fragment is found at the index, it updates the fragment's lines accordingly.
-- `updateFragmentTitle(service, fragment, line, fragmentPrjIndex)`: Updates the title of a fragment by calculating its depth and replacing the '#' characters with an empty string. It also emits an event when the fragment's key changes.
-- `removeFragmentTitle(service, fragment, index)`: Removes the title of a fragment by inserting the line at the beginning of the fragment's lines. If the previous fragment is null, it sets the title to empty. Otherwise, it copies all the lines from the current fragment to the previous fragment and updates the index accordingly.
-- `insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index)`: Inserts a new fragment at the specified index by creating a new text fragment and adjusting the lines and index accordingly.
-- `handleTitleLine(service, line, index)`: Handles title lines by checking if the fragments index is empty or null at the specified index. If it is, it creates a new text fragment and adds it to the index. Otherwise, it updates the title of the fragment at the index or inserts a new fragment if the index is different from the fragment's start.
-- `updateFragmentLines(service, fragment, index, fragmentStart)`: Updates the lines of a fragment at the specified index by replacing an existing line or adding a new line if the index is greater than the fragment's line length.
-- `handleRegularLine(service, line, index)`: Handles regular lines by creating a new fragment if there is no fragment at the index or in front of it. If the fragment's start is equal to the index, it removes the fragment's title. Otherwise, it updates the fragment's lines.
 # MarkdownCode > services > folder service
 - The folder service is a global singleton that manages the location of the currently active project.
 - It has the following properties:
@@ -233,17 +222,6 @@ The 'LineParserHelpers' module contains helper functions described in pseudo cod
   - For each text fragment in the project service's data list:
     - For every transformer in the entry points list of the cybertron service:
       - Request the transformer to asynchronously render its result (renderResult).
-# MarkdownCode > components > body > editor
-- The editor component uses the monaco editor npm package to display markdown text.
-- When the editor is loaded, it retrieves the text from the project service and applies the theme, font, and font-size from the theme-service.
-- The editor will reload the text whenever the project service triggers the 'content-changed' event.
-- The monaco editor monitors several events:
-  - onDidChangeModelContent: processes content changes using the project service.
-  - onDidFocusEditorWidget: stores a reference to the monaco editor in the selection service.
-  - onDidBlurEditorWidget: removes the reference to the monaco editor from the selection service.
-  - onDidChangeCursorPosition: updates the position-tracking service with the new cursor position.
-  - onDidChangeCursorSelection: notifies subscribers of the selection-service about the selection change.
-- The monaco editor always occupies all available space.
 # MarkdownCode > components > body > outline
 - The outline component is on the left side of the editor.
 - It displays a tree structure representing the headings in the active project.
@@ -259,65 +237,12 @@ The 'LineParserHelpers' module contains helper functions described in pseudo cod
   - calculateKey: calculates the key of a text-fragment based on its depth-level and the titles of previous fragments.
   - clear: clears the fragmentsIndex list.
 - The parse function and related pseudo code are provided to demonstrate how the line-parser service can be used to handle different types of lines.
-# MarkdownCode > components > body > results view > results view tab
-- The results-view-tab component displays the results of a transformer for a specific text fragment identified by its key.
-- The monaco editor npm package is used to display the results in markdown, json data, javascript, html, or css.
-- The monaco editor fills the available width and height of the component.
-- When the results-view-tab is loaded:
-  - The text for the monaco editor is retrieved from the result-cache of the assigned transformer using the current key, if available.
-  - The theme (light or dark), font, and font-size are retrieved from the theme-service and applied to the monaco editor.
-- The results-cache of the transformer is monitored for changes in the result with the current key.
-  - If the result is marked as 'out-of-date' or 'deleted', the text is shown as grayed-out.
-  - If the result is marked as 'overwritten', the text is shown in red.
-- When the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer and marked as overwritten.
-- The following events are monitored on the monaco editor:
-  - onDidFocusEditorWidget: The monaco editor reference is stored in the selection service.
-  - onDidBlurEditorWidget: If the selection service currently references this monaco editor, the editor reference is set to null.
-  - onDidChangeCursorSelection: If the selection service currently references this monaco editor, the subscribers of the selection-service are notified of the selection change.
-- A results-view-context-menu component is placed on top of the monaco editor.
-- The component monitors the position-tracking service for changes to the currently selected text fragment.
-  - When this changes, the key value is updated and the text is retrieved from the result-cache and shown in the monaco editor.
 # MarkdownCode > components > body > results view
 - Results-view component is at the bottom of the main body.
 - Users can see results generated by registered transformers for the selected text block.
 - Each transformer in the list creates a tab at the top left of the view.
 - The tab's title is the transformer's name.
 - The tab content displays a results-view-tab component.
-# MarkdownCode > services > project service
-- The project service is responsible for creating and opening projects, as well as saving the currently opened project.
-- When creating a new project, the service clears the necessary data, reloads the cache for each registered transformer, and raises the content-changed event.
-- When opening an existing project, the service clears the necessary data, sets the file location, reads the file contents, parses each line, reloads the cache for each registered transformer, and raises the content-changed event.
-- When saving the currently opened project, the service moves or copies the file depending on the situation, writes the content to the file, reloads the cache for each registered transformer, and saves the filename.
-- The service also processes data changes made in the markdown editor and marks the project as dirty for auto-saving.
-- The service manages a data list of text fragments and provides functions to delete, add, and mark fragments as out of date.
-- The service stores user configs like auto-save in local storage.
-- The service uses events to notify others of changes, including content changes, fragment deletion and insertion, fragment out-of-date marking, and key changes.
-# MarkdownCode > services > result-cache service
-- This service manages cached results for transformers.
-- Transformers can store results for text fragments and track if the results are out of date.
-- The cache can monitor changes in both project fragments and result fragments.
-- Transformers use an instance of this class to cache their results.
-- The cache uses a dictionary to store the results.
-- The cache saves the results in a JSON file specified by the transformer.
-- The cache loads the JSON file during construction and clears the cache if the file doesn't exist.
-- The cache registers event handlers with the project service and other input transformers to monitor changes in text fragments.
-- When a fragment changes, the cache checks the secondary dictionary for entries and marks them as out of date.
-- The cache can overwrite results for a key and retrieve results for a key.
-- The cache can determine if a text fragment is out of date.
-- The cache has a function to clear the cache.
-- The cache has a function to retrieve all results related to a fragment.
-- The cache has event handlers for fragment deletion and key changes.
-- The cache stores the results in a dictionary and updates the 'is-dirty' flag when results are modified.
-# MarkdownCode > components > toolbar > home > file section
-- The file-section component manages project and file actions.
-- Buttons in the component use icons instead of text.
-- Supported actions include:
-  - New Project: Creates a new project. If there are unsaved changes, prompts the user to save first and clears the current project data.
-  - Open: Opens an existing project. Shows a dialog box to select a file. If a file is selected, loads the project using the project service. Includes error handling.
-  - Save: Saves the current project to a file. Enabled when there is a filename for the project and there are unsaved changes. Shows a save-as dialog if the project file does not have a filename. Includes error handling.
-  - Save As: Saves the current project to a new location. Enabled when there are unsaved changes. Shows a save-as dialog and asks the project service to save the project to the new location. Includes error handling.
-  - Auto-Save: A toggle button that updates the auto-save state of the project service when pressed. The button's state follows the project service's auto-save state.
-- The buttons' state is updated based on changes in the undo service.
 # MarkdownCode > services > position-tracking service
 - The position-tracking service is responsible for tracking the text-fragment that the user is currently working on.
 - It keeps track of the currently selected line number and the text-fragment related to that line.
@@ -331,18 +256,141 @@ The 'LineParserHelpers' module contains helper functions described in pseudo cod
 - The available tabs are: Home (shown as the first tab when the application starts), Format, and Preferences.
 - A JSON structure should be created for all the tabs, including fields for key, label, and children.
 - The JSON structure should be assigned to the items property.
+# MarkdownCode > services > project service > change-processor service
+- The change-processor service ensures that the project structure stays synchronized with the source by processing changes in the project content.
+- Functions:
+  - process(changes, full): Updates the project service to reflect user edits. Pseudo code:
+    ```python (pseudo)
+    def process(changes, full):
+      projectService.content = full
+      for change in changes:
+        lines = change.text.split('\n')
+        curLine = change.range.startLineNumber - 1
+        lineEnd = change.range.endLineNumber - 1
+        lineIdx = 0
+        # Replace overwritten lines
+        while lineIdx < len(lines) and curLine < lineEnd:
+          lineParser.parse(lines[lineIdx], curLine)
+          lineIdx += 1
+          curLine += 1
+        # Delete or insert lines
+        while curLine < lineEnd:
+          lineParser.deleteLine(curLine)
+          curLine += 1
+        while lineIdx < len(lines):
+          LineParser.insert(line, index)
+        storageService.markDirty()
+    ```
+# MarkdownCode > services > build-stack service
+- The build-stack service prevents circular references in the build process.
+- It uses a dictionary called "running" to keep track of the currently running textframe - transformer pairs.
+- The "tryRegister" function checks if a pair is already running and returns false if it is, otherwise it adds the pair to the "running" dictionary and returns true.
+- The "unRegister" function removes a pair from the "running" dictionary.
+# MarkdownCode > services > constant-extractor service
+- The constant-extractor service extracts constant definitions from source code and stores them in a json file. It replaces the constants in the source texts with references to the json entries.
+- It inherits from the transformer-base service and has a constructor with the parameters 'constants' (name) and an empty array (dependencies). The isJson parameter is set to true.
+- To use the service, create a global instance of it.
+- Register the global instance of the service as a transformer with the cybertron-service using the code `cybertronService.register(this, false)`.
+- The service has the following functions:
+  - extract-quotes: This function extracts all the locations in the text that contain quotes.
+  - render-result: This function renders the result by extracting quotes from the text fragment, caching the result, and returning it.
+  - get-result: This function retrieves an up-to-date result value for the specified key. It uses the cache if possible. If the result is not available in the cache, it renders the result and returns it.
+# MarkdownCode > components > toolbar > home > file section
+- The file-section component manages project and file actions.
+- Buttons in the component use icons instead of text.
+- Supported actions include:
+  - New Project: creates a new project, prompts to save if changes are present, and calls `storageService.new()`.
+  - Open: opens an existing project, prompts to select a file, and calls `storageService.load()` with the selected file.
+  - Save: saves the current project to a file, prompts to save as if no filename is present, and calls `storageService.save()` with the filename.
+  - Save As: saves the current project to a new location, prompts to select a file, and calls `storageService.save()` with the new location.
+  - Auto-save: a toggle button that updates the auto-save state in the project service.
+- The buttons' states are updated based on changes in the undo service.
+# MarkdownCode > services > project service
+- The project service is a global singleton that manages a data-list of text fragments and stores the raw content displayed to the user.
+- It provides functions to work with the text fragments, such as deleting, adding, marking as out of date, and retrieving fragments by key.
+- It also keeps track of user configurations, such as auto-save settings.
+- The project service uses an EventTarget field to dispatch events, allowing other objects to listen for and handle these events.
+- It raises events for content changes, fragment deletion and insertion, marking fragments as out of date, and changing fragment keys.
+# MarkdownCode > services > line parser > line parser helpers
+The 'LineParserHelpers' module contains helper functions used by the line parser service. These functions are described in pseudo code and perform various tasks such as getting a fragment at a specific index, handling empty lines, updating fragment titles, removing fragment titles, inserting fragments, handling title lines, and updating fragment lines.
+# MarkdownCode > services > project service > storage service
+- The storage service is a global singleton responsible for reading and writing project data to and from storage.
+- Functions:
+  - clear(): clears all references to previously loaded data.
+  - new(): sets up everything for a new project.
+  - open(filePath): loads all data from disk.
+  - updateOutOfDate(): updates the list of out-of-date transformers for each text-fragment.
+  - markDirty(): marks the project as dirty for auto-saving.
+  - save(file): saves the project to disk.
+- Note: The fs module should be loaded remotely through Electron.
 # MarkdownCode > components > toolbar > home > build section
 - The build-section component has actions for the build-service.
 - Buttons have icons instead of text.
 - Actions include:
-  - "All" button to render code for the entire project.
-    - Disabled when project-service.isAnyFragmentOutOfDate() is false.
-  - "Code for active fragment" button to render code files for the currently active fragment.
-    - Disabled when `!positionTrackingService.activeFragment.isOutOfDate`.
-  - "Active fragment with active transformer" button.
-    - Disabled when `positionTrackingService.activeFragment && positionTrackingService.activeTransformer && !positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)`.
+  - "All" button: renders all code for the project.
+    - Disabled when no fragment is out of date.
+    - Calls build-service.buildAll().
+  - "Code for active fragment" button: renders code files for the active fragment.
+    - Disabled when active fragment is not out of date.
+    - Calls build-service.buildFragment(activeFragment).
+  - "Active fragment with active transformer" button: renders result for active fragment and transformer.
+    - Disabled when active fragment or transformer is not out of date.
+    - Calls build-service.runTransformer(activeFragment, activeTransformer).
   - Separator.
-  - "Debug" toggle button to update the debug state.
-    - The toggle button's state follows the build-service's debug state.
-  - "Run next" button to continue rendering to the next transformer.
-    - Disabled when `!debug`.
+  - "Debug" toggle button: updates debug state in build-service.
+    - State follows build-service's debug state.
+  - "Run next" button: continues rendering to the next transformer.
+    - Disabled when not in debug mode.
+- Store disabled values of buttons in state for updating from event handlers.
+- Initialize button states on load.
+- Register event handlers for changes in project-service and position-tracking service.
+- Unregister event handlers on unload.
+# MarkdownCode > components > body > editor
+- The editor component uses the monaco editor npm package to display markdown text.
+- When the editor is loaded, it retrieves the text from the project service and applies the theme, font, and font-size from the theme service.
+- The editor will reload the text whenever the project service triggers the 'content-changed' event.
+- The monaco editor monitors several events:
+  - onDidChangeModelContent: it asks the change-processor-service to process the changes.
+  - onDidFocusEditorWidget: it stores a reference to the monaco editor in the selection service.
+  - onDidBlurEditorWidget: it removes the reference to the monaco editor from the selection service.
+  - onDidChangeCursorPosition: it updates the position-tracking service with the new cursor position.
+  - onDidChangeCursorSelection: it informs the subscribers of the selection-service that the selection has changed.
+- The monaco editor always occupies all available space.
+# MarkdownCode > services > result-cache service
+- This service manages cached results for transformers.
+- Transformers can store results for text fragments and track if the results are out of date.
+- The cache can monitor changes in both project fragments and result fragments.
+- Transformers use this service to cache their results.
+- The cache uses a dictionary to store the results.
+- The cache saves the results in a JSON file.
+- The cache is updated whenever a transformer calculates a result.
+- The cache file name is specified by the transformer.
+- The cache file location is provided by the folder-service.cache.
+- The cache file contains the primary dictionary, secondary dictionary, overwritten values, and last save date.
+- The cache tries to load the JSON file during construction and clears the cache if the file doesn't exist.
+- The result-cache-service initializes the 'is-dirty' flag and registers event handlers with the project service and input transformers.
+- When a fragment is changed or deleted, the cache service updates the cache and sets the 'is-dirty' flag.
+- The cache has functions to overwrite and retrieve results for a key.
+- The cache has a function to check if a text fragment is out of date.
+- The cache can be cleared using the clearCache() function.
+- The cache has functions to handle fragment deletion and key changes.
+- The setResult function stores the result in the cache and updates the 'is-dirty' flag.
+- The isOutOfDate function checks if a key is marked as still-valid in the cache.
+# MarkdownCode > components > body > results view > results view tab
+- The results-view-tab component displays the results of a transformer for a specific text fragment identified by its key.
+- The monaco editor npm package is used to display the results in markdown, JSON data, JavaScript, HTML, or CSS.
+- The monaco editor fills the available width and height of the component.
+- When the results-view-tab is loaded:
+  - The text for the monaco editor is retrieved from the result-cache of the assigned transformer using the current key.
+  - The theme (light or dark), font, and font-size are retrieved from the theme-service and applied to the monaco editor.
+- The results-cache of the transformer is monitored for changes in the result with the current key.
+  - If the result is marked as 'out-of-date' or 'deleted', the text is shown as grayed-out.
+  - If the result is marked as 'overwritten', the text is shown in red.
+- When the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer as overwritten.
+- The following events are monitored on the monaco editor:
+  - onDidFocusEditorWidget: The monaco editor is stored in the selection service and the position-tracking-service is set to the active transformer.
+  - onDidBlurEditorWidget: If the selection service references this monaco editor, the editor reference is set to null.
+  - onDidChangeCursorSelection: If the selection service references this monaco editor, the subscribers of the selection-service are notified of the selection change.
+- A results-view-context-menu component is placed on top of the monaco editor.
+- The component monitors the position-tracking service for changes to the currently selected text-fragment.
+  - When this changes, the key value is updated and the text is retrieved from the result-cache and shown in the monaco editor.

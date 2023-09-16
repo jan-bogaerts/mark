@@ -2,9 +2,9 @@
 import React, { Component } from 'react';
 import { Tabs } from 'antd';
 import cybertronService from '../../../services/cybertron_service/CybertronService';
-import dialogService from '../../../../services/dialog_service/DialogService';
-import themeService from '../../../../services/Theme_service/ThemeService';
-import ResultsViewTab from '../results_view/results_view_tab/ResultsViewTab';
+import dialogService from '../../../services/dialog_service/DialogService';
+import themeService from '../../../services/Theme_service/ThemeService';
+import ResultsViewTab from './results_view_tab/ResultsViewTab';
 
 const { TabPane } = Tabs;
 
@@ -30,7 +30,7 @@ class ResultsView extends Component {
    */
   getTransformers = () => {
     try {
-      const transformers = cybertronService.getTransformers();
+      const transformers = cybertronService.transformers;
       this.setState({ transformers });
     } catch (error) {
       dialogService.showErrorDialog('Error fetching transformers', error);

@@ -6,8 +6,6 @@
 {"ThemeService": "declare"}
 # MarkdownCode > services > Selection service
 {"SelectionService": "declare"}
-# MarkdownCode > services > line parser > line parser helpers
-{"LineParserHelpers": "declare"}
 # MarkdownCode > services > folder service
 {"FolderService": "declare"}
 # MarkdownCode > services > gpt service
@@ -22,9 +20,19 @@
 {"BuildService": "declare"}
 # MarkdownCode > services > line parser
 {"LineParser": "declare"}
-# MarkdownCode > services > project service
-{"ProjectService": "declare"}
-# MarkdownCode > services > result-cache service
-{"ResultCacheService": "declare"}
 # MarkdownCode > services > position-tracking service
 {"PositionTrackingService": "declare"}
+# MarkdownCode > services > project service > change-processor service
+{"ChangeProcessorService": "declare"}
+# MarkdownCode > services > build-stack service
+{"BuildStackService": "declare"}
+# MarkdownCode > services > constant-extractor service
+{"ConstantExtractorService": "declare"}
+# MarkdownCode > services > project service
+{"ProjectService": "declare"}
+# MarkdownCode > services > line parser > line parser helpers
+{"LineParserHelpers": "declare"}
+# MarkdownCode > services > project service > storage service
+{"StorageService": "declare"}
+# MarkdownCode > services > result-cache service
+{"ResultCacheService": "declare"}

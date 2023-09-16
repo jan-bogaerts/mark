@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import { Tree } from 'antd';
-import projectService from '../../../../services/project_service/ProjectService';
-import positionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
-import dialogService from '../../../../services/dialog_service/DialogService';
-import themeService from '../../../../services/Theme_service/ThemeService';
+import projectService from '../../../services/project_service/ProjectService';
+import positionTrackingService from '../../../services/position-tracking_service/PositionTrackingService';
+import themeService from '../../../services/Theme_service/ThemeService';
 
 /**
  * Outline component
@@ -18,15 +17,15 @@ class Outline extends Component {
   }
 
   componentDidMount() {
-    projectService.subscribe('content-changed', this.handleContentChanged);
-    projectService.subscribe('fragment-deleted', this.handleFragmentDeleted);
-    projectService.subscribe('fragment-inserted', this.handleFragmentInserted);
-    projectService.subscribe('key-changed', this.handleKeyChanged);
-    positionTrackingService.subscribe(this.handlePositionChanged);
+    projectService.eventTarget.addEventListener('content-changed', this.handleContentChanged);
+    projectService.eventTarget.addEventListener('fragment-deleted', this.handleFragmentDeleted);
+    projectService.eventTarget.addEventListener('fragment-inserted', this.handleFragmentInserted);
+    projectService.eventTarget.addEventListener('key-changed', this.handleKeyChanged);
+    positionTrackingService.eventTarget.addEventListener('change', this.handlePositionChanged);
   }
 
   handleContentChanged = () => {
-    const projectData = projectService.getProjectData();
+    const projectData = projectService.textFragments;
     const treeData = this.convertToTreeData(projectData);
     this.setState({ treeData });
   };

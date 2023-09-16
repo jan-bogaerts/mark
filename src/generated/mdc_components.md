@@ -30,17 +30,17 @@
 ["Body", "HorizontalSplitter", "Outline", "VerticalSplitter", "Editor", "ResultsView"]
 # MarkdownCode > components > body > results view > results view context menu
 ["ResultsViewContextMenu"]
-# MarkdownCode > components > body > editor
-["Editor"]
 # MarkdownCode > components > body > outline
 ["Outline"]
-# MarkdownCode > components > body > results view > results view tab
-["ResultsViewTab", "ResultsViewContextMenu"]
 # MarkdownCode > components > body > results view
 ["ResultsView", "ResultsViewTab"]
-# MarkdownCode > components > toolbar > home > file section
-["FileSection"]
 # MarkdownCode > components > toolbar
 ["Toolbar", "HomeTab", "FormatTab", "PreferencesTab"]
+# MarkdownCode > components > toolbar > home > file section
+["FileSection"]
 # MarkdownCode > components > toolbar > home > build section
 ["BuildSection"]
+# MarkdownCode > components > body > editor
+["Editor"]
+# MarkdownCode > components > body > results view > results view tab
+["ResultsViewTab", "ResultsViewContextMenu"]

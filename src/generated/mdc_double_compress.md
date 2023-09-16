@@ -56,17 +56,6 @@ The selection service tracks selected text and the active editor. It can be moni
 The body component is the main part of the application, containing a horizontal splitter that divides its area. On the left side is an outline component, and on the right side is a vertical splitter. The vertical splitter has an editor component at the top and a results view component at the bottom. The body component has event handlers for the 'onPositionChanged' callback of both splitters, storing the new position values. When unloaded, the last splitter positions are stored in local storage. When loaded, the last positions are restored from local storage. The clientWidth and clientHeight of the component are retrieved. If there is no previous value for the vertical splitter or it is larger than the clientWidth, 'clientWidth / 4' is used. If there is no previous value for the horizontal splitter or it is larger than the clientHeight, 'clientHeight / 4' is used.
 # MarkdownCode > components > body > results view > results view context menu
 The results-view-context-menu is a component that wraps the Dropdown antd component. It requires the properties 'transformer' and 'key' to be provided. The dropdown's content consists of a 'more' button icon, positioned in the top-right corner of its parent with a margin of 16px. The menu contains options for selecting the GPT model to be used by the transformer. The submenu items are fetched from the GPT service's list of available models. The currently selected model is indicated as selected. When a different model is selected, the GPT service is asked to update the model name for the transformer. There is also an option to refresh the result by pressing a button.
-# MarkdownCode > services > line parser > line parser helpers
-'LineParserHelpers' module contains functions for handling fragments in text:
-
-- `getFragmentAt(service, index)`: Retrieves the fragment at the specified index, handling null or empty cases.
-- `handleEmptyLine(service, index)`: Handles empty lines by checking and adding null values if necessary. Updates fragment's lines if a fragment is found at the index.
-- `updateFragmentTitle(service, fragment, line, fragmentPrjIndex)`: Updates fragment's title by calculating depth and replacing '#' characters. Emits event when fragment's key changes.
-- `removeFragmentTitle(service, fragment, index)`: Removes fragment's title by inserting line at the beginning. Copies lines to previous fragment if it exists.
-- `insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index)`: Inserts new fragment at index by creating a new text fragment and adjusting lines and index.
-- `handleTitleLine(service, line, index)`: Handles title lines by creating a new fragment or updating existing fragment's title.
-- `updateFragmentLines(service, fragment, index, fragmentStart)`: Updates fragment's lines at index by replacing or adding lines.
-- `handleRegularLine(service, line, index)`: Handles regular lines by creating a new fragment or updating existing fragment's lines.
 # MarkdownCode > services > folder service
 The folder service is a global singleton that manages the location of the active project. It has properties for the root folder, project name, project file path, cache folder path, and project configuration file path. It can perform actions to clear, move, copy, and set the project location.
 # MarkdownCode > services > gpt service
@@ -87,8 +76,6 @@ The transformer-base service is a base class for transformers, providing a commo
 The compress service shortens text fragments and can be used for testing and other processes. It is a subclass of the transformer-base service. The constructor parameters are name and dependencies. During startup, an instance of the compress service is created and registered. The build-message function takes a text fragment as input and returns a JSON array called result with system and user roles. It also returns the text fragment key.
 # MarkdownCode > services > build service
 The build service handles all text fragments in the project service using transformers to generate conversions. To build the project, the service requests each transformer to asynchronously render its result for each text fragment in the project service's data list.
-# MarkdownCode > components > body > editor
-The editor uses the monaco editor npm package to display markdown text. It retrieves text from the project service and applies theme, font, and font-size from the theme-service. It reloads text when the project service triggers the 'content-changed' event. The monaco editor monitors events for content changes, focus, blur, cursor position, and cursor selection. It always occupies all available space.
 # MarkdownCode > components > body > outline
 - The outline component is on the left side and displays a tree structure of headings in the active project.
 - Project data is retrieved from the project service and converted into a tree structure using 'convertToTreeData' when the component is loaded or when a new project is loaded.
@@ -98,28 +85,10 @@ The editor uses the monaco editor npm package to display markdown text. It retri
 - 'convertToTreeData' creates a tree structure based on data items and sets parent-child relationships based on the level count.
 # MarkdownCode > services > line parser
 The line-parser service is a global singleton object that parses markdown lines and updates text-fragments in the project-service. It has functions to create text-fragments, calculate keys, and clear the fragmentsIndex list. The parse function and pseudo code demonstrate its usage for different line types.
-# MarkdownCode > components > body > results view > results view tab
-The results-view-tab component displays transformer results for a specific text fragment. It uses the monaco editor npm package to display results in various formats. The editor adjusts to the component's size. When loaded, the component retrieves text from the result-cache and applies theme settings. The cache is monitored for changes, and text is displayed accordingly. User changes are saved to the cache. The monaco editor events are monitored and the selection service is used. A results-view-context-menu component is placed on top of the editor and tracks selected text changes.
 # MarkdownCode > components > body > results view
 - Results-view component is located at the bottom of the main body, displaying results from registered transformers for the selected text block.
 - Each transformer in the list has a tab at the top left of the view, showing the transformer's name.
 - The tab content contains a results-view-tab component.
-# MarkdownCode > services > project service
-The project service creates, opens, and saves projects. It clears data, reloads cache, and raises events when creating or opening a project. It moves or copies files, writes content, and saves filenames when saving a project. It processes data changes in the markdown editor and marks projects as dirty. It manages a data list of text fragments and provides functions for deletion, addition, and marking as out of date. It stores user configs in local storage. It uses events to notify others of changes.
-# MarkdownCode > services > result-cache service
-- This service manages cached results for transformers, storing and tracking results for text fragments.
-- The cache monitors changes in both project and result fragments.
-- Transformers use this class to cache their results, stored in a dictionary.
-- Results are saved in a JSON file specified by the transformer, loaded during construction.
-- Event handlers are registered to monitor changes in text fragments.
-- When a fragment changes, the cache marks related entries as out of date.
-- The cache can overwrite and retrieve results for a key.
-- It can determine if a text fragment is out of date and clear the cache.
-- It can retrieve all results related to a fragment.
-- Event handlers are present for fragment deletion and key changes.
-- Results are stored in a dictionary, updating the 'is-dirty' flag when modified.
-# MarkdownCode > components > toolbar > home > file section
-The file-section component manages project and file actions using icon buttons. Supported actions include creating a new project, opening an existing project with error handling, saving the current project with error handling, saving the current project to a new location with error handling, and toggling the auto-save state. The buttons' state is updated based on changes in the undo service.
 # MarkdownCode > services > position-tracking service
 The position-tracking service tracks the user's current text-fragment, including the selected line number and related text. It also stores events monitoring changes in the selected text-fragment. The service offers methods to set the selected line and clear the active fragment and current line.
 # MarkdownCode > components > toolbar
@@ -129,18 +98,43 @@ The position-tracking service tracks the user's current text-fragment, including
 - The available tabs are Home, Format, and Preferences.
 - A JSON structure should be created for all tabs, including key, label, and children fields.
 - The JSON structure should be assigned to the items property.
+# MarkdownCode > services > project service > change-processor service
+The change-processor service keeps the project structure synchronized with the source by processing changes in the project content. Its main function, "process", updates the project service based on user edits. It replaces overwritten lines, deletes or inserts lines, and marks the storage service as dirty.
+# MarkdownCode > services > build-stack service
+The build-stack service prevents circular references. It uses a "running" dictionary to track running textframe - transformer pairs. The "tryRegister" function checks if a pair is already running and returns false if it is, otherwise it adds the pair to the "running" dictionary and returns true. The "unRegister" function removes a pair from the "running" dictionary.
+# MarkdownCode > services > constant-extractor service
+The constant-extractor service extracts constant definitions from source code and stores them in a json file. It replaces constants in the source texts with json references. It inherits from the transformer-base service and has a constructor with the parameters 'constants' and an empty array. To use the service, create a global instance and register it with the cybertron-service. The service has functions to extract quotes, render results, and retrieve up-to-date values.
+# MarkdownCode > components > toolbar > home > file section
+The file-section component manages project and file actions using icon buttons. Supported actions include creating a new project, opening an existing project, saving the current project, saving the current project to a new location, and toggling auto-save. The buttons' states are updated based on changes in the undo service.
+# MarkdownCode > services > project service
+The project service manages a global data-list of text fragments and stores the raw content displayed to the user. It provides functions for working with the fragments, such as deleting, adding, marking as out of date, and retrieving by key. It tracks user configurations, like auto-save settings. The service uses an EventTarget field to dispatch events for content changes, fragment deletion and insertion, marking fragments as out of date, and changing fragment keys.
+# MarkdownCode > services > line parser > line parser helpers
+The 'LineParserHelpers' module has helper functions for the line parser service. They handle tasks like getting fragments, handling empty lines, updating titles, removing titles, inserting fragments, handling title lines, and updating fragment lines.
+# MarkdownCode > services > project service > storage service
+The storage service is a global singleton for reading and writing project data. Functions include clear(), new(), open(filePath), updateOutOfDate(), markDirty(), and save(file). Note: fs module should be loaded remotely through Electron.
 # MarkdownCode > components > toolbar > home > build section
-- The build-section component has actions for the build-service.
-- Buttons have icons instead of text.
-- Actions include:
-  - "All" button for rendering code for the entire project.
-    - Disabled when project-service.isAnyFragmentOutOfDate() is false.
-  - "Code for active fragment" button for rendering code files for the currently active fragment.
-    - Disabled when `!positionTrackingService.activeFragment.isOutOfDate`.
-  - "Active fragment with active transformer" button.
-    - Disabled when `positionTrackingService.activeFragment && positionTrackingService.activeTransformer && !positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)`.
-  - Separator.
-  - "Debug" toggle button to update the debug state.
-    - The toggle button's state follows the build-service's debug state.
-  - "Run next" button to continue rendering to the next transformer.
-    - Disabled when `!debug`.
+- The build-section component has actions for the build-service, including buttons with icons instead of text.
+- Actions include: "All" button (renders all code for the project), "Code for active fragment" button (renders code files for the active fragment), "Active fragment with active transformer" button (renders result for active fragment and transformer), "Debug" toggle button (updates debug state in build-service), and "Run next" button (continues rendering to the next transformer).
+- Buttons are disabled based on certain conditions, such as when no fragment is out of date or when not in debug mode.
+- Button states are stored in state for updating from event handlers.
+- Button states are initialized on load and event handlers are registered for changes in project-service and position-tracking service.
+- Event handlers are unregistered on unload.
+# MarkdownCode > components > body > editor
+The editor uses the monaco editor npm package to display markdown text. It retrieves text from the project service and applies theme, font, and font-size from the theme service. It reloads text when the project service triggers the 'content-changed' event. The monaco editor monitors events for change processing, editor focus and blur, cursor position and selection changes. It always occupies all available space.
+# MarkdownCode > services > result-cache service
+- This service manages cached results for transformers, storing and tracking results for text fragments.
+- The cache monitors changes in project and result fragments.
+- Transformers use the cache to store their results in a JSON file.
+- The cache is updated when a transformer calculates a result.
+- The cache file name and location are specified by the transformer.
+- The cache contains dictionaries, overwritten values, and last save date.
+- The cache loads the JSON file during construction and clears the cache if the file doesn't exist.
+- The result-cache-service initializes the 'is-dirty' flag and registers event handlers.
+- When a fragment is changed or deleted, the cache updates and sets the 'is-dirty' flag.
+- The cache has functions to overwrite, retrieve, and check if a text fragment is out of date.
+- The cache can be cleared using the clearCache() function.
+- The cache handles fragment deletion and key changes.
+- The setResult function stores the result and updates the 'is-dirty' flag.
+- The isOutOfDate function checks if a key is still valid in the cache.
+# MarkdownCode > components > body > results view > results view tab
+The results-view-tab component displays transformer results for a specific text fragment. It uses the monaco editor npm package to display results in various formats. The editor adjusts to the component's size. When loaded, the component retrieves text from the result-cache and applies theme settings. The cache is monitored for changes, and text is displayed accordingly. User changes are saved to the cache. The monaco editor's events are monitored for selection changes. A results-view-context-menu component is placed on top of the editor, which updates the key and displays text when the selected fragment changes.

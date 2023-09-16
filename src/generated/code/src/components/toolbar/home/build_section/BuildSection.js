@@ -1,74 +1,85 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Divider } from 'antd';
-import { BuildOutlined, CodeOutlined, SyncOutlined, BugOutlined, StepForwardOutlined } from '@ant-design/icons';
+import { BuildOutlined, CodeOutlined, PlayCircleOutlined, BugOutlined, RightOutlined } from '@ant-design/icons';
 import buildService from '../../../services/build_service/BuildService';
-import projectService from '../../../services/project_service/ProjectService';
 import positionTrackingService from '../../../services/position-tracking_service/PositionTrackingService';
+import projectService from '../../../services/project_service/ProjectService';
 import dialogService from '../../../services/dialog_service/DialogService';
 import themeService from '../../../services/Theme_service/ThemeService';
 
 /**
  * BuildSection component
- * Contains actions that the build-service can perform.
  */
-const BuildSection = () => {
-  const [debug, setDebug] = useState(buildService.debug);
+function BuildSection() {
+  const [disabledButtons, setDisabledButtons] = useState({
+    all: true,
+    code: true,
+    active: true,
+    debug: false,
+    next: true,
+  });
 
   useEffect(() => {
-    const theme = themeService.getCurrentTheme();
-    document.body.className = theme;
+    initializeButtonStates();
+    registerEventHandlers();
+    return unregisterEventHandlers;
   }, []);
 
-  const handleAllClick = () => {
-    if (projectService.isAnyFragmentOutOfDate()) {
-      buildService.buildAll();
-    } else {
-      dialogService.showError('All fragments are up to date.');
+  const initializeButtonStates = () => {
+    setDisabledButtons({
+      all: !projectService.isAnyFragmentOutOfDate(),
+      code: !positionTrackingService.activeFragment?.isOutOfDate,
+      active: !(positionTrackingService.activeFragment && positionTrackingService.activeTransformer && !positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)),
+      debug: false,
+      next: !buildService.debug,
+    });
+  };
+
+  const registerEventHandlers = () => {
+    projectService.eventTarget.addEventListener('fragment-out-of-date', initializeButtonStates);
+    positionTrackingService.eventTarget.addEventListener('change', initializeButtonStates);
+  };
+
+  const unregisterEventHandlers = () => {
+    projectService.eventTarget.removeEventListener('fragment-out-of-date', initializeButtonStates);
+    positionTrackingService.eventTarget.removeEventListener('change', initializeButtonStates);
+  };
+
+  const handleButtonClick = (action) => {
+    switch (action) {
+      case 'all':
+        buildService.buildAll();
+        break;
+      case 'code':
+        buildService.buildFragment(positionTrackingService.activeFragment);
+        break;
+      case 'active':
+        buildService.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer);
+        break;
+      case 'debug':
+        buildService.debug = !buildService.debug;
+        break;
+      case 'next':
+        buildService.runNext();
+        break;
+      default:
+        dialogService.showError('Invalid action');
     }
   };
 
-  const handleActiveFragmentClick = () => {
-    if (positionTrackingService.activeFragment.isOutOfDate) {
-      buildService.buildFragment(positionTrackingService.activeFragment);
-    } else {
-      dialogService.showError('Active fragment is up to date.');
-    }
-  };
-
-  const handleActiveFragmentWithTransformerClick = () => {
-    if (positionTrackingService.activeFragment && positionTrackingService.activeTransformer && 
-        (!positionTrackingService.activeFragment.isOutOfDate || 
-        !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key))) {
-      buildService.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer);
-    } else {
-      dialogService.showError('Active fragment or transformer is up to date.');
-    }
-  };
-
-  const handleDebugClick = () => {
-    buildService.toggleDebug();
-    setDebug(!debug);
-  };
-
-  const handleRunNextClick = () => {
-    if (debug) {
-      buildService.runNext();
-    } else {
-      dialogService.showError('Debug mode is not enabled.');
-    }
-  };
+  const theme = themeService.getCurrentTheme();
 
   return (
-    <div className="build-section">
-      <Button icon={<BuildOutlined />} onClick={handleAllClick} disabled={!projectService.isAnyFragmentOutOfDate()} />
-      <Button icon={<CodeOutlined />} onClick={handleActiveFragmentClick} disabled={!positionTrackingService.activeFragment.isOutOfDate} />
-      <Button icon={<SyncOutlined />} onClick={handleActiveFragmentWithTransformerClick} disabled={!positionTrackingService.activeFragment || !positionTrackingService.activeTransformer || positionTrackingService.activeFragment.isOutOfDate || positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)} />
+    <div className={`build-section ${theme}`}>
+      <Button icon={<BuildOutlined />} disabled={disabledButtons.all} onClick={() => handleButtonClick('all')} />
+      <Button icon={<CodeOutlined />} disabled={disabledButtons.code} onClick={() => handleButtonClick('code')} />
+      <Button icon={<PlayCircleOutlined />} disabled={disabledButtons.active} onClick={() => handleButtonClick('active')} />
       <Divider />
-      <Button icon={<BugOutlined />} onClick={handleDebugClick} type={debug ? "primary" : "default"} />
-      <Button icon={<StepForwardOutlined />} onClick={handleRunNextClick} disabled={!debug} />
+      <Button icon={<BugOutlined />} disabled={disabledButtons.debug} onClick={() => handleButtonClick('debug')} />
+      <Button icon={<RightOutlined />} disabled={disabledButtons.next} onClick={() => handleButtonClick('next')} />
     </div>
   );
-};
+}
 
 export default BuildSection;

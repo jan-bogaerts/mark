@@ -16,8 +16,6 @@
 {}
 # MarkdownCode > services > Theme service
 {}
-# MarkdownCode > services > project service
-{}
 # MarkdownCode > services > Selection service
 {}
 # MarkdownCode > services > Undo service
@@ -54,8 +52,6 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js": ["more-button", "selected"]}
 # MarkdownCode > services > line parser
 {}
-# MarkdownCode > components > body > editor
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": ["MonacoEditor", "language", "theme", "options", "fontFamily", "fontSize", "onChange", "onFocus", "onBlur", "onCursorPositionChange", "onSelectionChange", "style", "width", "height"]}
 # MarkdownCode > components > body > outline
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js": ["outline"]}
 # MarkdownCode > services > folder service
@@ -66,15 +62,27 @@
 {}
 # MarkdownCode > services > transformer-base service
 {}
-# MarkdownCode > components > body > results view > results view tab
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.js": ["results-view-tab", "markdown"]}
 # MarkdownCode > components > body > results view
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js": ["results-view", "ant-tabs", "ant-tabs-tabpane", "results-view-tab"]}
-# MarkdownCode > components > toolbar > home > file section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.js": ["file-section", "primary", "default"]}
 # MarkdownCode > components > toolbar
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.js": ["toolbar-home", "toolbar-format", "toolbar-preferences"]}
 # MarkdownCode > services > position-tracking service
 {}
+# MarkdownCode > components > toolbar > home > file section
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.js": ["file-section", "primary", "default"]}
+# MarkdownCode > services > project service > storage service
+{}
+# MarkdownCode > services > project service > change-processor service
+{}
+# MarkdownCode > services > build-stack service
+{}
+# MarkdownCode > services > constant-extractor service
+{}
+# MarkdownCode > services > project service
+{}
 # MarkdownCode > components > toolbar > home > build section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js": ["build-section", "ant-btn", "ant-btn-icon-only", "ant-btn-primary", "ant-btn-default", "ant-divider", "anticon", "anticon-build", "anticon-code", "anticon-sync", "anticon-bug", "anticon-step-forward"]}
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js": []}
+# MarkdownCode > components > body > editor
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": ["editor", "editorDidMount", "className"]}
+# MarkdownCode > components > body > results view > results view tab
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.js": ["results-view-tab"]}

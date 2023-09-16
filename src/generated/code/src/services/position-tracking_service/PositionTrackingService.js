@@ -8,6 +8,7 @@ class PositionTrackingService {
   constructor() {
     this.currentLine = null;
     this.activeFragment = null;
+    this.activeTransformer = null;
     this.eventTarget = new EventTarget();
   }
 

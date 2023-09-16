@@ -6,8 +6,6 @@
 {"DialogService": "yes"}
 # MarkdownCode > services > Theme service
 {"ThemeService": "yes"}
-# MarkdownCode > services > line parser > line parser helpers
-{"LineParserHelpers": "no"}
 # MarkdownCode > services > folder service
 {"FolderService": "no"}
 # MarkdownCode > services > gpt service
@@ -22,9 +20,19 @@
 {"BuildService": "no"}
 # MarkdownCode > services > line parser
 {"LineParser": "no"}
-# MarkdownCode > services > project service
-{"ProjectService": "no"}
-# MarkdownCode > services > result-cache service
-{"ResultCacheService": "no"}
 # MarkdownCode > services > position-tracking service
 {"PositionTrackingService": "no"}
+# MarkdownCode > services > project service > change-processor service
+{"ChangeProcessorService": "no"}
+# MarkdownCode > services > build-stack service
+{"BuildStackService": "no"}
+# MarkdownCode > services > constant-extractor service
+{"ConstantExtractorService": "no"}
+# MarkdownCode > services > project service
+{"ProjectService": "no"}
+# MarkdownCode > services > line parser > line parser helpers
+{"LineParserHelpers": "no"}
+# MarkdownCode > services > project service > storage service
+{"StorageService": "no"}
+# MarkdownCode > services > result-cache service
+{"ResultCacheService": "no"}

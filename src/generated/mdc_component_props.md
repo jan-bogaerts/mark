@@ -28,11 +28,11 @@
 {"ViewSection": {"Theme": "A combobox where the user can choose between light or dark mode. Linked to the theme-service.", "Font": "A combobox for selecting the font of the markdown text. Linked to the theme-service.", "Font size": "A combobox for selecting the font size of the markdown text. Linked to the theme-service."}}
 # MarkdownCode > components > body
 {"Body": {}}
-# MarkdownCode > components > body > editor
-{"Editor": {}}
 # MarkdownCode > components > body > outline
 {"Outline": {}}
-# MarkdownCode > components > body > results view > results view tab
-{"ResultsViewTab": {}}
 # MarkdownCode > components > toolbar
 {"Toolbar": {"items": "An array of objects representing each tab in the toolbar. Each object should have a key, label, and children properties.", "key": "A unique identifier for each tab in the toolbar.", "label": "The display name of the tab in the toolbar.", "children": "An array of objects representing each item in the tab. Each object should have a key, label, and action properties.", "action": "A function that will be executed when the item is clicked."}}
+# MarkdownCode > components > body > editor
+{"Editor": {}}
+# MarkdownCode > components > body > results view > results view tab
+{"ResultsViewTab": {}}

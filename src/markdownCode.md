@@ -43,24 +43,24 @@ the following tabs are available:
 - it supports the following actions
   - New Project: a button to create a new project
     - if there is a project loaded with changes (the project's undo-service has data in the undo list), ask to save first.
-    - clears the current project data.
+    - call `storageService.new()`
   - open: a button to open an existing project.
     - show a dialog box to select a file (use the default electron dialog box for this)
-    - if a file is selected, ask the project service to load the file.
+    - if a file is selected, ask the storage-service to load the file.
     - wrap in an exception handler that shows an error dialog
   - save: a button to save the current project to file.
-    - enabled when the project service has a filename for the project and the undo service has undo data (indicating that the project has changed since the last save).
+    - enabled when the project service has a filename for the project (field 'filename' has a value) and the undo service has undo data (indicating that the project has changed since the last save).
     - if the project file does not yet have a filename, show a save-as dialog
     - if the user doesn't provide a valid filename, stop the action
     - if the user provides a valid filename,
-      - call the project-service 'save' function with filename as param.
+      - call the storage-service 'save' function with filename as param.
     - if the project service already has a filename,
-      - call project service save without param.
+      - call storage-service save without param.
     - wrap in an error handler and show the error
   - save as: a button to save the current project to a new location.
     - enabled the undo service has undo data (indicating that the project has changed since the last save).
     - show an electron save-as dialog
-    - if the user selects a file, ask the project-service to save the project to the new location.
+    - if the user selects a file, ask the storage-service to save the project to the new location.
     - wrap in an exceptions handler and show the error
   - auto-save: a toggle button, when pressed, asks the project service to update the auto-save state.
     - the toggle button's state follows that of the project service's auto-save state.
@@ -99,11 +99,25 @@ the following tabs are available:
 - all buttons use an appropriate icon as content, no text.
 - it contains the following actions:
   - all: a button to start rendering all the code for the entire project.
-    - enabled when the result-cache of any of the transformers in the cybertron-service's list has an out-of-date result fragment or missing result fragments.
-  - code for active topic: a button to start rendering all the code files for the currently active fragment.
-    - enabled when the selected fragment is out-of-date or missing in any of the result-caches of any of the transformers in the cybertron-service's list.
-  - active topic in active prompt
-    - enabled when the selected fragment is out-of-date or missing in the service related to the currently selected 
+    - disabled when project-service.isAnyFragmentOutOfDate() == false.
+    - calls `build-service.buildAll()`
+  - code for active fragment: a button to start rendering all the code files for the currently active fragment.
+    - disabled when `!positionTrackingService.activeFragment?.isOutOfDate`
+    - calls `build-service.buildFragment(positionTrackingService.activeFragment)`
+  - active fragment with active transformer: a button to start rendering the result for the currently active fragment and transformer.
+    - disabled when `positionTrackingService.activeFragment && positionTrackingService.activeTransformer && !positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)`
+    - calls `build-service.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer)`
+  - separator
+  - debug: a toggle button, when pressed, asks the build-service to update the debug state.
+    - the toggle button's state follows that of the build-service's debug state. 
+  - run next: a button that will continue rendering to the next transformer
+    - disabled when `!debug`
+  - Store the disabled value of all the buttons in the state so that they can be updated from the event handlers.
+  - initialize the button states when loaded
+  - register event handlers to monitor for changes with:
+    - project-service (field: eventTarget, event: fragment-out-of-date): update disabled state of the buttons
+    - position-tracking service (field: eventTarget, event: change): update disabled state of the buttons
+  - unregister the event handlers when unloaded.
 
 #### format
 - the format-tab component is a wrapper that displays it's children in a row.
@@ -225,18 +239,18 @@ Remember that each button needs it's own appropriate icon.
 - The editor component displays markdown text. 
 - to display the markdown text, the monaco editor npm package is used.
 - When the editor is loaded:
-  - the text for the monaco editor is retrieved from the project service.
+  - the text for the monaco editor is retrieved from the project service (`projectService.content`).
   - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
 - Whenever the project service triggers the 'content-changed' event, the editor will reload the text
-  - note: register using `projectService.subscribe('content-changed', handleContentChanged)`
+  - note: register using `projectService.eventTarget.addEventListener('content-changed', handleContentChanged)`
 - monitor the following events on the monaco editor:
-  - onDidChangeModelContent: ask the project service to process the content changes. in pseudo:
+  - onDidChangeModelContent: ask the change-processor-service to process the changes. in pseudo:
   ```python (pseudo)
   def handleDidChangeModelContent(ev):
       try:
         if not editor: # ref to the editor needs to be loaded, should be the case cause event is triggered
           return
-        projectService.processChanges(ev.changes, editor.getValue())
+        changeProcessor.process(ev.changes, editor.getValue())
       catch (e):
         dialogService.showErrorDialog(e)
   ```
@@ -249,13 +263,13 @@ Remember that each button needs it's own appropriate icon.
 #### outline
 - the outline component is positioned to the left of the editor
 - it contains a tree representing the outline of the currently active project: all markdown headings in the document are present in the outline
-- When the component is loaded and whenever the project-service raises the 'content-changed' event to indicate that a new project was loaded, the project data is retrieved from the project-service and converted into a tree structure using the function 'convertToTreeData'.
-  - note: register using `projectService.subscribe('content-changed', handleContentChanged)`
+- When the component is loaded and whenever the project-service raises the 'content-changed' event to indicate that a new project was loaded, the project data (field: textFragments) is retrieved from the project-service and converted into a tree structure using the function 'convertToTreeData'.
+  - note: register using `projectService.eventTarget.addEventListener('content-changed', handleContentChanged)`
 - Whenever the project service raises an event that a data item was removed (event: fragment-deleted), call the 'removeNode' function
 - Whenever the project service raises an event that a data item was added (fragment-inserted) or (multiple) item(s) were changed (the event 'key-changed'), rebuild the tree structure.
 - when the user selects a tree item, the key of the first selected item is assigned to the position-tracking service's activeFragment
 - this component monitors the position-tracking service for changes to the currently selected text-fragment.
-  - use `positionTrackingService.subscribe(eventHandler)` to attach the event handler
+  - use `positionTrackingService.eventTarget.addEventListener('change', eventHandler)` to attach the event handler
   - when the position changes, set the tree's selectedKeys property to the key of the selected text-fragment so that the corresponding tree node becomes selected.
 - show the tree with lines
 
@@ -300,18 +314,33 @@ Remember that each button needs it's own appropriate icon.
 - to display the results as markdown, json data, javascript, html or css, the monaco editor npm package is used.
 - The monaco editor fills the full width and height that are available to the component.
 - When the results-view-tab is loaded:
-  - the text for the monaco editor is retrieved from the result-cache of the transformer that is assigned to this component using the currently assigned key, if available (could be that it's null)
+  - the text for the monaco editor is retrieved from the result-cache of the transformer that is assigned to this component using the currently assigned key, if available (could be that it's null): 
+  ```python
+  toDisplay = this.props.transformer.cache.getFragmentResults(this.state.editorKey)
+  if this.props.transformer.isJson:
+    toDisplay = JSON.stringify(toDisplay, 0, 2) # do a pretty format with 2 tabs spacing
+  ```
   - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
 - the results-cache of the transformer is monitored for changes in the result (only for changes in the result with the current key).
   - if the result is marked as 'out-of-date' or 'deleted', show the text as grayed-out.
   - if the result is marked as 'overwritten', show the text in red 
-- when the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer, marked as overwritten. In pseudo: ```transformer.cache.overwriteResult(editorKey, newValue)```
+- when the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer, marked as overwritten. In pseudo: 
+  ```python
+  if this.props.transformer.isJson:
+    try:
+      newValue = JSON.parse(newValue)
+    except:
+      continue # if we cant parse to json, save as text so we still have the value.  
+  transformer.cache.overwriteResult(editorKey, newValue)
+  ```
 - monitor the following events on the monaco editor:
-  - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
+  - onDidFocusEditorWidget: 
+    - store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
+    - set `position-tracking-service.activeTransformer = transformer`
   - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
   - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed
 - put a results-view-context-menu component on top of the monaco editor
-- the component monitors the position-tracking service for changes to the currently selected text-fragment. 
+- the component monitors the position-tracking service (field: eventTarget, event: change) for changes to the currently selected text-fragment. 
   - when this changes update the key value and retrieve the text from the result-cache and show in the monaco-editor
 
 
@@ -348,34 +377,119 @@ Remember that each button needs it's own appropriate icon.
 - The main window refreshes it's entire content when the selected theme is updated.
 
 ### project service
-- the project service is a global singleton that is responsible for:
-  - creating a new project
-    - call this.clear
-    - call folder-service.clear
-    - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file:
-      `transformer.cache.clearCache()`
-    - raise the content-changed event to indicate that the data has changed
-  - opening an existing project.
-    - call this.clear
-    - call folder-service.set-location(file-path)
-    - read the contents of the file that is specified as a parameter. Read it as a string. save with the field 'content'
-    - split the file in lines
-    - for each line in the file, call line-parser-service.parse(line, index).
-    - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file:
-      `transformer.cache.loadCache()`
-    - raise an event (content-changed) to indicate that the data has changed
-  - saving the currently opened project (param: file).
-    - if there was no previous file path (first time project is saved), call folder-service.moveTo(file)
-    - if the previous file path is different from the new file (save-as was called), call folder-service.copyTo(file)
-    - open the file that was specified in the argument, for writing and write 'this.content' to the file as an utf string.
-    - for each transformer that is registered with the cybertron-service, ask the cache object to reload the data file:
-      `transformer.cache.saveCache()`
-    - reset the indicator that the project has changed
-    - save the filename in the project service if the auto-save function needs to use it.
-    - this.saveTimer = null
-  - processing data changes whenever the user makes changes in the markdown editor. in pseudo:
+- the project service is a global singleton that:
+  - manages a data-list of the currently loaded text-fragments (field: text-fragments). This stores the parsed text.
+  - stores the raw data content (field: content): this is the text displayed to the user.
+  - keep track of the filename of the currently loaded project (field: filename)
+  - provide the following functions to work with the text-fragments:
+    - deleteTextFragment(fragment): remove the object from the text-fragments list & raise the fragment-deleted event, parameter = fragment.key
+    - addTextFragment(fragment, index): if index is at end of the text-fragments list, add to list, otherwise insert the fragment at the specified position in the text-fragments list. raise the fragment-inserted event.
+    - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date, param = fragment.key
+    - getFragment(key): search for the fragmenet with the specified key and return it `this.textFragments.find(t => t.key == key)`
+    - tryAddToOutOfDate(key, transformer):
+      ```python
+      fragment = this.getFragment(key)
+      if not fragment:
+        dialogService.showError('Unknown key: ' + key)
+        return
+      if not fragment.isOutOfDate: # first tranformer out of date
+        fragment.outOfDateTransformers = [transformer]
+        this.markOutOfDate(fragment)
+      elif len(fragment.outOfDateTransformers) > 0: # only part is dirty, not yet full fragment
+        fragment.outOfDateTransformers.push(transformer)
+        if len(fragment.outOfDateTransformers) == len(cybertronService.tranformers): # fragment just became full dirty
+          fragment.outOfDateTransformers = []
+        this.eventTarget.dispatchEvent('fragment-out-of-date', key) # raise again so ui can adjust
+      # fragment is already marked as fully out-of-date (no specific fragment.outOfDateTransformers)
+      ```
+    - isAnyFragmentOutOfDate(): returns true if any of the fragments in textFragments array is marked as isOutOfDate.
+- the project service also keeps track of some user configs like:
+  - wether auto-save is on or not. This value is stored in the local storage. 
+- The project service uses an EventTarget field to dispatch events. Other objects can add / remove event listeners to / from the event target to receive events. 
+- it raises the following events:
+  - content-changed: when the project is loaded or a new project is created.
+  - fragment-deleted: when a text fragment is removed from the list
+  - fragment-inserted: when a text fragment is added to the list
+  - fragment-out-of-date: when a fragment is marked as out of date.
+  - key-changed: when the key of a fragment was changed (raised externally)
+
+
+#### storage service
+- the storage service is a global singleton that is responsible for reading and writing project data to and from storage.
+- functions:
+  - clear(): makes certain all references to data that was previously loaded, is cleared
+    ```python (pseudo)
+    projectService.textFragments = []
+    projectService.content = ''
+    lineParser.clear()
+    positionTrackingService.clear()
+    folderService.clear()
+    for transformer in cybertronService.transformers:
+      transformer.cache.clearCache()
+    ```
+  - new(): set everything up for a new project.
+    ```python
+      this.clear()
+      projectService.eventTarget.dispatchEvent('content-changed')
+      ```
+  - open(filePath): load all the data from disk 
+    ```python (pseudo)
+      this.clear()
+      folderService.setLocation(filePath)
+      content = fs.readFileSync(filePath, 'utf8')
+      projectService.content = content
+      content.split('\n').forEach((line, index) => lineParser.parse(line, index));
+      for transformer in cybertronService.transformers:
+        transformer.cache.loadCacheFromFile()
+      this.updateOutOfDate()
+      projectService.eventTarget.dispatchEvent('content-changed')
+    ```
+  - updateOutOfDate(): updates the list of out-of-date transformers for each text-fragment.
+    ```python (pseudo)
+    def updateOutOfDate():
+      for fragment in projectService.textFragments:
+        outOfDateTransformers = []
+        for transformer in cybertronService.transformers:
+          if transformer.cache.isOutOfDate(fragment.key):
+            outOfDateTransformers.push(transformer)
+        if len(outOfDateTransformers) == len(cybertronService.transformers): #all, so fragment is fully out-of-date
+          projectService.markOutOfDate(fragment)
+        elif len(outOfDateTransformers) > 0:
+          fragment.outOfDateTransformers = outOfDateTransformers
+          projectService.markOutOfDate(fragment)
+    ```
+  - markdirty():
+    ```python
+    def markDirty():
+      if projectService.autoSave and projectService.filename and not this.saveTimer:
+        this.saveTimer = setTimeout(() => {
+          this.save(projectService.filename)
+        }, 5000)
+  
+    ```
+  - save(file): saves the project to disk
+    ```python (pseudo)
+    async def save(file):
+      if not projectService.filename:
+        folderService.moveTo(file)
+      elif projectService.filename != file:
+        folderService.copyTo(file)
+      await fs.writeFileASync(file, projectService.content, 'utf8')
+      for transformer in cybertronService.transformers:
+        await transformer.cache.saveCacheToFile()
+      projectService.filename = file
+      this.saveTimer = None
+    ```
+- note: the fs module should be remotely loaded through electron.
+
+
+#### change-processor service
+- the change-processor service is responsible for processing changes in the project content so that the project structure remains in sync with the source.
+- functions:
+  - static process(changes, full): makes certain that the project service remains in sync when the user performs edits. in pseudo:
   ```python (pseudo)
-    def processChanges(changes, full):
+    def process(changes, full):
+      projectService.content = full
       for change in changes:
         lines = change.text.split('\n')
         curLine = change.range.startLineNumber - 1
@@ -392,34 +506,8 @@ Remember that each button needs it's own appropriate icon.
           curLine += 1
         while lineIdx < len(lines):
           LineParser.insert(line, index)
-        this.content = full
-        this.markDirty()
-
-    def markDirty():
-      if this.autoSave and this.filename and not this.saveTimer:
-        this.saveTimer = setTimeout(() => this.saveProject(this.filename), 5000)
-  
+        storageService.markDirty()
   ``` 
-  - manage a data-list of the currently loaded data (field: text-fragments) and provide the following functions to work with this data list:
-    - deleteTextFragment(fragment): remove the object from the text-fragments list & raise the fragment-deleted event, parameter = fragment.key
-    - addTextFragment(fragment, index): if index is at end of the text-fragments list, add to list, otherwise insert the fragment at the specified position in the text-fragments list. raise the fragment-inserted event.
-    - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date, param = fragment.key
-    - clear():
-      - clear the text-fragments
-      - the content field is reset
-      - call line-parser.clear
-      - call position-tracking-service.clear
-- the project service also keeps track of some user configs like:
-  - wether auto-save is on or not. This value is stored in the local storage. 
-- The project service uses an EventTarget to dispatch events that others can subscribe to / unsubscribe from. it raises the following events:
-  - content-changed: when the project is loaded or a new project is created.
-  - fragment-deleted: when a text fragment is removed from the list
-  - fragment-inserted: when a text fragment is added to the list
-  - fragment-out-of-date: when a fragment is marked as out of date.
-  - key-changed: when the key of a fragment was changed (raised externally)
-
-
-
 
 ### folder service
 - the folder service is a global singleton, responsible for managing the location of the currently active project.
@@ -481,6 +569,7 @@ Remember that each button needs it's own appropriate icon.
     - calculate the key for the text-fragment and store in the text-fragment.
     - set the 'out-of-date' flag to true, indicating that this fragment hasn't been processed yet
     - initialize an empty array for the 'lines' field
+    - initialize an empty arry for the 'outOfDateTransformers'
     - ask the project-service to add the text-fragment in it's list of text-fragments (projectService.addTextFragment(textFragment, index)).
     - do not add to the fragmentsIndex (is done separately)
   - calculateKey: for calculating the key of a text-fragment. It accepts as input a text-fragment and an index position. it goes as follows:
@@ -543,15 +632,15 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
       def updateFragmentTitle(service, fragment, line, fragmentPrjIndex):
         oldKey = fragment.key
-        line = line.trim().toLowerCase();
-        fragment.depth = line.split('#').length - 1;
+        line = line.trim().toLowerCase()
+        fragment.depth = line.split('#').length - 1
         fragment.title = line.replace(/#/g, '');
         fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
         eventParams = { fragment, oldKey }
-        projectService.emit('key-changed', eventParams)
+        projectService.eventTarget.dispatchEvent('key-changed', eventParams)
 
 
-      def removeFragmentTitle(service, fragment, index):
+      def removeFragmentTitle(service, fragment, line, index):
         prevFragment, prevIndex = getFragmentAt(service, index-1)
         if not prevFragment: # title of first was removed, set title to empty
           fragment.lines.insert(0, line)
@@ -597,7 +686,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
             insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index)
 
 
-      def updateFragmentLines(service, fragment, index, fragmentStart):
+      def updateFragmentLines(service, fragment, line, index, fragmentStart):
         fragmentLineIndex = index - fragmentStart
         if fragmentLineIndex < fragment.lines.length: # changing existing line
           fragment.lines[fragmentLineIndex] = line
@@ -619,9 +708,9 @@ The module 'LineParserHelpers' contains the following helper functions used by t
              service.fragmentsIndex.push(null)
           service.fragmentsIndex.push(toAdd)
         elif fragmentStart == index: # went from title to regular
-          removeFragmentTitle(service, fragment, index)
+          removeFragmentTitle(service, fragment, line, index)
         else:
-          updateFragmentLines(service, fragment, index, fragmentStart)
+          updateFragmentLines(service, fragment, line, index, fragmentStart)
 
 
     ```
@@ -631,6 +720,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - The service keeps track of:
   - the currently selected line nr
   - the text-fragment related to the currently selected line. This is an object that can be assigned (property: activeFragment). When this value changes, an event needs to be raised so that other parts of the application can move to the new active fragment.
+  - a reference to the currently active transformer. This is used to run a build only for the active transformer (field: activeTransformer)
   - an eventTarget that stores the events which monitor changes in the currently selected text-fragment.
 - it provides the following methods:
   - set currently selected line, input: line-index.
@@ -659,8 +749,9 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - whenever the transformer calculates a result, it asks the cache to update it's dictionary by calling 'setResult'.
 - the cache stores the results in a json file.
   - if the 'is-dirty' flag is not set, no need to save the results
+  - file writes are done async. The fs module should be remotely loaded through electron.
   - after saving the cache, the 'is-dirty' flag is reset.
-  - the name of this file is specified by the transformer that creates the class instance (constructor parameter)
+  - the name of this file is specified by the transformer that creates the class instance (the transformer is a constructor parameter, use the field 'name', store a ref to the transformer for later usage)
   - the location of the file (folder) is provided by folder-service.cache
   - the json file contains:
     - the primary dictionary that contains the results.
@@ -670,12 +761,13 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - the cache tries to load this json file during construction of the instance. If the file doesn't exist, clearCache() is called to make certain that the cache is empty again.
 - When the result-cache-service is created, it:
   - initializes the 'is-dirty' flag to false
+  - initialize eventTarget `this.eventTarget = new EventTarget()`
   - registers the event handler 'handleKeyChanged' with the project service to monitor when the key of a fragment changes
-    - register using pseudo: `projectService.subscribe('fragment-deleted', handleKeyChanged)`
+    - register using pseudo: `projectService.eventTarget.addEventListener('fragment-deleted', handleKeyChanged)`
   - registers the event handler 'handleFragmentDeleted' with the project service to monitor when a fragment is deleted
-    - register using pseudo: `projectService.subscribe('key-changed', handleFragmentDeleted)`
+    - register using pseudo: `projectService.eventTarget.addEventListener('key-changed', handleFragmentDeleted)`
   - registers an event handler with the project service to monitor when text fragments have changed
-    - register using pseudo: `projectService.subscribe('fragment-out-of-date', handleTextFragmentChanged)`
+    - register using pseudo: `projectService.eventTarget.addEventListener('fragment-out-of-date', handleTextFragmentChanged)`
   - and registers the same event handler with each object that the parent transformer uses as input (provided in the constructor as a list of transformer services, each service has a field 'cache')
   - whenever the event handler is triggered (event param = fragment-key), the cache service checks in the secondary dictionary if there are any entries for that key. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
     - for each entry in the list:
@@ -684,6 +776,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         - mark as out-of-date
         - set the 'is-dirty' flag
         - if there are any other cache services that monitor this cache-service (instead of the project service directly), then let them know that the specified text-fragment (from the result) has gone out-of-date.
+    - call projectService.tryAddToOutOfDate(fragmentKey, this.transformer)
 - the result-cache has a function to overwrite the result for a key. this overwritten text value is stored in the 'overwrites' dictionary, under the supplied key. When called, set the 'is-dirty' flag.
 - the result-cache has a function to retrieve the result for a particular key: the key is first searched in the 'overwrites' dictionary. if this has a result, return this value, otherwise try to return the value found in the results dictionary.
 - the result-cache has a function to retrieve if a text fragment is out-of-date or not (from the key): if the result is marked as out-of-date, returns true
@@ -698,6 +791,8 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
   ```python (pseudo)
   def getFragmentResults(fragmentKey):
+    if this.overwrites[key]: # entire fragment could be overwritten, if so, return this
+      return this.overwrites[key]
     result = {}
     cacheKeys = this.secondaryCache[fragmentKey]
     if cacheKeys:
@@ -750,18 +845,49 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       isModified = False
     if isModified:
       this.isDirty = True
-      this.emit(key)
+      this.eventTarget.dispatchEvent(key)
   ```
-
+- isOutOfDate(keyPart): checks if the specified key is present and marked as still-valid
+  ```python (pseudo)
+  def isOutOfDate(keyPart):
+    if keyPart in this.secondaryCache:
+      for key in this.secondaryCache[keyPart]:
+        if this.cache[key].state != 'still-valid':
+          return True
+      return False
+    return True
+  ```
 
 
 ### build service
 - the build service is a global singleton that processes all the text-fragments of the project-service. It uses a set of transformers to iteratively generate conversions on the different text-fragments.
-- to build the project, the service performs the following actions:
-  - for each text-fragment in project-service.data-list:
-    - for every transformer in the list of entry-points of the cybertron-service:
-      - ask the transformer to render it's result (renderResult) (async).
+- async buildAll: to build the project, the service performs the following actions:
+  - for each text-fragment in project-service.data-list: `this.buildFragment(text-fragment)`
+- async buildFragment(fragment): 
+  - for every transformer in the list of entry-points of the cybertron-service: `await this.runTransformer(text-fragment, transformer)`
+- async runTransformer(fragment, transformer):
+  - ask the transformer to render it's result (renderResult) (async)
+- debug: a property to indicate if the build service is currently in debug mode or not. Load the value from local storage upon creation. Save to local storage whenever the value is updated.
   
+
+### build-stack service
+- the build-stack service is used during the build process to make certain that there are no circular references in the process. This occurs when a transformer depends on the result of another transformer that (eventually) again relies on the result of the first transformer, which can't be rendered yet.
+- fields:
+  - running = {} : a dictionary that keeps track of the textframe - transformer pairs that are currently running. Key calculation for the dict = transformer.name + textframe.key
+- functions:
+  - tryRegister(name, key):
+    ```python
+    toSearch = key + '-' + name
+    if toSearch in this.running:
+      return False
+    this.running[toSearch] = True
+    return True
+    ```
+  - unRegister(name, key):
+    ```python
+    toSearch = key + '-' + name
+    delete this.running[toSearch] = True
+    ```
 
 ### cybertron service
 - the cybertron-service is a global singleton that is responsible for managing the list of available transformers.
@@ -770,24 +896,40 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - Transformers can also unregister themselves. this will remove them from the list of available transformers and the list of entry-points.
 
 
+
 ### transformer-base service
 - The transformer-base service acts as a base class for transformers: it provides a common interface and functionality
 - constructor:
   - name: the name of the transformer
   - dependencies: a list of names of transformers. Replace every name in the list with the object found in the list of transformers. If a name can not be found, raise an exception with the necessary info. Store the list of objects as 'dependencies'
+  - isJson: when true, the result values should be treated as json structures, otherwise as regular text.
 - this service uses a result-cache-service (field: cache) to store all the results and keep track of when the build has gone out-of-date. 
   - constructor params:
     - transformer-name = this.name
     - dependencies = this.dependencies
-- function render-result(pseudo):
-
-  ```python (pseudo)
-  def renderResult(textFragment):
-    message, keys = this.buildMessage(textFragment)
-    result = await GPT-service.sendRequest(this.name, textFragment.key, message) # need name and key so the gpt service can select the correct model
-    key = ' | '.join(keys)
-    this.cache.setResult(key, result)
-  ```
+- functions:
+  - render-result(pseudo):
+    ```python (pseudo)
+    def renderResult(textFragment):
+      message, keys = await this.buildMessage(textFragment)
+      result = await GPT-service.sendRequest(this.name, textFragment.key, message) # need name and key so the gpt service can select the correct model
+      key = ' | '.join(keys)
+      this.cache.setResult(key, result)
+      return result
+    ```
+  - get-result(key): get an up-to-date result value for the specified key. Use the cache when possible.
+    ```python (pseudo)
+    async def getResult(fragment):
+      if not this.cache.isOutOfDate(fragment.key):
+        return this.cache.getFragmentResults(fragment.key)
+      if not buildStackService.tryRegister(this.name, fragment.key):
+        return # circular reference, not good, stop the process
+      try:
+        result = await this.renderResult(fragment)
+        return result
+      finally:
+        buildStackService.unregister(this, fragment.key)
+    ```
 
 
 ### compress service
@@ -795,7 +937,8 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - Useful to check if the system understands the fragment and can be used as input for other processes.
 - inherits from transformer-base service. Constructor parameters:
   - name: 'compress'
-  - dependencies: []
+  - dependencies: ['constants']
+  - isJson: false
 - create a global instance of the service
 - register the global instance of the service as an entry-point transformer with the cybertron-service: `cybertronService.register(this, true)`
 
@@ -809,3 +952,82 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
     - role: user, content: `text-fragment.lines.join('\n')`.
   - return result, [ text-fragment.key ]
+
+
+### constant-extractor service
+- The constant-extractor service makes certain all constant definitions (between quotes) are extracted from the source code, rendered to a json file and replaced with references to the json-entries in the source texts.
+- inherits from transformer-base service. Constructor parameters:
+  - name: 'constants'
+  - dependencies: []
+  - isJson: true
+- create a global instance of the service
+- register the global instance of the service as a transformer with the cybertron-service: `cybertronService.register(this, false)`
+- functions:
+  - extract-quotes: extract all the locations in the text that contain quotes
+  ```python (pseudo)
+    def extractQuotes(lines):
+      quotes = []
+      current_quote = None
+      cur_lines = []
+      line_nr = 0
+      for line in lines:
+          line = line.lstrip()
+          if line.startswith('>'):
+              line = line[1:] # remove the > 
+              if line[0] == ' ':  # and the space but leave everything else cause we want the exact quote
+                  line = line[1:]
+              cur_lines.append(line)
+              if not current_quote:
+                  # could be that the previous line was empty, in that case, start the quote a line earlier
+                  if line_nr > 0 and not lines[line_nr - 1].strip():
+                      current_quote = {'start': line_nr - 1}
+                  else:
+                      current_quote = {'start': line_nr}
+          elif not line and current_quote: # empty line so we need to close the quote
+              current_quote['end'] = line_nr
+              quotes.append((current_quote, cur_lines))
+              current_quote = None
+              cur_lines = []
+          line_nr += 1
+      if current_quote:
+          current_quote['end'] = line_nr
+          quotes.append((current_quote, cur_lines))
+      return quotes
+  ```
+  - render-result(pseudo):
+    ```python (pseudo)
+    def renderResult(textFragment):
+      result = this.extractQuotes(textFragment.lines)
+      this.cache.setResult(textFragment.key, result)
+      return result
+    ```
+  - get-result(key): get an up-to-date result value for the specified key. Use the cache when possible.
+    ```python (pseudo)
+    async def getResult(fragment):
+      quotes = []
+      if not this.cache.isOutOfDate(fragment.key):
+        quotes = this.cache.getFragmentResults(fragment.key)
+      else:
+        quotes = await this.renderResult(fragment)
+      if not quotes:
+        return fragment.lines.join('\n')
+      else:
+        lines = fragment.lines
+        new_lines = []
+        consts = [*quotes] # make a copy of the list so we can remove items from it
+        current_const = consts.pop(0)
+        cur_line = 0
+        while cur_line < len(lines):
+            if current_const and cur_line == current_const['start']:
+                # add the constant to the previous line
+                new_lines[-1] += f' the value of the constant resources.{current_const["name"]}'
+                cur_line = current_const['end'] + 1
+                if len(consts) > 0:
+                    current_const = consts.pop(0)
+                else:
+                    current_const = None
+            else:
+                new_lines.append(lines[cur_line])
+                cur_line += 1
+        return new_lines.join('\n')
+    ```

@@ -1,63 +1,48 @@
 .build-section {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 16px;
 }
 
 .ant-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background-color: transparent;
-  border: none;
+  padding: 0 15px;
+  font-size: 14px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .ant-btn-icon-only {
-  margin-right: 8px;
+  width: 32px;
+  padding: 0;
 }
 
 .ant-btn-primary {
   background-color: #1890ff;
   color: #fff;
+  border: none;
 }
 
-.ant-btn-default {
-  background-color: #f5f5f5;
-  color: #333;
-}
-
-.ant-divider {
-  margin: 0 8px;
-  height: 16px;
-  border-left: 1px solid #ccc;
-}
-
-.anticon {
+.ant-btn-lg {
+  height: 40px;
   font-size: 16px;
 }
 
-.anticon-build:before {
-  content: "\e6a1";
+.ant-btn-circle {
+  width: 40px;
+  border-radius: 50%;
 }
 
-.anticon-code:before {
-  content: "\e6a2";
+.ant-divider-vertical {
+  height: 24px;
+  margin: 0 8px;
+  border-left: 1px solid #e8e8e8;
 }
 
-.anticon-sync:before {
-  content: "\e6a3";
-}
-
-.anticon-bug:before {
-  content: "\e6a4";
-}
-
-.anticon-step-forward:before {
-  content: "\e6a5";
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

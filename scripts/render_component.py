@@ -141,7 +141,7 @@ def get_import_service_line(import_def, cur_path, root_path):
         service = service.lower()
     else:
         service_txt = "service"
-    return f"The {service_txt} {service} from {service_path}\n"
+    return f"The {service_txt} {service} from {service_path} (exported as default)\n"
 
 
 def get_all_imports(component, full_title, cur_path, root_path):

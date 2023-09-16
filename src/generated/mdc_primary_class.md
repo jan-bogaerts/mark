@@ -6,8 +6,6 @@ DialogService
 ThemeService
 # MarkdownCode > services > Selection service
 SelectionService
-# MarkdownCode > services > line parser > line parser helpers
-LineParserHelpers
 # MarkdownCode > services > folder service
 FolderService
 # MarkdownCode > services > gpt service
@@ -22,9 +20,19 @@ CompressService
 BuildService
 # MarkdownCode > services > line parser
 LineParser
-# MarkdownCode > services > project service
-ProjectService
-# MarkdownCode > services > result-cache service
-ResultCacheService
 # MarkdownCode > services > position-tracking service
 PositionTrackingService
+# MarkdownCode > services > project service > change-processor service
+ChangeProcessorService
+# MarkdownCode > services > build-stack service
+BuildStackService
+# MarkdownCode > services > constant-extractor service
+ConstantExtractorService
+# MarkdownCode > services > project service
+ProjectService
+# MarkdownCode > services > line parser > line parser helpers
+LineParserHelpers
+# MarkdownCode > services > project service > storage service
+StorageService
+# MarkdownCode > services > result-cache service
+ResultCacheService

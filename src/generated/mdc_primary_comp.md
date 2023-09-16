@@ -30,17 +30,17 @@ ViewSection
 Body
 # MarkdownCode > components > body > results view > results view context menu
 ResultsViewContextMenu
-# MarkdownCode > components > body > editor
-Editor
 # MarkdownCode > components > body > outline
 Outline
-# MarkdownCode > components > body > results view > results view tab
-ResultsViewTab
 # MarkdownCode > components > body > results view
 ResultsView
-# MarkdownCode > components > toolbar > home > file section
-FileSection
 # MarkdownCode > components > toolbar
 Toolbar
+# MarkdownCode > components > toolbar > home > file section
+FileSection
 # MarkdownCode > components > toolbar > home > build section
 BuildSection
+# MarkdownCode > components > body > editor
+Editor
+# MarkdownCode > components > body > results view > results view tab
+ResultsViewTab

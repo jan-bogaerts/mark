@@ -60,8 +60,6 @@
 []
 # MarkdownCode > services > line parser
 []
-# MarkdownCode > services > line parser > line parser helpers
-[]
 # MarkdownCode > services > gpt service
 []
 # MarkdownCode > services > build service
@@ -72,9 +70,19 @@
 []
 # MarkdownCode > services > compress service
 [{"start": 11, "end": 15, "name": "MarkdownCode_services_compress_service_0"}]
+# MarkdownCode > services > position-tracking service
+[]
+# MarkdownCode > services > project service > change-processor service
+[]
+# MarkdownCode > services > build-stack service
+[]
+# MarkdownCode > services > constant-extractor service
+[]
 # MarkdownCode > services > project service
 []
-# MarkdownCode > services > result-cache service
+# MarkdownCode > services > line parser > line parser helpers
 []
-# MarkdownCode > services > position-tracking service
+# MarkdownCode > services > project service > storage service
+[]
+# MarkdownCode > services > result-cache service
 []

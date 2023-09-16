@@ -1,8 +1,8 @@
 
 import React, { Component } from 'react';
 import { Resizable } from 're-resizable';
-import { DialogService } from '../../../services/dialog-service/DialogService';
-import { ThemeService } from '../../../services/theme-service/ThemeService';
+import DialogService from '../../../services/dialog_service/DialogService';
+import ThemeService from '../../../services/Theme_service/ThemeService';
 
 const splitterWidth = 8;
 

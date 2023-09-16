@@ -1,11 +1,11 @@
 
-import { ProjectService } from '../../project_service/ProjectService';
+import ProjectService from '../../project_service/ProjectService';
 
 class LineParserHelpers {
   /**
    * Get the fragment at a specific index.
-   * @param {Object} service - The service object.
-   * @param {number} index - The index to get the fragment from.
+   * @param {Object} service - The LineParser instance.
+   * @param {number} index - The index of the fragment.
    * @returns {Array} - The fragment and its index.
    */
   static getFragmentAt(service, index) {
@@ -23,9 +23,9 @@ class LineParserHelpers {
   }
 
   /**
-   * Handle an empty line.
-   * @param {Object} service - The service object.
-   * @param {number} index - The index of the empty line.
+   * Handle the scenario when the line to be parsed is empty.
+   * @param {Object} service - The LineParser instance.
+   * @param {number} index - The index of the line.
    */
   static handleEmptyLine(service, index) {
     const fragmentsIndexEmpty = service.fragmentsIndex.length === 0 || service.fragmentsIndex.find(t => t === null).length === service.fragmentsIndex.length;
@@ -52,9 +52,9 @@ class LineParserHelpers {
 
   /**
    * Update the fragment title.
-   * @param {Object} service - The service object.
+   * @param {Object} service - The LineParser instance.
    * @param {Object} fragment - The fragment to update.
-   * @param {string} line - The new title.
+   * @param {string} line - The line to parse.
    * @param {number} fragmentPrjIndex - The index of the fragment in the project.
    */
   static updateFragmentTitle(service, fragment, line, fragmentPrjIndex) {
@@ -64,19 +64,19 @@ class LineParserHelpers {
     fragment.title = line.replace(/#/g, '');
     fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
     const eventParams = { fragment, oldKey };
-    ProjectService.emit('key-changed', eventParams);
+    ProjectService.eventTarget.dispatchEvent('key-changed', eventParams);
   }
 
   /**
    * Remove the fragment title.
-   * @param {Object} service - The service object.
-   * @param {Object} fragment - The fragment to remove the title from.
+   * @param {Object} service - The LineParser instance.
+   * @param {Object} fragment - The fragment to remove.
    * @param {number} index - The index of the fragment.
    */
-  static removeFragmentTitle(service, fragment, index) {
+  static removeFragmentTitle(service, fragment, line, index) {
     const [prevFragment, prevIndex] = this.getFragmentAt(service, index - 1);
     if (!prevFragment) {
-      fragment.lines.splice(0, 0, line);
+      fragment.lines.unshift(line);
       const fragmentPrjIndex = ProjectService.textFragments.indexOf(fragment);
       this.updateFragmentTitle(service, fragment, '', fragmentPrjIndex);
     } else {
@@ -93,30 +93,30 @@ class LineParserHelpers {
   }
 
   /**
-   * Insert a fragment.
-   * @param {Object} service - The service object.
+   * Insert a new fragment.
+   * @param {Object} service - The LineParser instance.
    * @param {Object} fragment - The fragment to insert.
    * @param {number} fragmentStart - The start index of the fragment.
-   * @param {string} line - The line to insert.
+   * @param {string} line - The line to parse.
    * @param {number} fragmentPrjIndex - The index of the fragment in the project.
-   * @param {number} index - The index to insert the fragment at.
+   * @param {number} index - The index of the line.
    */
   static insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index) {
     const toAdd = service.createTextFragment(line, fragmentPrjIndex);
     service.fragmentsIndex[index] = toAdd;
     const fragmentLineIndex = index - fragmentStart;
     while (fragmentLineIndex > 0) {
-      toAdd.lines.splice(0, 0, fragment.lines.pop());
+      toAdd.lines.unshift(fragment.lines.pop());
       service.fragmentsIndex[index + fragmentLineIndex] = toAdd;
     }
     ProjectService.markOutOfDate(fragment);
   }
 
   /**
-   * Handle a title line.
-   * @param {Object} service - The service object.
-   * @param {string} line - The title line.
-   * @param {number} index - The index of the title line.
+   * Handle the scenario when the line to be parsed starts with a '#'.
+   * @param {Object} service - The LineParser instance.
+   * @param {string} line - The line to parse.
+   * @param {number} index - The index of the line.
    */
   static handleTitleLine(service, line, index) {
     if (service.fragmentsIndex.length === 0 || service.fragmentsIndex.length < index || service.fragmentsIndex[index] === null) {
@@ -141,12 +141,12 @@ class LineParserHelpers {
 
   /**
    * Update the fragment lines.
-   * @param {Object} service - The service object.
+   * @param {Object} service - The LineParser instance.
    * @param {Object} fragment - The fragment to update.
-   * @param {number} index - The index of the fragment.
+   * @param {number} index - The index of the line.
    * @param {number} fragmentStart - The start index of the fragment.
    */
-  static updateFragmentLines(service, fragment, index, fragmentStart) {
+  static updateFragmentLines(service, fragment, line, index, fragmentStart) {
     const fragmentLineIndex = index - fragmentStart;
     if (fragmentLineIndex < fragment.lines.length) {
       fragment.lines[fragmentLineIndex] = line;
@@ -162,10 +162,10 @@ class LineParserHelpers {
   }
 
   /**
-   * Handle a regular line.
-   * @param {Object} service - The service object.
-   * @param {string} line - The regular line.
-   * @param {number} index - The index of the regular line.
+   * Handle the scenario when the line to be parsed is a regular line.
+   * @param {Object} service - The LineParser instance.
+   * @param {string} line - The line to parse.
+   * @param {number} index - The index of the line.
    */
   static handleRegularLine(service, line, index) {
     const [fragment, fragmentStart] = this.getFragmentAt(service, index);
@@ -176,9 +176,9 @@ class LineParserHelpers {
       }
       service.fragmentsIndex.push(toAdd);
     } else if (fragmentStart === index) {
-      this.removeFragmentTitle(service, fragment, index);
+      this.removeFragmentTitle(service, fragment, line, index);
     } else {
-      this.updateFragmentLines(service, fragment, index, fragmentStart);
+      this.updateFragmentLines(service, fragment, line, index, fragmentStart);
     }
   }
 }

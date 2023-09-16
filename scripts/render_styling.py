@@ -134,8 +134,8 @@ def process_data(writer):
                         response = response[:-len("```")]
                     file_name = collect_response(file_name, response)
                     file_names.append(file_name)
-            if file_names:
-                collect_file_list(fragment.full_title, file_names, writer)
+                if file_names:
+                    collect_file_list(fragment.full_title, file_names, writer)
             
     return result
                     

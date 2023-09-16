@@ -6,8 +6,6 @@
 {"ThemeService": "The ThemeService class manages the selected theme font and font-size globally, saving changes to local storage. It allows for light or dark theme selection and applies the selected theme to components without the need for subscription. The main window refreshes content when the theme is updated."}
 # MarkdownCode > services > Selection service
 {"SelectionService": "The SelectionService is a class that tracks selected text and the active editor. It allows monitoring for changes and supports various actions such as cut, copy, paste, delete, clear selection, and select all."}
-# MarkdownCode > services > line parser > line parser helpers
-{"LineParserHelpers": "The 'LineParserHelpers' service class provides functions for handling fragments in text. It includes methods for retrieving fragments, handling empty lines, updating fragment titles, removing fragment titles, inserting new fragments, handling title lines, updating fragment lines, and handling regular lines."}
 # MarkdownCode > services > folder service
 {"FolderService": "The FolderService is a global singleton that manages the location of the active project. It provides properties and actions to handle the root folder, project name, project file path, cache folder path, and project configuration file path."}
 # MarkdownCode > services > gpt service
@@ -22,9 +20,19 @@
 {"BuildService": "The BuildService is responsible for handling text fragments in a project service and using transformers to generate conversions. It requests each transformer to render its result asynchronously for each text fragment in the project service's data list."}
 # MarkdownCode > services > line parser
 {"LineParser": "The LineParser service is a global singleton object that parses markdown lines and updates text-fragments in the project-service. It provides functions to create text-fragments, calculate keys, and clear the fragmentsIndex list."}
-# MarkdownCode > services > project service
-{"ProjectService": "The ProjectService class manages project creation, opening, and saving. It handles file operations, data processing in the markdown editor, and manages a data list of text fragments. It also stores user configurations and notifies others of changes using events."}
-# MarkdownCode > services > result-cache service
-{"ResultCacheService": "The ResultCacheService is a service class that manages cached results for transformers. It stores and tracks results for text fragments, allowing transformers to cache their results in a dictionary. The cache monitors changes in both project and result fragments, marking related entries as out of date when a fragment changes. It can overwrite and retrieve results for a key, determine if a text fragment is out of date, clear the cache, and retrieve all results related to a fragment. Event handlers are present for fragment deletion and key changes, and results are stored in a dictionary with an 'is-dirty' flag that updates when modified."}
 # MarkdownCode > services > position-tracking service
 {"PositionTrackingService": "The PositionTrackingService is a service class that tracks the user's current text-fragment, including the selected line number and related text. It also stores events monitoring changes in the selected text-fragment. The service offers methods to set the selected line and clear the active fragment and current line."}
+# MarkdownCode > services > project service > change-processor service
+{"ChangeProcessorService": "The ChangeProcessorService is responsible for keeping the project structure synchronized with the source by processing changes in the project content. Its main function, \"process\", updates the project service based on user edits by replacing overwritten lines, deleting or inserting lines, and marking the storage service as dirty."}
+# MarkdownCode > services > build-stack service
+{"BuildStackService": "The BuildStackService is a service class that prevents circular references by tracking running textframe - transformer pairs and providing functions to register and unregister these pairs."}
+# MarkdownCode > services > constant-extractor service
+{"ConstantExtractorService": "The ConstantExtractorService is a service that extracts constant definitions from source code and stores them in a json file. It replaces constants in the source texts with json references."}
+# MarkdownCode > services > project service
+{"ProjectService": "The ProjectService manages a global data-list of text fragments and provides functions for working with the fragments, such as deleting, adding, marking as out of date, and retrieving by key. It also tracks user configurations and uses an EventTarget field to dispatch events for content changes and other actions."}
+# MarkdownCode > services > line parser > line parser helpers
+{"LineParserHelpers": "The 'LineParserHelpers' service class provides helper functions for the line parser service. It includes functions for tasks such as getting fragments, handling empty lines, updating titles, removing titles, inserting fragments, handling title lines, and updating fragment lines."}
+# MarkdownCode > services > project service > storage service
+{"StorageService": "The StorageService is a global singleton that provides functions for reading and writing project data. It includes functions for clearing data, creating new data, opening files, updating out-of-date data, marking data as dirty, and saving data to a file. The fs module should be loaded remotely through Electron."}
+# MarkdownCode > services > result-cache service
+{"ResultCacheService": "The ResultCacheService is a service class that manages cached results for transformers. It stores and tracks results for text fragments, allowing transformers to store their results in a JSON file. The cache is updated when a transformer calculates a result, and it contains dictionaries, overwritten values, and the last save date. The cache also handles fragment deletion and key changes, and provides functions to overwrite, retrieve, and check if a text fragment is out of date. Additionally, the cache can be cleared using the clearCache() function."}

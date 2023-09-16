@@ -1,56 +1,59 @@
 
-const fs = require('fs');
+const fs = require('electron').remote.require('fs');
 const path = require('path');
-const { EventEmitter } = require('events');
 const FolderService = require('../folder_service/FolderService');
 const ProjectService = require('../project_service/ProjectService');
 
 /**
  * ResultCacheService class
  */
-class ResultCacheService extends EventEmitter {
-  constructor(transformerName, inputTransformers) {
-    super();
-    this.transformerName = transformerName;
+class ResultCacheService {
+  constructor(transformer, inputServices) {
+    this.transformer = transformer;
     this.cache = {};
     this.secondaryCache = {};
     this.overwrites = {};
     this.isDirty = false;
-    this.inputTransformers = inputTransformers;
-    this.cacheFilePath = path.join(FolderService.cache, `${transformerName}.json`);
+    this.lastSaveDate = null;
+    this.eventTarget = new EventTarget();
 
-    ProjectService.subscribe('fragment-deleted', this.handleFragmentDeleted.bind(this));
-    ProjectService.subscribe('key-changed', this.handleKeyChanged.bind(this));
-    ProjectService.subscribe('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
+    this.loadCache();
 
-    inputTransformers.forEach(transformer => {
-      transformer.cache.subscribe('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
+    ProjectService.eventTarget.addEventListener('fragment-deleted', this.handleFragmentDeleted.bind(this));
+    ProjectService.eventTarget.addEventListener('key-changed', this.handleKeyChanged.bind(this));
+    ProjectService.eventTarget.addEventListener('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
+
+    inputServices.forEach(service => {
+      service.cache.eventTarget.addEventListener('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
     });
-
-    this.loadCacheFromFile();
   }
 
-  loadCacheFromFile() {
-    if (fs.existsSync(this.cacheFilePath)) {
-      const cacheData = JSON.parse(fs.readFileSync(this.cacheFilePath));
-      this.cache = cacheData.cache;
-      this.secondaryCache = cacheData.secondaryCache;
-      this.overwrites = cacheData.overwrites;
+  loadCache() {
+    const cachePath = path.join(FolderService.cache, `${this.transformer.name}.json`);
+    if (fs.existsSync(cachePath)) {
+      const data = JSON.parse(fs.readFileSync(cachePath));
+      this.cache = data.cache;
+      this.secondaryCache = data.secondaryCache;
+      this.overwrites = data.overwrites;
+      this.lastSaveDate = data.lastSaveDate;
     } else {
       this.clearCache();
     }
   }
 
-  saveCacheToFile() {
-    if (this.isDirty) {
-      const cacheData = {
-        cache: this.cache,
-        secondaryCache: this.secondaryCache,
-        overwrites: this.overwrites,
-      };
-      fs.writeFileSync(this.cacheFilePath, JSON.stringify(cacheData));
+  saveCache() {
+    if (!this.isDirty) return;
+    const cachePath = path.join(FolderService.cache, `${this.transformer.name}.json`);
+    const data = {
+      cache: this.cache,
+      secondaryCache: this.secondaryCache,
+      overwrites: this.overwrites,
+      lastSaveDate: this.lastSaveDate,
+    };
+    fs.writeFile(cachePath, JSON.stringify(data), err => {
+      if (err) throw err;
       this.isDirty = false;
-    }
+    });
   }
 
   clearCache() {
@@ -88,7 +91,7 @@ class ResultCacheService extends EventEmitter {
         if (this.cache[key].state !== 'out-of-date') {
           this.cache[key].state = 'out-of-date';
           this.isDirty = true;
-          this.emit('fragment-out-of-date', key);
+          ProjectService.tryAddToOutOfDate(fragmentKey, this.transformer);
         }
       }
     }
@@ -114,7 +117,7 @@ class ResultCacheService extends EventEmitter {
     }
     if (isModified) {
       this.isDirty = true;
-      this.emit(key);
+      this.eventTarget.dispatchEvent(key);
     }
   }
 
@@ -125,12 +128,22 @@ class ResultCacheService extends EventEmitter {
     return this.cache[key] ? this.cache[key].result : null;
   }
 
-  overwriteResult(key, value) {
-    this.overwrites[key] = value;
-    this.isDirty = true;
+  isOutOfDate(keyPart) {
+    if (this.secondaryCache[keyPart]) {
+      for (const key of this.secondaryCache[keyPart]) {
+        if (this.cache[key].state !== 'still-valid') {
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
   }
 
   getFragmentResults(fragmentKey) {
+    if (this.overwrites[fragmentKey]) {
+      return this.overwrites[fragmentKey];
+    }
     const result = {};
     const cacheKeys = this.secondaryCache[fragmentKey];
     if (cacheKeys) {
