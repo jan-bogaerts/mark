@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { Row } from 'antd';
-import ThemeService from '../../../services/ThemeService/ThemeService';
-import StyleSection from './StyleSection/StyleSection';
-import ParagraphSection from './ParagraphSection/ParagraphSection';
-import FontSection from './FontSection/FontSection';
+import ThemeService from '../../../services/Theme_service/ThemeService';
+import StyleSection from './style_section/StyleSection';
+import ParagraphSection from './paragraph_section/ParagraphSection';
+import FontSection from './font_section/FontSection';
 
 /**
  * FormatTab component

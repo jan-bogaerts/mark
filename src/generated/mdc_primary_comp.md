@@ -2,16 +2,10 @@
 MainWindow
 # MarkdownCode > components > toolbar > home
 HomeTab
-# MarkdownCode > components > toolbar > home > edit section
-EditSection
 # MarkdownCode > components > toolbar > home > undo section
 UndoSection
 # MarkdownCode > components > toolbar > preferences
 PreferencesTab
-# MarkdownCode > components > body > horizontal splitter
-HorizontalSplitter
-# MarkdownCode > components > body > vertical splitter
-VerticalSplitter
 # MarkdownCode > components > toolbar > format
 FormatTab
 # MarkdownCode > components > toolbar > format > style section
@@ -26,14 +20,10 @@ GPTSection
 OpenAiConfigurationDialog
 # MarkdownCode > components > toolbar > preferences > view section
 ViewSection
-# MarkdownCode > components > body
-Body
 # MarkdownCode > components > body > results view > results view context menu
 ResultsViewContextMenu
 # MarkdownCode > components > body > outline
 Outline
-# MarkdownCode > components > body > results view
-ResultsView
 # MarkdownCode > components > toolbar
 Toolbar
 # MarkdownCode > components > toolbar > home > file section
@@ -44,3 +34,9 @@ BuildSection
 Editor
 # MarkdownCode > components > body > results view > results view tab
 ResultsViewTab
+# MarkdownCode > components > toolbar > home > edit section
+EditSection
+# MarkdownCode > components > body
+Body
+# MarkdownCode > components > body > results view
+ResultsView

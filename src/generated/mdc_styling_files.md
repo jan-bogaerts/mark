@@ -2,8 +2,6 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\main window\\MainWindow.css"]
 # MarkdownCode > components > toolbar > home
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\HomeTab.css"]
-# MarkdownCode > components > toolbar > home > edit section
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.css"]
 # MarkdownCode > components > toolbar > home > undo section
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\undo_section\\UndoSection.css"]
 # MarkdownCode > components > toolbar > preferences
@@ -38,20 +36,12 @@
 []
 # MarkdownCode > components > toolbar > preferences > view section
 []
-# MarkdownCode > components > body
-[]
-# MarkdownCode > components > body > horizontal splitter
-[]
-# MarkdownCode > components > body > vertical splitter
-[]
 # MarkdownCode > components > body > results view > results view context menu
 []
 # MarkdownCode > services > line parser
 []
 # MarkdownCode > components > body > outline
 []
-# MarkdownCode > components > body > results view
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.css"]
 # MarkdownCode > components > toolbar
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.css"]
 # MarkdownCode > components > toolbar > home > file section
@@ -60,3 +50,5 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.css"]
 # MarkdownCode > components > body > results view > results view tab
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.css"]
+# MarkdownCode > components > toolbar > home > edit section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.css"]

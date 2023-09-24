@@ -1,6 +1,5 @@
 
 import resources from '../../resources.json';
-import cybertronService from '../cybertron_service/CybertronService';
 import TransformerBaseService from '../transformer-base_service/TransformerBaseService';
 
 /**
@@ -11,7 +10,6 @@ import TransformerBaseService from '../transformer-base_service/TransformerBaseS
 class CompressService extends TransformerBaseService {
   constructor() {
     super('compress', []);
-    cybertronService.register(this, true);
   }
 
   /**
@@ -28,8 +26,4 @@ class CompressService extends TransformerBaseService {
     return [result, textFragment.key];
   }
 }
-
-// Create a global instance of the service
-const compressService = new CompressService();
-
-export default compressService;
+export default CompressService;

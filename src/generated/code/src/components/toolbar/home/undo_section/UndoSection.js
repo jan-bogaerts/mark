@@ -2,10 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from 'antd';
 import { UndoOutlined, RedoOutlined } from '@ant-design/icons';
-import ProjectService from '../../../../services/project-service/ProjectService';
-import UndoService from '../../../../services/undo-service/UndoService';
-import DialogService from '../../../../services/dialog-service/DialogService';
-import ThemeService from '../../../../services/theme-service/ThemeService';
+import UndoService from '../../../../services/Undo_service/UndoService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
 
 /**
  * UndoSection component

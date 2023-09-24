@@ -20,14 +20,13 @@ the application uses a toolbar similar to applications like mS Access, excel, wo
 
 - At the top of the toolbar are a nr of tabs (use the tabs from the antd library)
 - all components on the toolbar show a tooltip (from the antd library) containing a short description of the action.
-
+- create a json structure for all the tabs (fields: key, label, children).
+- assign the json structure to the items property.
+  
 the following tabs are available:
 - home: this is shown as the first tab when the application starts.
 - format
 - preferences
-
-- create a json structure for all the tabs (fields: key, label, children).
-- assign the json structure to the items property.
 
 #### home
 - the home-tab component is a wrapper that displays it's children in a row.
@@ -45,12 +44,12 @@ the following tabs are available:
     - if there is a project loaded with changes (the project's undo-service has data in the undo list), ask to save first.
     - call `storageService.new()`
   - open: a button to open an existing project.
-    - show a dialog box to select a file (use the default electron dialog box for this)
+    - show a dialog box to select a file `filename = await dialogService.showOpenDialog()`
     - if a file is selected, ask the storage-service to load the file.
     - wrap in an exception handler that shows an error dialog
   - save: a button to save the current project to file.
     - enabled when the project service has a filename for the project (field 'filename' has a value) and the undo service has undo data (indicating that the project has changed since the last save).
-    - if the project file does not yet have a filename, show a save-as dialog
+    - if the project file does not yet have a filename, show a save-as dialog `filename = await dialogService.showSaveDialog()`
     - if the user doesn't provide a valid filename, stop the action
     - if the user provides a valid filename,
       - call the storage-service 'save' function with filename as param.
@@ -59,7 +58,7 @@ the following tabs are available:
     - wrap in an error handler and show the error
   - save as: a button to save the current project to a new location.
     - enabled the undo service has undo data (indicating that the project has changed since the last save).
-    - show an electron save-as dialog
+    - show a save-as dialog `filename = await dialogService.showSaveDialog()`
     - if the user selects a file, ask the storage-service to save the project to the new location.
     - wrap in an exceptions handler and show the error
   - auto-save: a toggle button, when pressed, asks the project service to update the auto-save state.
@@ -68,7 +67,7 @@ the following tabs are available:
   
 ##### edit section
 - the edit-section component contains actions related to the clipboard and the currently selected data.
-- all buttons use an appropriate icon as content, no text.
+- all buttons use an appropriate icon from the '@ant-design/icons' library as content, no text.
 - it supports the following actions
   - cut: a button to initiate the cut command of the selection service
     - enabled when the selection service has any data marked as selected.
@@ -76,11 +75,16 @@ the following tabs are available:
     - enabled when the selection service has any data marked as selected.
   - paste: a button to initiate the paste command of the selection service
     - enabled when the clipboard contains text data.
+    - use the BiPaste icon from react-icons
+    - call `clipboard.readText()` to get the data that needs to be pasted.
   - delete: a button to initiate the delete command of the selection service
     - enabled when the selection service has any data marked as selected.
   - select all: a button to select all the text in the currently active window.
   - clear selection: a button to clear the current selection buffer.
     - enabled when the selection service has any data marked as selected.
+- to check if the clipboard contains text data:
+  - use the clipboard imported from electron
+  - when the component is loaded and when the ipcRenderer emits the 'focused' event, call `clipboard.has('text/plain')` to see if there is data in the clipboard.
 
 ##### undo section
 - the undo-section component contains actions that the undo / redo service can perform.
@@ -105,9 +109,9 @@ the following tabs are available:
     - disabled when `!positionTrackingService.activeFragment?.isOutOfDate`
     - calls `build-service.buildFragment(positionTrackingService.activeFragment)`
   - active fragment with active transformer: a button to start rendering the result for the currently active fragment and transformer.
-    - disabled when `positionTrackingService.activeFragment && positionTrackingService.activeTransformer && !positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)`
+    - disabled when `positionTrackingService.activeFragment && positionTrackingService.activeTransformer && (!positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key))`
     - calls `build-service.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer)`
-  - separator
+  - separator (type='vertical', height='24px')
   - debug: a toggle button, when pressed, asks the build-service to update the debug state.
     - the toggle button's state follows that of the build-service's debug state. 
   - run next: a button that will continue rendering to the next transformer
@@ -128,19 +132,19 @@ the following tabs are available:
 
 ##### style section
 - the style-section component contains actions related to the markup used in the text for applying markdown formatting.
-- all buttons use an appropriate icon as content, no text.
+- all buttons use an appropriate icon (from react-icons) as content, no text.
 - there is a button for each of the following formatting styles:
-  - heading 1
-  - heading 2
-  - heading 3
-  - heading 4
-  - heading 5
-  - heading 6
-  - paragraph
-  - quote
-  - code
-  - bullet list
-  - numbered list
+  - heading 1 (btn: LuHeading1)
+  - heading 2 (btn: LuHeading2)
+  - heading 3 (btn: LuHeading3)
+  - heading 4 (btn: LuHeading4)
+  - heading 5 (btn: LuHeading5)
+  - heading 6 (btn: LuHeading6)
+  - paragraph (btn: PiParagraph)
+  - quote (btn: LuCode2LuQuote)
+  - code (btn: LuCode2)
+  - bullet list (btn: LuList)
+  - numbered list (btn: PiListNumbers)
 - when a button is pressed, the formatting style is applied to the currently selected text in the selection-service.
 - only 1 button can be selected at the same time, it is not possible to have no selection at all.
 - all the buttons are lined up in a single row.    
@@ -203,38 +207,27 @@ Remember that each button needs it's own appropriate icon.
 
 ### body
 - the body component represents the main body of the application.
-- it's entire area is filled with a horizontal splitter component.
-  - on the left of the horizontal splitter is an outline component.
-  - to the right is a vertical splitter component.  
-    - at the top of the vertical splitter component is an editor component
-    - at the bottom of the vertical splitter component is a results view component
-- The body component has an event handler for the 'onPositionChanged' callback of both the horizontal and vertical splitter that will store the new value for it's position (number).
+- use the Split component of the  @geoffcox/react-splitter library 
+- it's entire area is filled with a Split component.
+  - initialPrimarySize = this.state.verticalSplitSize
+  - minPrimarySize='50px'
+  - minSecondarySize='15%'
+  - children:
+    - outline component
+    - Split component:
+      - initialPrimarySize = this.state.horizontalSplitSize
+      - minPrimarySize='50px'
+      - minSecondarySize='15%'
+      - horizontal
+      - children:
+        - editor component
+        - results view component
+- The body component has an event handler for the 'onSplitChanged' callback of both the horizontal and vertical split that will store the new value for it's position (% value) (verticalSplitSize / horizontalSplitSize).
 - When the body component is unloaded, the last position of the horizontal and vertical splitters are stored in the local storage.
 - When the body component is loaded:
-  - the last position of the horizontal and vertical splitters are restored from the local storage, 
-  - the clientWidth & clientHeight of the component are retrieved
-  - if there was no previous value for the vertical splitter or the value is bigger then the clientWidth, use the value 'clientWidth / 4' instead
-  - if there was no previous value for the horizontal splitter or the value is bigger then the clientHeight, use the value 'clientHeight / 4' instead
+  - the last position of the horizontal and vertical splitters are restored from the local storage, if no value is found, the default '30%' is used.
   
-
-#### horizontal splitter
-- The horizontal splitter is a component that is responsible for managing the layout of 2 child components so that users can increase the size of the panel above the splitter while simultaneously decreasing the size of the panel below it, or vice versa.
-- The horizontal-splitter component has the following properties:
-  - top: the component that should be placed at the top
-  - bottom: the component that should be placed at the bottom
-  - position: the height assigned to the bottom component
-  - onPositionChanged: a callback function, called when the position value should be updated. This callback has 1 parameter: the new value for position (number)
-- between the bottom and top component, the splitter puts a div component of 8 pixels high. When the user drags this bar up or down, the onPositionChanged callback is called (when provided) with the new position value.
-
-#### vertical splitter
-- The vertical splitter is a component that is responsible for managing the layout of 2 child components so that users can increase the width of the panel to the left of the splitter while simultaneously decreasing the size of the panel right of it, or vice versa.
-- The vertical-splitter component has the following properties:
-  - left: the component that should be placed to the left
-  - right: the component that should be placed to the right
-  - position: the width assigned to the left component
-  - onPositionChanged: a callback function, called when the position value should be updated. This callback has 1 parameter: the new value for position (number)
-- between the left and right component, the splitter puts a div component of 8 pixels wide. When the user drags this bar left or right, the onPositionChanged callback is called (when provided) with the new position value.
-
+  
 #### editor
 - The editor component displays markdown text. 
 - to display the markdown text, the monaco editor npm package is used.
@@ -250,7 +243,7 @@ Remember that each button needs it's own appropriate icon.
       try:
         if not editor: # ref to the editor needs to be loaded, should be the case cause event is triggered
           return
-        changeProcessor.process(ev.changes, editor.getValue())
+        changeProcessorService.process(ev.changes, editor)
       catch (e):
         dialogService.showErrorDialog(e)
   ```
@@ -277,15 +270,16 @@ Remember that each button needs it's own appropriate icon.
   set parent to null
   for every data item:
     create a new node for the data item. Set the title & key of the node to the title & key of the data item. also keep a reference to the data item itself in the node
-    if the item's field level-count = 1, add the new node to the root node and make that node the parent 
+    if the item's field depth = 1, add the new node to the root node and make that node the parent 
     else if there is no parent yet, skip the item
-    if the item's level count is higher then parent.data.level-count: add the new node to the parent's children. make the new node parent 
-    if the item's level count equals parent.data.level-count or is lower:
-      get the parent of the current parent until the level count of this new parent is 1 higher then the level count of the item and add the item as a child of this new parent. Make the item the new parent.
+    if the item's depth is higher then parent.data.depth: add the new node to the parent's children. make the new node parent 
+    if the item's depth equals parent.data.depth or is lower:
+      get the parent of the current parent until the depth of this new parent is 1 higher then the depth of the item and add the item as a child of this new parent. Make the item the new parent.
   
 - pseudo for removeNodeFromTree:
   ```javascript (pseudo)
-  removeNode = (key) => {
+  removeNode = (e) => {
+    key = e.detail
     const treeData = this.removeNodeByKey(this.state.treeData, key);
     this.setState({ treeData });
   };
@@ -303,10 +297,13 @@ Remember that each button needs it's own appropriate icon.
 #### results view
 - the results-view component is positioned at the bottom of the main body
 - the user can view the results that were generated by the transformers that were registered with the cybertron-service, for the currently selected text block.
-- For each transformer in the transformers list provided by the cybertron-service, this view creates a tab.
-  - the tabs are located at the top of the view (to the left)
-  - the transformer name is used as the title of the tab
+- tabs are placed at the bottom of the results view, size = small, tabBarStyle={{marginTop: 0}}
+- For each transformer in the transformers list provided by the cybertron-service (field: transformers), this view creates a tab.
+  - the tabs are located at the top of the view
+  - the transformer name is used as the title and key of the tab
   - the tab content shows a results-view-tab component
+- create a json structure for all the tabs (fields: key, label, children).
+- assign the json structure to the items property.
 
 
 ##### results view tab
@@ -316,10 +313,11 @@ Remember that each button needs it's own appropriate icon.
 - When the results-view-tab is loaded:
   - the text for the monaco editor is retrieved from the result-cache of the transformer that is assigned to this component using the currently assigned key, if available (could be that it's null): 
   ```python
-  editorKey = positionTrackingService.activeFragment.key
-  toDisplay = this.props.transformer.cache.getFragmentResults(editorKey)
-  if this.props.transformer.isJson:
-    toDisplay = JSON.stringify(toDisplay, 0, 2) # do a pretty format with 2 tabs spacing
+  editorKey = positionTrackingService.activeFragment?.key
+  if editorKey:
+    toDisplay = this.props.transformer.cache.getFragmentResults(editorKey)
+    if this.props.transformer.isJson:
+      toDisplay = JSON.stringify(toDisplay, 0, 2) # do a pretty format with 2 tabs spacing
   ```
   - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
 - the results-cache of the transformer is monitored for changes in the result (only for changes in the result with the current key).
@@ -340,7 +338,7 @@ Remember that each button needs it's own appropriate icon.
     - set `position-tracking-service.activeTransformer = transformer`
   - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
   - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed
-- put a results-view-context-menu component on top of the monaco editor
+- put a results-view-context-menu component below the monaco editor (so it's rendered after the editor)
 - the component monitors the position-tracking service (field: eventTarget, event: change) for changes to the currently selected text-fragment. 
   - when this changes update the key value and retrieve the text from the result-cache and show in the monaco-editor
 
@@ -349,7 +347,7 @@ Remember that each button needs it's own appropriate icon.
 - this results-view-context-menu is a component that is a wrapper for the Dropdown antd component.
 - it has the properties 'transformer' and 'key' that needs to be supplied 
 - The dropdown's content is a 'more' button icon and the trigger for the dropdown is 'click'.
-- the 'more' button is positioned in the top-right corner (with a margin of 16px) of the parent as a floating button.
+- the 'more' button is positioned in the top-right corner of the parent as a floating button (position: 'absolute', top: 0, right: 16).
 - it contains the following menu items:
   - model for all: select the gpt model to be used by the transformer.
     - the sub menu items are provided by the gpt-service's list of available models (fetched from the internet).
@@ -370,9 +368,26 @@ Remember that each button needs it's own appropriate icon.
 - the dialog service is a global singleton that provides a common interface for other components and services to show dialog boxes.
 - the service can show a dialog box for errors, warnings and info.
 - all actions or functions that the user can trigger from a component, should be wrapped in a proper error handler so that when an error occurs, an electron dialog box is shown to the user with details on the error. 
+- electron.openDialog is globally available through the contextBridge loade by the preloader script. Dont import the dialog module from electron. 
+- functions:
+  - showErrorDialog(param1, param2): 
+    ```python (pseudo) 
+      config = { title: (param2 ? param1 : 'Error'), content: param2 or param1 }
+      electron.openDialog('showErrorBox', config)
+    ```
+  - showSaveDialog():
+    ```python (pseudo)
+      config = { filters: [{ name: 'markdown', extensions: ['md']}, { name: 'any', extensions: ['*']}] }
+      return electron.openDialog('showSaveDialog', config)
+    ```
+  - showOpenDialog():
+    ```python (pseudo)
+      config = { filters: [{ name: 'markdown', extensions: ['md']}, { name: 'any', extensions: ['*']}] }
+      return electron.openDialog('showOpenDialog', config)
+    ```
 
 ### Theme service
-- The theme service is a global singleton, responsible for managing the currently selected theme font & font-size: when the selected theme, font or font-size is changed, the new value is saved to the local storage. When the service is created, the values previously stored in local storage, are retrieved.
+- The theme service is a global singleton, responsible for managing the currently selected theme font & font-size: when the selected theme, font or font-size is changed, the new value is saved to the local storage (the global `localStorage`). When the service is created, the values previously stored in local storage, are retrieved.
 - The service allows for a selection between a light or dark theme.
 - Every component uses this service to retrieve the currently selected theme (not the font or font-size)  so it can apply this. Components don't need to subscribe for changes to the selected theme value, they only need to retrieve this value from the theme service and use the styling names, based on the selected. theme.
 - The main window refreshes it's entire content when the selected theme is updated.
@@ -431,7 +446,7 @@ Remember that each button needs it's own appropriate icon.
   - new(): set everything up for a new project.
     ```python
       this.clear()
-      projectService.eventTarget.dispatchEvent('content-changed')
+      projectService.eventTarget.dispatchEvent(new Event('content-changed'))
       ```
   - open(filePath): load all the data from disk 
     ```python (pseudo)
@@ -443,7 +458,7 @@ Remember that each button needs it's own appropriate icon.
       for transformer in cybertronService.transformers:
         transformer.cache.loadCacheFromFile()
       this.updateOutOfDate()
-      projectService.eventTarget.dispatchEvent('content-changed')
+      projectService.eventTarget.dispatchEvent(new Event('content-changed'))
     ```
   - updateOutOfDate(): updates the list of out-of-date transformers for each text-fragment.
     ```python (pseudo)
@@ -481,7 +496,7 @@ Remember that each button needs it's own appropriate icon.
       projectService.filename = file
       this.saveTimer = None
     ```
-- note: the fs module should be remotely loaded through electron.
+- note: the fs module should be loaded from @electron/remote.
 
 
 #### change-processor service
@@ -489,16 +504,17 @@ Remember that each button needs it's own appropriate icon.
 - functions:
   - static process(changes, full): makes certain that the project service remains in sync when the user performs edits. in pseudo:
   ```python (pseudo)
-    def process(changes, full):
-      projectService.content = full
+    def process(changes, editor):
+      projectService.content = editor.getValue()
+      model = editor.getModel()
       for change in changes:
         lines = change.text.split('\n')
         curLine = change.range.startLineNumber - 1
         lineEnd = change.range.endLineNumber - 1
         lineIdx = 0
-        # first replace lines that are overwritten
-        while lineIdx < len(lines) and curLine < lineEnd:
-          lineParser.parse(lines[lineIdx], curLine)
+        # first replace lines that are overwritten. change can contain only part of line so get full line
+        while lineIdx < len(lines) and curLine <= lineEnd:
+          lineParser.parse(model.getLineContent(curLine + 1), curLine)
           lineIdx += 1
           curLine += 1
         # now there are either lines to delete or to insert
@@ -506,7 +522,9 @@ Remember that each button needs it's own appropriate icon.
           lineParser.deleteLine(curLine)
           curLine += 1
         while lineIdx < len(lines):
-          LineParser.insert(line, index)
+          LineParser.insertLine(model.getLineContent(curLine + 1), curLine)
+          lineIdx += 1
+          curLine += 1
         storageService.markDirty()
   ``` 
 
@@ -541,23 +559,26 @@ Remember that each button needs it's own appropriate icon.
     - store the new folder and project name
   - set location (location)
     - store the new folder and project name
+- The fs module should be remotely loaded through @electron/remote.
 
 ### Selection service
 - The selection service is a global singleton object that keeps track of the currently selected text.
 - the selection service keeps track of the currently active editor (an object from the monaco editor npm package)
 - the service can be monitored for changes in the selection.
-- supports the following actions:
+- supports the following actions / functions:
   - cut: if there is a reference to an editor, ask the monaco editor to cut the selected text to the clipboard.
   - copy: if there is a reference to an editor, ask the monaco editor to copy the selected text to the clipboard.
   - paste: if there is a reference to an editor, ask the monaco editor to paste the clipboard content at the current cursor position.
   - delete: if there is a reference to an editor, ask the monaco editor to delete the selected text.
   - clear selection: if there is a reference to an editor, ask the monaco editor to clear the current selection.
   - select all: if there is a reference to an editor, ask the monaco editor to select all the text.
+  - hasSelection: returns true if there is an editor and it has a non-empty selection
 
 
 ### Undo service
 - The undo service is a global singleton that keeps track of all the text edits that the user performs on the various monaco-editors.
 - It has an undo and redo list.
+- don't freeze the global object
 
 ### line parser
 - the line-parser service is a global singleton object used to parse markdown lines and update the the text-fragments stored in the project-service.
@@ -573,12 +594,13 @@ Remember that each button needs it's own appropriate icon.
     - initialize an empty arry for the 'outOfDateTransformers'
     - ask the project-service to add the text-fragment in it's list of text-fragments (projectService.addTextFragment(textFragment, index)).
     - do not add to the fragmentsIndex (is done separately)
+    - return textFragment
   - calculateKey: for calculating the key of a text-fragment. It accepts as input a text-fragment and an index position. it goes as follows:
     - the current depth = the depth-level of the text-fragment
     - the result value = the title of the text-fragment
     - loop from the given index position until 0 using the field idx
-      - prev-fragment = the text-fragment that the project-service has at position 'idx'
-      - if the depth-level of the prev-fragment is smaller then the current depth:
+      - prev-fragment = the text-fragment that the project-service has at position 'idx' `ProjectService.textFragments[idx]`
+      - if there is a prev-fragment and the depth-level of the prev-fragment is smaller then the current depth:
         - store the new current depth
         - prepend the title of the prev-fragment + ' > ' to the result
         - if the new current depth == 1, stop the loop
@@ -594,6 +616,13 @@ Remember that each button needs it's own appropriate icon.
         else:
           lineParserHelpers.handleRegularLine(this, line, index)
 
+      def insertLine(line, index):
+        this.fragmentsIndex.insert(index, null)
+        this.parse(line, index)
+
+      def deleteLine(index):
+        lineParserHelpers.deleteLine(index)
+        del this.fragmentsIndex[index]
     ```
 
 #### line parser helpers
@@ -614,7 +643,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
 
       def handleEmptyLine(service, index):
-        fragmentsIndexEmpty = service.fragmentsIndex.length == 0 or service.fragmentsIndex.find(t => t==null).length == service.fragmentsIndex.length
+        fragmentsIndexEmpty = service.fragmentsIndex.length == 0 or service.fragmentsIndex.find(t => t==null)?.length == service.fragmentsIndex.length
         if fragmentsIndexEmpty:
           while service.fragmentsIndex.length <= index:
              service.fragmentsIndex.push(null)
@@ -627,8 +656,6 @@ The module 'LineParserHelpers' contains the following helper functions used by t
             fragment.lines.push('')
           if fragment.lines.length > fragmentLineIndex:
             fragment.lines.insert(fragmentLineIndex, '')
-          else:
-            fragment.lines.push('')
 
 
       def updateFragmentTitle(service, fragment, line, fragmentPrjIndex):
@@ -638,17 +665,19 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         fragment.title = line.replace(/#/g, '');
         fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
         eventParams = { fragment, oldKey }
-        projectService.eventTarget.dispatchEvent('key-changed', eventParams)
+        projectService.eventTarget.dispatchEvent(new CustomEvent('key-changed', { detail: eventParams } ))
 
 
       def removeFragmentTitle(service, fragment, line, index):
         prevFragment, prevIndex = getFragmentAt(service, index-1)
         if not prevFragment: # title of first was removed, set title to empty
-          fragment.lines.insert(0, line)
+          if line:
+            fragment.lines.insert(0, line)
           fragmentPrjIndex = projectService.textFragments.indexOf(fragment)
           updateFragmentTitle(service, fragment, '', fragmentPrjIndex)
         else:
-          prevFragment.lines.push(line)
+          if line:
+            prevFragment.lines.push(line)
           #copy all the lines to the previous fragment
           for l in fragment.lines:
             prevFragment.lines.push(l)
@@ -705,14 +734,23 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         # no fragment yet at this line or in front of it, create new one
         if not fragment:
           toAdd = service.createTextFragment('', 0)
-          while service.fragmentsIndex.length < index:
+          toAdd.lines.push(line)
+          while service.fragmentsIndex.length <= index:
              service.fragmentsIndex.push(null)
-          service.fragmentsIndex.push(toAdd)
-        elif fragmentStart == index: # went from title to regular
+          service.fragmentsIndex[index] = toAdd
+        elif fragmentStart == index and fragment.title: # went from title to regular
           removeFragmentTitle(service, fragment, line, index)
         else:
           updateFragmentLines(service, fragment, line, index, fragmentStart)
 
+      
+      def deleteLine(service, index):
+        fragment, fragmentStart = service.getFragmentAt(index)
+        if fragment:
+          if fragmentStart == index: # fragment is being removed. if it still has lines, copy to prev, if no prev, leave with no title
+            removeFragmentTitle(service, fragment None, index)
+          else:
+            del fragment.lines[index - fragmentStart]
 
     ```
   
@@ -735,11 +773,23 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 ### gpt service
 - the GPT service is a global singleton that is responsible for communicating with the open-ai api backend. It is primarily used by transformers that perform more specific tasks.
 - the service uses the openai node.js library to communicate with the backend.
-- it provides a function that other services (or components) can call to send an api request to open-ai.
+- sendRequest: other services (or components) can call to send an api request to open-ai.
   - this function accepts a list (called `messages`) json objects that contain a `role` and `content` field.
   - this `messages` list is sent to openai using the `createChatCompletion` function.
-  - if the request fails, the service will retry 3 times before giving up and raising an error.
-- the service also provides a method to retrieve the list of available models. To retrieve this list, the openai nodejs library is used.
+  - if the request fails, the service will retry 3 times before giving up and raising an error (use the async-es lib).
+- getModels: a method to retrieve the list of available models. 
+  - To retrieve this list, the openai nodejs library is used. `(await this.openai.models.list())?.data?.map((model) => model.id) ?? [];`
+  - only try to retrieve the list of models if there is a key available
+  - if there is no key available, show a dialog message to the user asking him to provide a valid open-ai api key. Only ask 1 time. Return an empty list.
+  - sort the list
+  - after retrieving the list from openai, store in local variable. if this variable is set, return this instead of retrieving the value.
+- apiKey: stores the api key to use when creating the openAI object.
+  - load from localStorage (globally available) during construction of the service
+- setApiKey: updates the api key
+  - save to localStorage
+  - recreate openAI object `new OpenAI({apiKey, dangerouslyAllowBrowser: true})`.
+  - reset flag so errors can be shown again
+- only instantiate the OpenAI library if a valid apiKey is provided
 
 ### result-cache service
 - this service manages previously retrieved results for transformers.
@@ -750,7 +800,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - whenever the transformer calculates a result, it asks the cache to update it's dictionary by calling 'setResult'.
 - the cache stores the results in a json file.
   - if the 'is-dirty' flag is not set, no need to save the results
-  - file writes are done async. The fs module should be remotely loaded through electron.
+  - file writes are done async. The fs module should be remotely loaded through @electron/remote.
   - after saving the cache, the 'is-dirty' flag is reset.
   - the name of this file is specified by the transformer that creates the class instance (the transformer is a constructor parameter, use the field 'name', store a ref to the transformer for later usage)
   - the location of the file (folder) is provided by folder-service.cache
@@ -770,7 +820,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - registers an event handler with the project service to monitor when text fragments have changed
     - register using pseudo: `projectService.eventTarget.addEventListener('fragment-out-of-date', handleTextFragmentChanged)`
   - and registers the same event handler with each object that the parent transformer uses as input (provided in the constructor as a list of transformer services, each service has a field 'cache')
-  - whenever the event handler is triggered (event param = fragment-key), the cache service checks in the secondary dictionary if there are any entries for that key. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
+  - whenever the event handler is triggered (event.detail = fragment-key), the cache service checks in the secondary dictionary if there are any entries for that key. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
     - for each entry in the list:
       - search in the primary dictionary
       - if not yet marked as out-of-date:
@@ -784,7 +834,8 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - clearCache(): a function to clear the cache, secondary cache & overwrites
 - handleFragmentDeleted: an event handler called when a fragment is deleted. in pseudo:
   ```python (pseudo)
-  def handleFragmentDeleted(fragment):
+  def handleFragmentDeleted(e):
+    fragment = e.detail
     fragment.state = 'deleted'
     this.isDirty = True
   ```
@@ -814,7 +865,8 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   ```
 - handleKeyChanged: an event handler, called when the key of a text-fragment has changed, definition in pseudo:
   ```python (pseudo)
-  def handlekeyChanged(params):
+  def handlekeyChanged(e):
+    params = e.detail
     oldKeys = this.secondaryCache[params.oldKey]
     if oldKeys:
       newKeys = []
@@ -846,7 +898,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       isModified = False
     if isModified:
       this.isDirty = True
-      this.eventTarget.dispatchEvent(key)
+      this.eventTarget.dispatchEvent(new CustomEvent('fragment-out-of-date', { detail: key }))
   ```
 - isOutOfDate(keyPart): checks if the specified key is present and marked as still-valid
   ```python (pseudo)
@@ -893,16 +945,26 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 ### cybertron service
 - the cybertron-service is a global singleton that is responsible for managing the list of available transformers.
 - the service also maintains a list of entry-points: this is a sub-list of the available transformers which can be used as starting points for building text-fragments.
-- Transformers register themselves. this adds them to the list. A second parameter indicates if the transformer should also be added as an entry-point
-- Transformers can also unregister themselves. this will remove them from the list of available transformers and the list of entry-points.
+- Transformers can be register. this adds them to the list. A second parameter indicates if the transformer should also be added as an entry-point
+- Transformers can also be unregister. this will remove them from the list of available transformers and the list of entry-points.
 
+
+### all-spark service
+- the all-spark service is a global singleton that is responsible for creating all the transformers and registering them into the cybertron service. 
+- functions:
+  - load: create the transformers and register them with the cybertron-service. 
+    - This function is called during construction of the application
+    - to register, use: `cybertronService.register(transformer, false)`, to register as entry point, use: `cybertronService.register(transformer, true)`
+    - transformers to create:
+      - compress service (entry point)
+      - constant-extractor service
 
 
 ### transformer-base service
 - The transformer-base service acts as a base class for transformers: it provides a common interface and functionality
 - constructor:
   - name: the name of the transformer
-  - dependencies: a list of names of transformers. Replace every name in the list with the object found in the list of transformers. If a name can not be found, raise an exception with the necessary info. Store the list of objects as 'dependencies'
+  - dependencies: a list of names of transformers. Replace every name in the list with the object found in the cybertron-service's list of transformers. If a name can not be found, raise an exception with the necessary info. Store the list of objects as 'dependencies'
   - isJson: when true, the result values should be treated as json structures, otherwise as regular text.
 - this service uses a result-cache-service (field: cache) to store all the results and keep track of when the build has gone out-of-date. 
   - constructor params:
@@ -940,8 +1002,6 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - name: 'compress'
   - dependencies: ['constants']
   - isJson: false
-- create a global instance of the service
-- register the global instance of the service as an entry-point transformer with the cybertron-service: `cybertronService.register(this, true)`
 
 - function build-message(text-fragment):
   - result (json array):
@@ -961,8 +1021,6 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - name: 'constants'
   - dependencies: []
   - isJson: true
-- create a global instance of the service
-- register the global instance of the service as a transformer with the cybertron-service: `cybertronService.register(this, false)`
 - functions:
   - extract-quotes: extract all the locations in the text that contain quotes
   ```python (pseudo)

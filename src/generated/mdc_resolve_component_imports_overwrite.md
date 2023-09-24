@@ -116,4 +116,4 @@
       "service": "ThemeService",
       "path": "src\\services\\Theme_service\\ThemeService",
       "service_loc": "# MarkdownCode > services > Theme service"
-    }], "HorizontalSplitter": "src\\components\\body\\horizontal_splitter\\HorizontalSplitter", "Outline": "src\\components\\body\\outline\\Outline", "VerticalSplitter": "src\\components\\body\\vertical_splitter\\VerticalSplitter", "Editor": "src\\components\\body\\editor\\Editor", "ResultsView": "src\\components\\body\\results_view\\ResultsView"}
+    }],  "Outline": "src\\components\\body\\outline\\Outline", "Editor": "src\\components\\body\\editor\\Editor", "ResultsView": "src\\components\\body\\results_view\\ResultsView"}

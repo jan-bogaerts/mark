@@ -1,124 +1,95 @@
 
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Tooltip } from 'antd';
-import { ScissorOutlined, CopyOutlined, PasteOutlined, DeleteOutlined, SelectOutlined, ClearOutlined } from '@ant-design/icons';
-import SelectionService from '../../../services/SelectionService/SelectionService';
-import DialogService from '../../../services/DialogService/DialogService';
-import ThemeService from '../../../services/ThemeService/ThemeService';
+import { BiPaste } from 'react-icons/bi';
+import { clipboard, ipcRenderer } from 'electron';
+import SelectionService from '../../../../services/Selection_service/SelectionService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
+import { ScissorOutlined, CopyOutlined, DeleteOutlined, SelectOutlined, ClearOutlined } from '@ant-design/icons';
 
 /**
  * EditSection component
- * Contains actions related to the clipboard and the currently selected data.
  */
-class EditSection extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      theme: ThemeService.getCurrentTheme(),
-    };
-  }
+function EditSection() {
+  const [clipboardHasText, setClipboardHasText] = useState(false);
+  const [selectionExists, setSelectionExists] = useState(false);
 
-  /**
-   * Check if any data is selected
-   */
-  isDataSelected = () => {
-    return SelectionService.hasSelectedData();
-  }
+  useEffect(() => {
+    setClipboardHasText(clipboard.has('text/plain'));
+    setSelectionExists(SelectionService.hasSelection());
 
-  /**
-   * Check if clipboard contains text data
-   */
-  isClipboardDataAvailable = () => {
-    return SelectionService.isClipboardDataAvailable();
-  }
+    ipcRenderer.on('focused', () => {
+      setClipboardHasText(clipboard.has('text/plain'));
+    });
+  }, []);
 
-  /**
-   * Handle cut action
-   */
-  handleCut = () => {
-    if (this.isDataSelected()) {
+  const handleCut = () => {
+    if (SelectionService.hasSelection()) {
       SelectionService.cut();
     } else {
-      DialogService.showErrorDialog('No data selected to cut.');
+      DialogService.showError('No selection to cut');
     }
-  }
+  };
 
-  /**
-   * Handle copy action
-   */
-  handleCopy = () => {
-    if (this.isDataSelected()) {
+  const handleCopy = () => {
+    if (SelectionService.hasSelection()) {
       SelectionService.copy();
     } else {
-      DialogService.showErrorDialog('No data selected to copy.');
+      DialogService.showError('No selection to copy');
     }
-  }
+  };
 
-  /**
-   * Handle paste action
-   */
-  handlePaste = () => {
-    if (this.isClipboardDataAvailable()) {
-      SelectionService.paste();
+  const handlePaste = () => {
+    if (clipboardHasText) {
+      SelectionService.paste(clipboard.readText());
     } else {
-      DialogService.showErrorDialog('No data available to paste.');
+      DialogService.showError('No text in clipboard to paste');
     }
-  }
+  };
 
-  /**
-   * Handle delete action
-   */
-  handleDelete = () => {
-    if (this.isDataSelected()) {
+  const handleDelete = () => {
+    if (SelectionService.hasSelection()) {
       SelectionService.delete();
     } else {
-      DialogService.showErrorDialog('No data selected to delete.');
+      DialogService.showError('No selection to delete');
     }
-  }
+  };
 
-  /**
-   * Handle select all action
-   */
-  handleSelectAll = () => {
+  const handleSelectAll = () => {
     SelectionService.selectAll();
-  }
+  };
 
-  /**
-   * Handle clear selection action
-   */
-  handleClearSelection = () => {
-    if (this.isDataSelected()) {
+  const handleClearSelection = () => {
+    if (SelectionService.hasSelection()) {
       SelectionService.clearSelection();
     } else {
-      DialogService.showErrorDialog('No data selected to clear.');
+      DialogService.showError('No selection to clear');
     }
-  }
+  };
 
-  render() {
-    const { theme } = this.state;
-    return (
-      <div className={`edit-section ${theme}`}>
-        <Tooltip title="Cut">
-          <Button icon={<ScissorOutlined />} onClick={this.handleCut} disabled={!this.isDataSelected()} />
-        </Tooltip>
-        <Tooltip title="Copy">
-          <Button icon={<CopyOutlined />} onClick={this.handleCopy} disabled={!this.isDataSelected()} />
-        </Tooltip>
-        <Tooltip title="Paste">
-          <Button icon={<PasteOutlined />} onClick={this.handlePaste} disabled={!this.isClipboardDataAvailable()} />
-        </Tooltip>
-        <Tooltip title="Delete">
-          <Button icon={<DeleteOutlined />} onClick={this.handleDelete} disabled={!this.isDataSelected()} />
-        </Tooltip>
-        <Tooltip title="Select All">
-          <Button icon={<SelectOutlined />} onClick={this.handleSelectAll} />
-        </Tooltip>
-        <Tooltip title="Clear Selection">
-          <Button icon={<ClearOutlined />} onClick={this.handleClearSelection} disabled={!this.isDataSelected()} />
-        </Tooltip>
-      </div>
-    );
-  }
+  return (
+    <div className={`edit-section ${ThemeService.getCurrentTheme()}`}>
+      <Tooltip title="Cut">
+        <Button icon={<ScissorOutlined />} onClick={handleCut} disabled={!selectionExists} />
+      </Tooltip>
+      <Tooltip title="Copy">
+        <Button icon={<CopyOutlined />} onClick={handleCopy} disabled={!selectionExists} />
+      </Tooltip>
+      <Tooltip title="Paste">
+        <Button icon={<BiPaste />} onClick={handlePaste} disabled={!clipboardHasText} />
+      </Tooltip>
+      <Tooltip title="Delete">
+        <Button icon={<DeleteOutlined />} onClick={handleDelete} disabled={!selectionExists} />
+      </Tooltip>
+      <Tooltip title="Select All">
+        <Button icon={<SelectOutlined />} onClick={handleSelectAll} />
+      </Tooltip>
+      <Tooltip title="Clear Selection">
+        <Button icon={<ClearOutlined />} onClick={handleClearSelection} disabled={!selectionExists} />
+      </Tooltip>
+    </div>
+  );
 }
 
 export default EditSection;

@@ -1,12 +1,12 @@
 
 import React, { Component } from 'react';
 import MonacoEditor from 'react-monaco-editor';
-import { ResultsViewContextMenu } from './ResultsViewContextMenu';
+import ResultsViewContextMenu from '../results_view_context_menu/ResultsViewContextMenu';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
 import SelectionService from '../../../../services/Selection_service/SelectionService';
 import PositionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
 import DialogService from '../../../../services/dialog_service/DialogService';
-import StorageService from '../../....//services/project_service/storage_service/StorageService';
+import StorageService from '../../../../services/project_service/storage_service/StorageService';
 
 
 class ResultsViewTab extends Component {
@@ -19,6 +19,7 @@ class ResultsViewTab extends Component {
         theme: ThemeService.getCurrentTheme(),
         fontFamily: ThemeService.getCurrentFont(),
         fontSize: ThemeService.getCurrentFontSize(),
+        automaticLayout: true,
       },
     };
   }
@@ -33,12 +34,14 @@ class ResultsViewTab extends Component {
   }
 
   updateEditorValue = () => {
-    const editorKey = PositionTrackingService.activeFragment.key;
-    let editorValue = this.props.transformer.cache.getFragmentResults(editorKey);
-    if (this.props.transformer.isJson) {
-      editorValue = JSON.stringify(editorValue, null, 2);
+    const editorKey = PositionTrackingService.activeFragment?.key;
+    if (editorKey) {
+      let editorValue = this.props.transformer.cache.getFragmentResults(editorKey);
+      if (this.props.transformer.isJson) {
+        editorValue = JSON.stringify(editorValue, null, 2);
+      }
+      this.setState({ editorKey, editorValue });
     }
-    this.setState({ editorKey, editorValue });
   }
 
   handleEditorChange = (newValue) => {
@@ -75,7 +78,6 @@ class ResultsViewTab extends Component {
   render() {
     return (
       <div className="results-view-tab">
-        <ResultsViewContextMenu transformer={this.props.transformer} key={this.state.editorKey} />
         <MonacoEditor
           width="100%"
           height="100%"
@@ -89,6 +91,7 @@ class ResultsViewTab extends Component {
           onBlur={this.handleEditorBlur}
           onSelectionChange={this.handleCursorChange}
         />
+        <ResultsViewContextMenu transformer={this.props.transformer} key={this.state.editorKey} />
       </div>
     );
   }

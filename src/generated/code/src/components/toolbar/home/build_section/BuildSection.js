@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Divider } from 'antd';
 import { BuildOutlined, CodeOutlined, PlayCircleOutlined, BugOutlined, RightOutlined } from '@ant-design/icons';
-import buildService from '../../../services/build_service/BuildService';
-import positionTrackingService from '../../../services/position-tracking_service/PositionTrackingService';
-import projectService from '../../../services/project_service/ProjectService';
-import dialogService from '../../../services/dialog_service/DialogService';
-import themeService from '../../../services/Theme_service/ThemeService';
+import buildService from '../../../../services/build_service/BuildService';
+import positionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
+import projectService from '../../../../services/project_service/ProjectService';
+import dialogService from '../../../../services/dialog_service/DialogService';
+import themeService from '../../../../services/Theme_service/ThemeService';
 
 /**
  * BuildSection component
@@ -30,7 +30,7 @@ function BuildSection() {
     setDisabledButtons({
       all: !projectService.isAnyFragmentOutOfDate(),
       code: !positionTrackingService.activeFragment?.isOutOfDate,
-      active: !(positionTrackingService.activeFragment && positionTrackingService.activeTransformer && !positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key)),
+      active: !(positionTrackingService.activeFragment && positionTrackingService.activeTransformer && (!positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key))),
       debug: false,
       next: !buildService.debug,
     });
@@ -75,7 +75,7 @@ function BuildSection() {
       <Button icon={<BuildOutlined />} disabled={disabledButtons.all} onClick={() => handleButtonClick('all')} />
       <Button icon={<CodeOutlined />} disabled={disabledButtons.code} onClick={() => handleButtonClick('code')} />
       <Button icon={<PlayCircleOutlined />} disabled={disabledButtons.active} onClick={() => handleButtonClick('active')} />
-      <Divider />
+      <Divider type='vertical' style={{height: '24px'}}/>
       <Button icon={<BugOutlined />} disabled={disabledButtons.debug} onClick={() => handleButtonClick('debug')} />
       <Button icon={<RightOutlined />} disabled={disabledButtons.next} onClick={() => handleButtonClick('next')} />
     </div>

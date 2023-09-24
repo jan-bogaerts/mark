@@ -92,6 +92,5 @@ class UndoService {
 }
 
 const undoService = new UndoService();
-Object.freeze(undoService);
 
 module.exports = undoService;

@@ -1,6 +1,5 @@
 
-const { TransformerBaseService } = require('../transformer-base_service/TransformerBaseService');
-const cybertronService = require('../cybertron_service/CybertronService');
+import TransformerBaseService from '../transformer-base_service/TransformerBaseService';
 
 /**
  * ConstantExtractorService class
@@ -9,7 +8,6 @@ const cybertronService = require('../cybertron_service/CybertronService');
 class ConstantExtractorService extends TransformerBaseService {
   constructor() {
     super('constants', [], true);
-    cybertronService.register(this, false);
   }
 
   /**
@@ -108,7 +106,4 @@ class ConstantExtractorService extends TransformerBaseService {
   }
 }
 
-// Create a global instance of the service
-const constantExtractorService = new ConstantExtractorService();
-
-module.exports = { constantExtractorService };
+export default ConstantExtractorService;

@@ -20,13 +20,10 @@ class SelectionService {
     return this.editor;
   }
 
-  hasSelectedData() {
-    return this.editor && this.editor.getSelection().isEmpty();
+  hasSelection() {
+    return this.editor && !this.editor.getSelection().isEmpty();
   }
 
-  isClipboardDataAvailable() {
-    return clipboard.hasData();
-  }
 
   cut() {
     if (this.editor) {

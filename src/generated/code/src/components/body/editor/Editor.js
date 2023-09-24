@@ -1,11 +1,9 @@
 
 import React, { useEffect, useRef } from 'react';
-import { useTheme } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import dialogService from '../../../services/dialog_service/DialogService';
 import themeService from '../../../services/Theme_service/ThemeService';
 import selectionService from '../../../services/Selection_service/SelectionService';
-import positionTrackingService from '../../../services/position-tracking_service/PositionTrackingService';
 import changeProcessorService from '../../../services/project_service/change-processor_service/ChangeProcessorService';
 import projectService from '../../../services/project_service/ProjectService';
 
@@ -14,7 +12,7 @@ import projectService from '../../../services/project_service/ProjectService';
  */
 function Editor() {
   const editorRef = useRef(null);
-  const theme = useTheme();
+
 
   useEffect(() => {
     const handleContentChanged = () => {
@@ -35,7 +33,7 @@ function Editor() {
     editor.onDidChangeModelContent((ev) => {
       try {
         if (!editor) return;
-        changeProcessorService.process(ev.changes, editor.getValue());
+        changeProcessorService.process(ev.changes, editor);
       } catch (e) {
         dialogService.showErrorDialog(e);
       }
@@ -53,7 +51,7 @@ function Editor() {
 
     editor.onDidChangeCursorPosition((ev) => {
       if (selectionService.getEditor() === editor) {
-        positionTrackingService.updatePosition(ev.position);
+   //     positionTrackingService.updatePosition(ev.position);
       }
     });
 
@@ -68,7 +66,7 @@ function Editor() {
     selectOnLineNumbers: true,
     roundedSelection: false,
     readOnly: false,
-    cursorStyle: 'line',
+    // `cursorStyle: 'line',
     automaticLayout: true,
     theme: themeService.getCurrentTheme(),
     fontFamily: themeService.getCurrentFont(),
@@ -80,7 +78,6 @@ function Editor() {
       width="100%"
       height="100%"
       language="markdown"
-      theme={theme}
       value={projectService.content}
       options={options}
       editorDidMount={handleEditorDidMount}

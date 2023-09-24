@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs } from 'antd';
-import { ThemeService } from '../../../../services/Theme_service/ThemeService';
+import ThemeService from '../../services/Theme_service/ThemeService';
 import HomeTab from './home/HomeTab';
 import FormatTab from './format/FormatTab';
 import PreferencesTab from './preferences/PreferencesTab';

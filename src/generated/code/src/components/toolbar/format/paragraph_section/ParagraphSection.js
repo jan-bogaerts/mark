@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from 'antd';
-import { ThemeService } from '../../../services/ThemeService/ThemeService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
 import IndentButton from './IndentButton';
 import UnindentButton from './UnindentButton';
 

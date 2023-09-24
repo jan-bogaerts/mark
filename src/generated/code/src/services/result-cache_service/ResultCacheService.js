@@ -1,8 +1,8 @@
 
-const fs = require('electron').remote.require('fs');
-const path = require('path');
-const FolderService = require('../folder_service/FolderService');
-const ProjectService = require('../project_service/ProjectService');
+import fs from 'fs';
+import path from 'path';
+import FolderService from '../folder_service/FolderService';
+import ProjectService from '../project_service/ProjectService';
 
 /**
  * ResultCacheService class
@@ -63,12 +63,14 @@ class ResultCacheService {
     this.isDirty = true;
   }
 
-  handleFragmentDeleted(fragment) {
+  handleFragmentDeleted(e) {
+    const fragment = e.detail;
     fragment.state = 'deleted';
     this.isDirty = true;
   }
 
-  handleKeyChanged(params) {
+  handleKeyChanged(e) {
+    const params = e.detail;
     const oldKeys = this.secondaryCache[params.oldKey];
     if (oldKeys) {
       const newKeys = [];
@@ -84,7 +86,8 @@ class ResultCacheService {
     }
   }
 
-  handleTextFragmentChanged(fragmentKey) {
+  handleTextFragmentChanged(e) {
+    const fragmentKey = e.detail;
     const cacheKeys = this.secondaryCache[fragmentKey];
     if (cacheKeys) {
       for (const key of cacheKeys) {
@@ -117,7 +120,7 @@ class ResultCacheService {
     }
     if (isModified) {
       this.isDirty = true;
-      this.eventTarget.dispatchEvent(key);
+      this.eventTarget.dispatchEvent(new CustomEvent('fragment-out-of-date', { detail: key }));
     }
   }
 
@@ -164,4 +167,4 @@ class ResultCacheService {
   }
 }
 
-module.exports = ResultCacheService;
+export default ResultCacheService;

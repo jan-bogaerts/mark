@@ -1,96 +1,74 @@
 
-const OpenAI = require('openai');
-const { retry } = require('async');
+import OpenAI from 'openai';
+import { retry } from 'async-es';
+import DialogService from '../dialog_service/DialogService';
 
 class GPTService {
   constructor() {
-    this.openai = new OpenAI(process.env.OPENAI_API_KEY);
-    this.defaultModel = 'text-davinci-002';
-    this.apiKey = process.env.OPENAI_API_KEY;
-    this.activeFragment = null;
-    this.fragments = [];
-    this.transformers = [];
+    this.apiKey = localStorage.getItem('apiKey');
+    this.openai = this.apiKey ? new OpenAI({apiKey: this.apiKey, dangerouslyAllowBrowser: true}) : null;
+    this.models = null;
+    this.errorShown = false;
   }
 
   /**
-   * Fetches available models from the GptService.
+   * Send a request to the OpenAI API.
+   * @param {Array} messages - The list of messages to send.
+   * @returns {Promise} The API response.
+   */
+  async sendRequest(messages) {
+    if (!this.openai) {
+      throw new Error('OpenAI not initialized. Please set the API key.');
+    }
+
+    return retry(async () => {
+      return this.openai.createChatCompletion({ model: 'text-davinci-002', messages });
+    }, { retries: 3 });
+  }
+
+  /**
+   * Get the list of available models.
+   * @returns {Promise} The list of models.
    */
   async getModels() {
-    const models = await this.openai.listModels();
-    return models.data;
+    if (!this.openai && !this.errorShown) {
+      DialogService.showErrorDialog('Please provide a valid OpenAI API key.');
+      this.errorShown = true;
+      this.models = [];
+      return [];
+    }
+
+    if (this.models) {
+      return this.models;
+    }
+
+    this.models = (await this.openai.models.list())?.data?.map((model) => model.id) ?? [];
+    this.models.sort();
+    return this.models;
+  }
+
+  getDefaultModel () {
+    return 'text-davinci-002';
   }
 
   /**
-   * Fetches the default model from the GptService.
-   */
-  getDefaultModel() {
-    return this.defaultModel;
-  }
-
-  /**
-   * Sets the default model in the GptService.
-   */
-  setDefaultModel(model) {
-    this.defaultModel = model;
-  }
-
-  /**
-   * Retrieves the current API key from the GptService.
+   * Get the current API key.
+   * @returns {string} The API key.
    */
   getApiKey() {
     return this.apiKey;
   }
 
   /**
-   * Sets the API key in the GptService.
+   * Set the API key.
+   * @param {string} apiKey - The new API key.
    */
   setApiKey(apiKey) {
     this.apiKey = apiKey;
-    this.openai = new OpenAI(apiKey);
-  }
-
-  /**
-   * Returns the currently active fragment in the GptService.
-   */
-  getActiveFragment() {
-    return this.activeFragment;
-  }
-
-  /**
-   * Checks if any fragment in the GptService is out of date.
-   */
-  isAnyFragmentOutOfDate() {
-    return this.fragments.some(fragment => fragment.isOutOfDate);
-  }
-
-  /**
-   * Checks if a specific fragment in the GptService is out of date.
-   */
-  isFragmentOutOfDate(fragment) {
-    return fragment.isOutOfDate;
-  }
-
-  /**
-   * Fetches the list of transformers from the GptService.
-   */
-  getTransformers() {
-    return Promise.resolve(this.transformers);
-  }
-
-  /**
-   * Sends an API request to OpenAI.
-   */
-  async sendRequest(messages) {
-    const task = async () => {
-      const response = await this.openai.createChatCompletion({
-        model: this.defaultModel,
-        messages: messages
-      });
-      return response.data;
-    };
-
-    return retry({ times: 3, interval: 200 }, task);
+    localStorage.setItem('apiKey', apiKey);
+    this.openai = new OpenAI({apiKey, dangerouslyAllowBrowser: true});
+    this.errorShown = false;
   }
 }
 
-module.exports = new GPTService();
+export default new GPTService();

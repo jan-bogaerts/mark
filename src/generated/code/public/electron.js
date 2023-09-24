@@ -1,8 +1,10 @@
 
 // Importing required modules
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const isDev = require("electron-is-dev");
+require('@electron/remote/main').initialize(); // initialize remote module
+const mainRemote = require("@electron/remote/main");
 
 let mainWindow;
 
@@ -11,13 +13,18 @@ function createWindow () {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    autoHideMenuBar: true,
+    // for these to work, there also needs to be a div in the header with css style `-webkit-app-region: drag;` to make the window draggable
+    // titleBarStyle: 'hidden',
+    // titleBarOverlay: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       webSecurity: false,
-      // enableRemoteModule: true,
+      enableRemoteModule: true,
       nodeIntegrationInWorker: true,
-      backgroundThrottling: false
+      backgroundThrottling: false,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
@@ -33,6 +40,7 @@ function createWindow () {
   if (!app.isPackaged) {
     mainWindow.webContents.openDevTools();
   }
+  mainRemote.enable(mainWindow.webContents);
 
 
   // Emitted when the window is closed.
@@ -57,5 +65,22 @@ app.on('activate', function () {
   // On macOS it's common to re-create a window in the app when the dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
     createWindow();
+  }
+});
+
+app.on('browser-window-focus', () => {
+  mainWindow.webContents.send('focused')
+})
+
+app.on('browser-window-blur', () => {
+  mainWindow.webContents.send('blurred')
+})
+
+ipcMain.handle('dialog', async (event, method, params) => {    
+  if (method  === 'showErrorBox') {
+    dialog.showErrorBox(params.title, params.content.toString());
+  } else {
+    const result = await dialog[method](params);
+    return result;
   }
 });

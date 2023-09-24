@@ -2,12 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Tooltip } from 'antd';
 import { SaveOutlined, FolderOpenOutlined, FileAddOutlined, SaveFilled, SyncOutlined } from '@ant-design/icons';
-import { remote } from 'electron';
-import UndoService from '../../../services/Undo_service/UndoService';
-import ProjectService from '../../../services/project_service/ProjectService';
-import StorageService from '../../../services/project_service/storage_service/StorageService';
-import DialogService from '../../../services/dialog_service/DialogService';
-import ThemeService from '../../../services/Theme_service/ThemeService';
+import UndoService from '../../../../services/Undo_service/UndoService';
+import ProjectService from '../../../../services/project_service/ProjectService';
+import StorageService from '../../../../services/project_service/storage_service/StorageService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
 
 /**
  * FileSection component
@@ -16,14 +15,16 @@ function FileSection() {
   const [autoSave, setAutoSave] = useState(ProjectService.getAutoSaveState());
 
   useEffect(() => {
-    const undoSubscription = UndoService.subscribe(() => {
-      setAutoSave(ProjectService.getAutoSaveState());
-    });
 
+    UndoService.subscribe(updateAutoSave);
     return () => {
-      undoSubscription.unsubscribe();
+      UndoService.unsubscribe(updateAutoSave);
     };
   }, []);
+
+  const updateAutoSave = () => {
+    setAutoSave(ProjectService.getAutoSaveState());
+  };
 
   const newProject = async () => {
     if (UndoService.hasUndoData()) {
@@ -36,7 +37,7 @@ function FileSection() {
   };
 
   const openProject = async () => {
-    const filePath = await remote.dialog.showOpenDialog({ properties: ['openFile'] });
+    const filePath = await DialogService.showOpenDialog();
     if (filePath.filePaths[0]) {
       try {
         await StorageService.load(filePath.filePaths[0]);
@@ -49,7 +50,7 @@ function FileSection() {
   const saveProject = async () => {
     let fileName = ProjectService.filename;
     if (!fileName) {
-      const filePath = await remote.dialog.showSaveDialog({});
+      const filePath = await DialogService.showSaveDialog();
       if (filePath.filePath) {
         fileName = filePath.filePath;
       } else {
@@ -64,7 +65,7 @@ function FileSection() {
   };
 
   const saveProjectAs = async () => {
-    const filePath = await remote.dialog.showSaveDialog({});
+    const filePath = await DialogService.showSaveDialog();
     if (filePath.filePath) {
       try {
         await StorageService.save(filePath.filePath);

@@ -30,7 +30,8 @@ class Outline extends Component {
     this.setState({ treeData });
   };
 
-  handleFragmentDeleted = (key) => {
+  handleFragmentDeleted = (e) => {
+    const key = e.detail;
     this.removeNode(key);
   };
 
@@ -42,7 +43,8 @@ class Outline extends Component {
     this.handleContentChanged();
   };
 
-  handlePositionChanged = (key) => {
+  handlePositionChanged = (e) => {
+    const key = e.detail;
     this.setState({ selectedKeys: [key] });
   };
 
@@ -51,16 +53,16 @@ class Outline extends Component {
     const treeData = [];
     data.forEach(item => {
       const node = { title: item.title, key: item.key, data: item, children: [] };
-      if (item.levelCount === 1) {
+      if (item.depth === 1) {
         treeData.push(node);
         parent = node;
       } else if (!parent) {
         return;
-      } else if (item.levelCount > parent.data.levelCount) {
+      } else if (item.depth > parent.data.depth) {
         parent.children.push(node);
         parent = node;
       } else {
-        while (parent && parent.data.levelCount >= item.levelCount) {
+        while (parent && parent.data.depth >= item.depth) {
           parent = parent.parent;
         }
         if (parent) {

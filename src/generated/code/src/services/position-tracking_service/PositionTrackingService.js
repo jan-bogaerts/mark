@@ -1,5 +1,5 @@
 
-const { LineParser } = require('../line_parser/LineParser');
+import LineParser from '../line_parser/LineParser';
 
 /**
  * PositionTrackingService class
@@ -55,4 +55,4 @@ class PositionTrackingService {
   }
 }
 
-module.exports = new PositionTrackingService();
+export default new PositionTrackingService();

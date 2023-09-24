@@ -1,6 +1,4 @@
 
-const electron = require('electron');
-const storage = electron.storage || electron.remote.storage;
 
 /**
  * ThemeService class
@@ -8,9 +6,9 @@ const storage = electron.storage || electron.remote.storage;
  */
 class ThemeService {
   constructor() {
-    this.theme = storage.get('theme') || 'light';
-    this.font = storage.get('font') || 'Arial';
-    this.fontSize = storage.get('fontSize') || 14;
+    this.theme = localStorage.getItem('theme') || 'light';
+    this.font = localStorage.getItem('font') || 'Arial';
+    this.fontSize = localStorage.getItem('fontSize') || 14;
     this.subscribers = [];
   }
 
@@ -57,7 +55,7 @@ class ThemeService {
    */
   setCurrentTheme(theme) {
     this.theme = theme;
-    storage.set('theme', theme);
+    localStorage.setItem('theme', theme);
     this.notifySubscribers();
   }
 
@@ -67,7 +65,7 @@ class ThemeService {
    */
   setCurrentFont(font) {
     this.font = font;
-    storage.set('font', font);
+    localStorage.setItem('font', font);
   }
 
   /**
@@ -76,7 +74,7 @@ class ThemeService {
    */
   setCurrentFontSize(fontSize) {
     this.fontSize = fontSize;
-    storage.set('fontSize', fontSize);
+    localStorage.setItem('fontSize', fontSize);
   }
 
   /**

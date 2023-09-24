@@ -1,10 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Select } from 'antd';
-import GptService from '../../../../services/gpt-service/GptService';
-import DialogService from '../../../../services/dialog-service/DialogService';
-import ThemeService from '../../../../services/theme-service/ThemeService';
-import OpenAIConfigurationDialog from '../../../open-ai-configuration-dialog/OpenAiConfigurationDialog';
+import GptService from '../../../../services/gpt_service/GPTService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
 
 /**
  * ModelComboBox component allows user to select default model for open-ai requests.

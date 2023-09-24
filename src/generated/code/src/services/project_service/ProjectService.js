@@ -1,21 +1,18 @@
 
 import dialogService from '../dialog_service/DialogService';
-import cybertronService from '../cybertron_service/CybertronService';
+import CybertronService from '../cybertron_service/CybertronService';
 
-class ProjectService extends EventTarget {
+class ProjectService {
   constructor() {
-    super();
     this.textFragments = [];
     this.content = '';
-    this.autoSave = localStorage.getItem('autoSave') === 'true';
+    this.filename = '';
+    this.eventTarget = new EventTarget();
   }
 
   deleteTextFragment(fragment) {
-    const index = this.textFragments.indexOf(fragment);
-    if (index > -1) {
-      this.textFragments.splice(index, 1);
-      this.emit('fragment-deleted', fragment.key);
-    }
+    this.textFragments = this.textFragments.filter(frag => frag.key !== fragment.key);
+    this.eventTarget.dispatchEvent(new CustomEvent('fragment-deleted', { detail: fragment.key }));
   }
 
   addTextFragment(fragment, index) {
@@ -24,12 +21,12 @@ class ProjectService extends EventTarget {
     } else {
       this.textFragments.splice(index, 0, fragment);
     }
-    this.emit('fragment-inserted', fragment);
+    this.eventTarget.dispatchEvent(new CustomEvent('fragment-inserted', { detail: fragment.key }));
   }
 
   markOutOfDate(fragment) {
     fragment.isOutOfDate = true;
-    this.emit('fragment-out-of-date', fragment.key);
+    this.eventTarget.dispatchEvent(new CustomEvent('fragment-out-of-date', { detail: fragment.key }));
   }
 
   getFragment(key) {
@@ -37,7 +34,7 @@ class ProjectService extends EventTarget {
   }
 
   tryAddToOutOfDate(key, transformer) {
-    const fragment = this.getFragment(key);
+    let fragment = this.getFragment(key);
     if (!fragment) {
       dialogService.showError('Unknown key: ' + key);
       return;
@@ -47,9 +44,9 @@ class ProjectService extends EventTarget {
       this.markOutOfDate(fragment);
     } else if (fragment.outOfDateTransformers.length > 0) {
       fragment.outOfDateTransformers.push(transformer);
-      if (fragment.outOfDateTransformers.length == cybertronService.transformers.length) {
+      if (fragment.outOfDateTransformers.length == CybertronService.tranformers.length) {
         fragment.outOfDateTransformers = [];
-        this.emit('fragment-out-of-date', key);
+        this.eventTarget.dispatchEvent(new CustomEvent('fragment-out-of-date', { detail: key }));
       }
     }
   }
@@ -58,18 +55,22 @@ class ProjectService extends EventTarget {
     return this.textFragments.some(fragment => fragment.isOutOfDate);
   }
 
-  getAutoSaveState() {
-    return this.autoSave;
-  }
-
-  setAutoSaveState(state) {
-    this.autoSave = state;
-    localStorage.setItem('autoSave', state);
-  }
-
   getProjectData() {
     return this.textFragments;
   }
+
+  getAutoSaveState() {
+    return localStorage.getItem('autoSave') === 'true';
+  }
+
+  setAutoSaveState(state) {
+    localStorage.setItem('autoSave', state);
+  }
+
+  getFileName() {
+    return this.filename;
+  }
 }
+
 const projectService = new ProjectService();
-export default  projectService;
+export default projectService;

@@ -1,5 +1,5 @@
 
-import LineParserHelpers from 'line_parser_helpers/LineParserHelpers';
+import LineParserHelpers from './line_parser_helpers/LineParserHelpers';
 import ProjectService from '../project_service/ProjectService';
 
 class LineParser {
@@ -8,9 +8,9 @@ class LineParser {
   }
 
   /**
-   * Creates a new text fragment and adds it to the project service.
-   * @param {string} line - The line to be processed.
-   * @param {number} index - The index at which the object should be placed.
+   * Create a new text fragment and add it to the project service
+   * @param {string} line - The line to be processed
+   * @param {number} index - The index at which the object should be placed
    */
   createTextFragment(line, index) {
     const trimmedLine = line.trim().toLowerCase();
@@ -23,22 +23,24 @@ class LineParser {
       key,
       outOfDate: true,
       lines: [],
+      outOfDateTransformers: [],
     };
     ProjectService.addTextFragment(textFragment, index);
+    return textFragment;
   }
 
   /**
-   * Calculates the key of a text fragment.
-   * @param {Object} textFragment - The text fragment to calculate the key for.
-   * @param {number} index - The index of the text fragment.
-   * @returns {string} The calculated key.
+   * Calculate the key of a text fragment
+   * @param {Object} textFragment - The text fragment
+   * @param {number} index - The index position
+   * @returns {string} - The calculated key
    */
   calculateKey(textFragment, index) {
     let currentDepth = textFragment.depth;
     let result = textFragment.title;
     for (let idx = index; idx >= 0; idx--) {
       const prevFragment = ProjectService.textFragments[idx];
-      if (prevFragment.depth < currentDepth) {
+      if (prevFragment && prevFragment.depth < currentDepth) {
         currentDepth = prevFragment.depth;
         result = `${prevFragment.title} > ${result}`;
         if (currentDepth === 1) break;
@@ -48,16 +50,16 @@ class LineParser {
   }
 
   /**
-   * Clears the fragments index.
+   * Clear the fragments index list
    */
   clear() {
     this.fragmentsIndex = [];
   }
 
   /**
-   * Parses a line of text.
-   * @param {string} line - The line to parse.
-   * @param {number} index - The index of the line.
+   * Parse a line of text
+   * @param {string} line - The line to be parsed
+   * @param {number} index - The current line number
    */
   parse(line, index) {
     if (line === '') {
@@ -70,22 +72,23 @@ class LineParser {
   }
 
   /**
-   * Deletes a line at a given index.
-   * @param {number} index - The index of the line to delete.
+   * Delete a line from the project content
+   * @param {number} index - The line number to be deleted
    */
   deleteLine(index) {
-    ProjectService.textFragments.splice(index, 1);
+    LineParserHelpers.deleteLine(index);
+    this.fragmentsIndex.splice(index, 1);
   }
 
   /**
-   * Inserts a line of text at a given index.
-   * @param {string} line - The line to insert.
-   * @param {number} index - The index at which to insert the line.
+   * Insert a line of text at a given line number in the project content
+   * @param {string} line - The line to be inserted
+   * @param {number} index - The line number at which the line should be inserted
    */
-  insert(line, index) {
-    ProjectService.textFragments.splice(index, 0, line);
+  insertLine(line, index) {
+    this.fragmentsIndex.splice(index, 0, null);
     this.parse(line, index);
   }
 }
-
-export default new LineParser();
+const lineParser = new LineParser();
+export default lineParser;

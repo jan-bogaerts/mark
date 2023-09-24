@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Button, Space } from 'antd';
 import { KeyOutlined } from '@ant-design/icons';
-import ThemeService from '../../../../services/ThemeService/ThemeService';
-import OpenAIConfigurationDialog from '../open-ai-configuration-dialog/OpenAiConfigurationDialog';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
+import OpenAIConfigurationDialog from '../open-ai_configuration_dialog/OpenAiConfigurationDialog';
 import ModelComboBox from './ModelComboBox';
 
 /**

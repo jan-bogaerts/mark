@@ -1,58 +1,57 @@
 
-import React, { useEffect, useState } from 'react';
-import HorizontalSplitter from './horizontal_splitter/HorizontalSplitter';
-import VerticalSplitter from './vertical_splitter/VerticalSplitter';
+import React from 'react';
+import { Split } from '@geoffcox/react-splitter';
+import { Layout } from 'antd';
+import ThemeService from '../../services/Theme_service/ThemeService';
 import Outline from './outline/Outline';
 import Editor from './editor/Editor';
 import ResultsView from './results_view/ResultsView';
-import ThemeService from '../../services/Theme_service/ThemeService';
 
-const LOCAL_STORAGE_HORIZONTAL_SPLITTER_POSITION = 'horizontalSplitterPosition';
-const LOCAL_STORAGE_VERTICAL_SPLITTER_POSITION = 'verticalSplitterPosition';
-
-/**
- * Body component represents the main body of the application.
- */
-const Body = () => {
-  const [horizontalSplitterPosition, setHorizontalSplitterPosition] = useState(null);
-  const [verticalSplitterPosition, setVerticalSplitterPosition] = useState(null);
-
-  useEffect(() => {
-    const horizontalSplitterPosition = localStorage.getItem(LOCAL_STORAGE_HORIZONTAL_SPLITTER_POSITION);
-    const verticalSplitterPosition = localStorage.getItem(LOCAL_STORAGE_VERTICAL_SPLITTER_POSITION);
-    const clientWidth = document.documentElement.clientWidth;
-    const clientHeight = document.documentElement.clientHeight;
-
-    setHorizontalSplitterPosition(horizontalSplitterPosition && horizontalSplitterPosition < clientHeight ? horizontalSplitterPosition : clientHeight / 4);
-    setVerticalSplitterPosition(verticalSplitterPosition && verticalSplitterPosition < clientWidth ? verticalSplitterPosition : clientWidth / 4);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      localStorage.setItem(LOCAL_STORAGE_HORIZONTAL_SPLITTER_POSITION, horizontalSplitterPosition);
-      localStorage.setItem(LOCAL_STORAGE_VERTICAL_SPLITTER_POSITION, verticalSplitterPosition);
+class Body extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      verticalSplitSize: localStorage.getItem('verticalSplitSize') || '30%',
+      horizontalSplitSize: localStorage.getItem('horizontalSplitSize') || '30%',
     };
-  }, [horizontalSplitterPosition, verticalSplitterPosition]);
+  }
 
-  const theme = ThemeService.getCurrentTheme();
+  handleVerticalSplitChange = (newSize) => {
+    this.setState({ verticalSplitSize: newSize });
+  }
 
-  return (
-    <div className={`body ${theme}`}>
-      <HorizontalSplitter
-        top={<Outline />}
-        bottom={
-          <VerticalSplitter
-            left={<Editor />}
-            right={<ResultsView />}
-            position={verticalSplitterPosition}
-            onPositionChanged={setVerticalSplitterPosition}
-          />
-        }
-        position={horizontalSplitterPosition}
-        onPositionChanged={setHorizontalSplitterPosition}
-      />
-    </div>
-  );
-};
+  handleHorizontalSplitChange = (newSize) => {
+    this.setState({ horizontalSplitSize: newSize });
+  }
+
+  componentWillUnmount() {
+    localStorage.setItem('verticalSplitSize', this.state.verticalSplitSize);
+    localStorage.setItem('horizontalSplitSize', this.state.horizontalSplitSize);
+  }
+
+  render() {
+    const theme = ThemeService.getCurrentTheme();
+    return (
+      <Split
+          initialPrimarySize={this.state.verticalSplitSize}
+          minPrimarySize='50px'
+          minSecondarySize='15%'
+          onSplitChanged={this.handleVerticalSplitChange}
+        >
+          <Outline />
+          <Split
+            initialPrimarySize={this.state.horizontalSplitSize}
+            minPrimarySize='50px'
+            minSecondarySize='15%'
+            horizontal
+            onSplitChanged={this.handleHorizontalSplitChange}
+          >
+            <Editor />
+            <ResultsView transformer={this.props.transformer} key={this.props.key} />
+          </Split>
+        </Split>
+    );
+  }
+}
 
 export default Body;

@@ -6,8 +6,6 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\main window\\MainWindow.js": ["main-window", "toolbar", "body"]}
 # MarkdownCode > components > toolbar > home
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\HomeTab.js": ["home-tab", "theme"]}
-# MarkdownCode > components > toolbar > home > edit section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.js": ["edit-section", "ant-tooltip", "ant-btn", "anticon", "cut-outlined", "copy-outlined", "paste-outlined", "delete-outlined", "select-outlined", "clear-outlined"]}
 # MarkdownCode > components > toolbar > home > undo section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\undo_section\\UndoSection.js": ["undo-section", "undo-button", "redo-button"]}
 # MarkdownCode > components > toolbar > preferences
@@ -42,12 +40,6 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\open-ai configuration dialog\\OpenAiConfigurationDialog.js": ["openai-configuration-dialog", "openai-configuration-input"]}
 # MarkdownCode > components > toolbar > preferences > view section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\view section\\ViewSection.js": ["view-section", "theme-select", "font-select", "font-size-select"]}
-# MarkdownCode > components > body
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js": ["body", "theme"]}
-# MarkdownCode > components > body > horizontal splitter
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\horizontal splitter\\HorizontalSplitter.js": ["horizontal-splitter", "splitter"]}
-# MarkdownCode > components > body > vertical splitter
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\vertical splitter\\VerticalSplitter.js": ["vertical-splitter", "left-panel", "splitter", "right-panel"]}
 # MarkdownCode > components > body > results view > results view context menu
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js": ["more-button", "selected"]}
 # MarkdownCode > services > line parser
@@ -62,8 +54,6 @@
 {}
 # MarkdownCode > services > transformer-base service
 {}
-# MarkdownCode > components > body > results view
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js": ["results-view", "ant-tabs", "ant-tabs-tabpane", "results-view-tab"]}
 # MarkdownCode > components > toolbar
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.js": ["toolbar-home", "toolbar-format", "toolbar-preferences"]}
 # MarkdownCode > services > position-tracking service
@@ -86,3 +76,9 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": ["editor", "editorDidMount", "className"]}
 # MarkdownCode > components > body > results view > results view tab
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.js": ["results-view-tab"]}
+# MarkdownCode > components > toolbar > home > edit section
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.js": ["edit-section", "ant-btn", "ant-tooltip", "anticon-scissor", "anticon-copy", "react-icons-bi", "anticon-delete", "anticon-select", "anticon-close-circle"]}
+# MarkdownCode > components > body
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js": ["Split", "Layout", "Outline", "Editor", "ResultsView"]}
+# MarkdownCode > components > body > results view
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js": ["results-view", "ant-tabs", "ant-tabs-tabpane"]}

@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { Select, Button } from 'antd';
-import { ThemeService } from '../../../services/ThemeService/ThemeService';
-import { DialogService } from '../../../services/DialogService/DialogService';
+import { Select } from 'antd';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
+import DialogService from '../../../../services/dialog_service/DialogService';
 
 const { Option } = Select;
 
 const FONT_SIZES = Array.from({length: 45}, (_, i) => i + 6);
-const FONTS = ['Consolas', 'Helvetica', 'Arial', 'Arial Black', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Impact', 'Gill Sans', 'Times New Roman', 'Georgia', 'Palatino', 'Baskerville', 'Andalé Mono', 'Courier', 'Lucida', 'Monaco', 'Bradley Hand', 'Brush Script MT', 'Luminari', 'Comic Sans MS'];
+const FONTS = ['Consolas', 'Helvetica', 'Arial', 'Arial Black', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Impact', 'Gill Sans', 'Times New Roman', 'Georgia', 'Palatino', 'Baskerville', 'Andalï¿½ Mono', 'Courier', 'Lucida', 'Monaco', 'Bradley Hand', 'Brush Script MT', 'Luminari', 'Comic Sans MS'];
 const THEMES = ['light', 'dark'];
 
 /**

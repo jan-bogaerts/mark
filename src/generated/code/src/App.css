@@ -1,0 +1,69 @@
+body {
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+  
+body,
+div {
+    box-sizing: border-box;
+}
+  
+  #root {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    overflow: hidden;
+}
+
+.main-window {
+    height: 100vh;
+}
+
+.toolbar {
+    height: 130px;
+    background-color: #f0f0f0;
+    padding: 10px;
+  }
+
+.home-tab {
+    display: flex;
+  }
+
+.build-section, 
+.undo-section, 
+.edit-section, 
+.file-section, 
+.font-section, 
+.paragraph-section, 
+.style-section,
+.gpt-section,
+.view-section {
+    display: flex;
+    flex-direction: row;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    align-items: center;
+    margin-right: 4px;
+}
+
+.body, .outline, .ant-tree, .results-view, .ant-tabs, .results-view-tab,
+.results-view > .ant-tabs-content-holder, .results-view > .ant-tabs-content-holder > .ant-tabs-content,
+.results-view > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+    height: 100%;
+}
+
+
+.ant-dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+}

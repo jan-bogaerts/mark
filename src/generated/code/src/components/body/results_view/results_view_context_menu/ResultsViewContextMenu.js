@@ -76,7 +76,7 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
     <Dropdown overlay={menu} trigger={['click']}>
       <Button
         className={`more-button ${theme}`}
-        style={{ float: 'right', margin: '16px' }}
+        style={{ float: 'right', right: '16px', top: '0px', position: 'absolute' }}
         icon={<MoreOutlined />}
       />
     </Dropdown>

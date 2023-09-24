@@ -1,15 +1,9 @@
 # MarkdownCode > components > main window
 {"MainWindow": {}}
-# MarkdownCode > components > toolbar > home > edit section
-{"EditSection": {}}
 # MarkdownCode > components > toolbar > home > undo section
 {"UndoSection": {}, "UndoButton": {}, "RedoButton": {}}
 # MarkdownCode > components > toolbar > home
 {"HomeTab": {}}
-# MarkdownCode > components > body > horizontal splitter
-{"HorizontalSplitter": {"top": "The component placed at the top of the splitter.", "bottom": "The component placed at the bottom of the splitter.", "position": "The height assigned to the bottom component.", "onPositionChanged": "A callback function that is called when the position value needs to be updated."}}
-# MarkdownCode > components > body > vertical splitter
-{"VerticalSplitter": {"left": "Defines the component placed on the left side of the splitter", "right": "Defines the component placed on the right side of the splitter", "position": "Represents the width assigned to the left component", "onPositionChanged": "Callback function that updates the position value when the user drags the bar between the left and right components"}}
 # MarkdownCode > components > toolbar > format
 {"FormatTab": {"style": "A property that defines the style of the FormatTab component.", "paragraph": "A property that defines the paragraph settings of the FormatTab component.", "font": "A property that defines the font settings of the FormatTab component."}}
 # MarkdownCode > components > toolbar > format > paragraph section
@@ -26,8 +20,6 @@
 {"OpenAiConfigurationDialog": {}}
 # MarkdownCode > components > toolbar > preferences > view section
 {"ViewSection": {"Theme": "A combobox where the user can choose between light or dark mode. Linked to the theme-service.", "Font": "A combobox for selecting the font of the markdown text. Linked to the theme-service.", "Font size": "A combobox for selecting the font size of the markdown text. Linked to the theme-service."}}
-# MarkdownCode > components > body
-{"Body": {}}
 # MarkdownCode > components > body > outline
 {"Outline": {}}
 # MarkdownCode > components > toolbar
@@ -36,3 +28,7 @@
 {"Editor": {}}
 # MarkdownCode > components > body > results view > results view tab
 {"ResultsViewTab": {}}
+# MarkdownCode > components > toolbar > home > edit section
+{"EditSection": {}}
+# MarkdownCode > components > body
+{"Body": {}}

@@ -1,7 +1,8 @@
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const remote = window.require("@electron/remote");
+const fs = remote.require('fs');
+const path = remote.require('path');
+const os = remote.require('os');
 
 /**
  * FolderService class
@@ -87,4 +88,4 @@ class FolderService {
   }
 }
 
-module.exports = new FolderService();
+export default new FolderService();

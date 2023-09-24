@@ -2,9 +2,9 @@
 import React, { Component } from 'react';
 import { Button } from 'antd';
 import { BoldOutlined, ItalicOutlined, UnderlineOutlined, StrikethroughOutlined } from '@ant-design/icons';
-import SelectionService from '../../../../services/SelectionService/SelectionService';
-import DialogService from '../../../../services/DialogService/DialogService';
-import ThemeService from '../../../../services/ThemeService/ThemeService';
+import SelectionService from '../../../../services/Selection_service/SelectionService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
 
 /**
  * FontSection component

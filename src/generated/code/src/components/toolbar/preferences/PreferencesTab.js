@@ -1,10 +1,10 @@
 
 import React, { Component } from 'react';
 import { Row } from 'antd';
-import { DialogService } from '../../../services/dialog-service/DialogService';
-import { ThemeService } from '../../../services/theme-service/ThemeService';
-import GPT from '../../../GptSection';
-import View from '../../../ViewSection';
+import DialogService from '../../../services/dialog_service/DialogService';
+import ThemeService from '../../../services/Theme_service/ThemeService';
+import GPT from './GPT_section/GPTSection';
+import View from './view_section/ViewSection';
 
 /**
  * PreferencesTab component

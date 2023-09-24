@@ -1,5 +1,6 @@
 
-const fs = require('electron').remote.require('fs');
+const remote = window.require("@electron/remote");
+const fs = remote.require('fs');
 const FolderService = require('../../folder_service/FolderService');
 const CybertronService = require('../../cybertron_service/CybertronService');
 const PositionTrackingService = require('../../position-tracking_service/PositionTrackingService');
@@ -28,7 +29,7 @@ class StorageService {
    */
   new() {
     this.clear();
-    ProjectService.eventTarget.dispatchEvent('content-changed');
+    ProjectService.eventTarget.dispatchEvent(new Event('content-changed'));
   }
 
   /**
@@ -43,7 +44,7 @@ class StorageService {
     content.split('\n').forEach((line, index) => LineParser.parse(line, index));
     CybertronService.transformers.forEach(transformer => transformer.cache.loadCacheFromFile());
     this.updateOutOfDate();
-    ProjectService.eventTarget.dispatchEvent('content-changed');
+    ProjectService.eventTarget.dispatchEvent(new Event('content-changed'))
   }
 
   /**
@@ -91,4 +92,4 @@ class StorageService {
   }
 }
 
-module.exports = new StorageService();
+export default new StorageService();

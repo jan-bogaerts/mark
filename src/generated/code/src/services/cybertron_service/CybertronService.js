@@ -44,6 +44,5 @@ class CybertronService {
 }
 
 const cybertronService = new CybertronService();
-Object.freeze(cybertronService);
 
-module.exports = cybertronService;
+export default cybertronService;

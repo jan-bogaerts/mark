@@ -6,22 +6,14 @@ MarkdownCode is a machine learning tool for ideation and software building. User
 - UI made with React and Ant Design (antd)
 # MarkdownCode > components > main window
 The main window is the first window shown when the app starts. It has a toolbar at the top and the rest of the space is the body.
-# MarkdownCode > components > toolbar > home > edit section
-The edit-section component handles clipboard and selected data actions. It supports cut, copy, paste, delete, select all, and clear selection. These actions are enabled based on the presence of selected data or text in the clipboard.
 # MarkdownCode > components > toolbar > home > undo section
 The undo-section component has actions for the undo/redo service. It supports undo and redo buttons that are enabled based on the project's undo-service actions.
 # MarkdownCode > services > Undo service
 The undo service records user text edits in monaco-editors and includes both undo and redo lists.
-# MarkdownCode > services > dialog service
-The dialog service is a shared interface for displaying dialog boxes in other components and services, supporting errors, warnings, and information. User-triggered actions in a component should be wrapped in an error handler to show an electron dialog box with error details if needed.
 # MarkdownCode > components > toolbar > preferences
 The preferences-tab component arranges its children in a row and includes the GPT and View sections on the toolbar.
 # MarkdownCode > components > toolbar > home
 The home-tab component arranges its children in a row and includes the following child components: File, Edit, Undo, and Build sections.
-# MarkdownCode > components > body > horizontal splitter
-The horizontal splitter manages the layout of 2 child components, allowing users to resize the panels above and below it. It has properties for the top and bottom components, the position of the bottom component, and a callback function for when the position value needs to be updated. The splitter includes a div component for dragging and triggering the callback.
-# MarkdownCode > components > body > vertical splitter
-The vertical splitter manages the layout of two child components, allowing users to adjust the width of the left panel while changing the size of the right panel. It has properties for the left and right components, position, and onPositionChanged callback. The splitter includes a div component for dragging and triggering the onPositionChanged callback.
 # MarkdownCode > components > toolbar > format
 The format-tab component arranges its children in a row, including the Style, Paragraph, and Font sections.
 # MarkdownCode > components > toolbar > format > paragraph section
@@ -52,19 +44,10 @@ The view-section component configures the app's appearance. Buttons have icon-on
 The theme service globally manages the selected theme font and font-size, saving changes to local storage. It retrieves stored values on creation and allows for light or dark theme selection. Components use the service to apply the selected theme without needing to subscribe for changes. The main window refreshes content when the theme is updated.
 # MarkdownCode > services > Selection service
 The selection service tracks selected text and the active editor. It can be monitored for changes. Supported actions include cut, copy, paste, delete, clear selection, and select all.
-# MarkdownCode > components > body
-The body component is the main part of the application, containing a horizontal splitter that divides its area. On the left side is an outline component, and on the right side is a vertical splitter. The vertical splitter has an editor component at the top and a results view component at the bottom. The body component has event handlers for the 'onPositionChanged' callback of both splitters, storing the new position values. When unloaded, the last splitter positions are stored in local storage. When loaded, the last positions are restored from local storage. The clientWidth and clientHeight of the component are retrieved. If there is no previous value for the vertical splitter or it is larger than the clientWidth, 'clientWidth / 4' is used. If there is no previous value for the horizontal splitter or it is larger than the clientHeight, 'clientHeight / 4' is used.
 # MarkdownCode > components > body > results view > results view context menu
 The results-view-context-menu is a component that wraps the Dropdown antd component. It requires the properties 'transformer' and 'key' to be provided. The dropdown's content consists of a 'more' button icon, positioned in the top-right corner of its parent with a margin of 16px. The menu contains options for selecting the GPT model to be used by the transformer. The submenu items are fetched from the GPT service's list of available models. The currently selected model is indicated as selected. When a different model is selected, the GPT service is asked to update the model name for the transformer. There is also an option to refresh the result by pressing a button.
 # MarkdownCode > services > folder service
 The folder service is a global singleton that manages the location of the active project. It has properties for the root folder, project name, project file path, cache folder path, and project configuration file path. It can perform actions to clear, move, copy, and set the project location.
-# MarkdownCode > services > gpt service
-- GPT service is a global singleton that communicates with the open-ai api backend for specific tasks.
-- It uses the openai node.js library to interact with the backend.
-- The service has a function for making api requests to open-ai, which accepts a list of json objects called `messages` with `role` and `content` fields.
-- The `messages` list is sent to openai using the `createChatCompletion` function.
-- If the request fails, the service retries it 3 times before raising an error.
-- The service also provides a method to retrieve the available models list using the openai nodejs library.
 # MarkdownCode > services > cybertron service
 - Cybertron-service globally manages transformers.
 - It maintains a sub-list of entry-points for building text-fragments.
@@ -83,12 +66,6 @@ The build service handles all text fragments in the project service using transf
 - The position-tracking service selects the corresponding tree node when the selected text-fragment changes.
 - The tree is displayed with lines.
 - 'convertToTreeData' creates a tree structure based on data items and sets parent-child relationships based on the level count.
-# MarkdownCode > services > line parser
-The line-parser service is a global singleton object that parses markdown lines and updates text-fragments in the project-service. It has functions to create text-fragments, calculate keys, and clear the fragmentsIndex list. The parse function and pseudo code demonstrate its usage for different line types.
-# MarkdownCode > components > body > results view
-- Results-view component is located at the bottom of the main body, displaying results from registered transformers for the selected text block.
-- Each transformer in the list has a tab at the top left of the view, showing the transformer's name.
-- The tab content contains a results-view-tab component.
 # MarkdownCode > services > position-tracking service
 The position-tracking service tracks the user's current text-fragment, including the selected line number and related text. It also stores events monitoring changes in the selected text-fragment. The service offers methods to set the selected line and clear the active fragment and current line.
 # MarkdownCode > components > toolbar
@@ -98,18 +75,12 @@ The position-tracking service tracks the user's current text-fragment, including
 - The available tabs are Home, Format, and Preferences.
 - A JSON structure should be created for all tabs, including key, label, and children fields.
 - The JSON structure should be assigned to the items property.
-# MarkdownCode > services > project service > change-processor service
-The change-processor service keeps the project structure synchronized with the source by processing changes in the project content. Its main function, "process", updates the project service based on user edits. It replaces overwritten lines, deletes or inserts lines, and marks the storage service as dirty.
 # MarkdownCode > services > build-stack service
 The build-stack service prevents circular references. It uses a "running" dictionary to track running textframe - transformer pairs. The "tryRegister" function checks if a pair is already running and returns false if it is, otherwise it adds the pair to the "running" dictionary and returns true. The "unRegister" function removes a pair from the "running" dictionary.
 # MarkdownCode > services > constant-extractor service
 The constant-extractor service extracts constant definitions from source code and stores them in a json file. It replaces constants in the source texts with json references. It inherits from the transformer-base service and has a constructor with the parameters 'constants' and an empty array. To use the service, create a global instance and register it with the cybertron-service. The service has functions to extract quotes, render results, and retrieve up-to-date values.
 # MarkdownCode > components > toolbar > home > file section
 The file-section component manages project and file actions using icon buttons. Supported actions include creating a new project, opening an existing project, saving the current project, saving the current project to a new location, and toggling auto-save. The buttons' states are updated based on changes in the undo service.
-# MarkdownCode > services > project service
-The project service manages a global data-list of text fragments and stores the raw content displayed to the user. It provides functions for working with the fragments, such as deleting, adding, marking as out of date, and retrieving by key. It tracks user configurations, like auto-save settings. The service uses an EventTarget field to dispatch events for content changes, fragment deletion and insertion, marking fragments as out of date, and changing fragment keys.
-# MarkdownCode > services > line parser > line parser helpers
-The 'LineParserHelpers' module has helper functions for the line parser service. They handle tasks like getting fragments, handling empty lines, updating titles, removing titles, inserting fragments, handling title lines, and updating fragment lines.
 # MarkdownCode > services > project service > storage service
 The storage service is a global singleton for reading and writing project data. Functions include clear(), new(), open(filePath), updateOutOfDate(), markDirty(), and save(file). Note: fs module should be loaded remotely through Electron.
 # MarkdownCode > components > toolbar > home > build section
@@ -138,3 +109,52 @@ The editor uses the monaco editor npm package to display markdown text. It retri
 - The isOutOfDate function checks if a key is still valid in the cache.
 # MarkdownCode > components > body > results view > results view tab
 The results-view-tab component displays transformer results for a specific text fragment. It uses the monaco editor npm package to display results in various formats. The editor adjusts to the component's size. When loaded, the component retrieves text from the result-cache and applies theme settings. The cache is monitored for changes, and text is displayed accordingly. User changes are saved to the cache. The monaco editor's events are monitored for selection changes. A results-view-context-menu component is placed on top of the editor, which updates the key and displays text when the selected fragment changes.
+# MarkdownCode > components > toolbar > home > edit section
+The edit-section component has actions for clipboard and selected data. Buttons use icons instead of text. Supported actions include cut, copy, paste, delete, select all, and clear selection. To check if the clipboard contains text data, use the clipboard imported from electron and call `clipboard.has('text/plain')` when the component is loaded or when the ipcRenderer emits the 'focused' event.
+# MarkdownCode > services > project service
+The project service manages text fragments in a project globally. It tracks loaded fragments, stores content and project filename. It provides functions to delete, add, mark as out of date, and retrieve fragments. It also handles user configurations and uses events for various actions.
+# MarkdownCode > components > body
+- The application uses the body component and the Split component from the @geoffcox/react-splitter library.
+- The body component is filled with a Split component, with initial and minimum sizes set for the primary and secondary splits.
+- The children of the body component are an outline component and another Split component.
+- The Split component is set to be horizontal and has an editor component and a results view component as children.
+- The body component has event handlers for the 'onSplitChanged' callback of both splits, storing the new position value in the state.
+- The last positions of the horizontal and vertical splitters are stored and restored from local storage when the body component is loaded and unloaded.
+# MarkdownCode > services > dialog service
+- The dialog service is a global singleton for displaying dialog boxes.
+- It can show dialog boxes for errors, warnings, and information.
+- All user-triggered actions in a component should have proper error handling, showing an electron dialog box with error details if necessary.
+- Functions: showErrorDialog(param1, param2), showSaveDialog(), showOpenDialog().
+# MarkdownCode > components > body > results view
+- Results-view component is at bottom of main body.
+- Users view results from registered transformers in cybertron-service for selected text block.
+- Each transformer in list creates a tab at top of view.
+- Tab title and key are transformer name.
+- Tab content displays results-view-tab component.
+- Create JSON structure for tabs with fields: key, label, children.
+- Assign JSON structure to items property.
+# MarkdownCode > services > line parser
+The line-parser service is a singleton object that parses markdown lines and updates text-fragments in the project-service. It has a fragmentIndex array to store text-fragment objects. The createTextFragment function trims and converts the line to lowercase, determines the depth-level of the text-fragment, assigns the title, calculates the key, and adds it to the project-service. The calculateKey function calculates the key of a text-fragment based on its depth-level and title. The clear function clears the fragmentIndex list. The parse function handles different types of lines, and the insertLine and deleteLine functions insert and delete lines respectively.
+# MarkdownCode > services > all-spark service
+The all-spark service is a global singleton that creates and registers transformers into the cybertron service. It has a function called Load that is called during application construction. To register a transformer, use `cybertronService.register(transformer, false)`. To register as an entry point, use `cybertronService.register(transformer, true)`. The transformers to create are the compress service (entry point) and the constant-extractor service.
+# MarkdownCode > services > line parser > line parser helpers
+- 'LineParserHelpers' module: helper functions for line parser service.
+- 'getFragmentAt' function: retrieves fragment at given index.
+- 'handleEmptyLine' function: handles empty line by adding/updating fragments.
+- 'updateFragmentTitle' function: updates fragment title.
+- 'removeFragmentTitle' function: removes fragment title and updates index.
+- 'insertFragment' function: inserts new fragment at given index.
+- 'handleTitleLine' function: handles line with title by creating/updating fragments.
+- 'updateFragmentLines' function: updates fragment lines.
+- 'handleRegularLine' function: handles regular line by creating/updating fragments.
+- 'deleteLine' function: deletes line from fragment.
+# MarkdownCode > services > project service > change-processor service
+The change-processor service keeps the project structure in sync with the source by processing changes in the project content. Its main function, `process(changes, full)`, updates the project service when the user makes edits. This function sets the project service content to the editor's value, gets the editor's model, and iterates through each change in the changes list. It then splits the change's text into lines, sets the current line to the start line number of the change, and sets the line end to the end line number of the change. The function also sets the line index to 0, replaces overwritten lines by parsing the line content and incrementing the line and index, and deletes or inserts lines based on the remaining lines and increments the line and index accordingly. Finally, it marks the storage service as dirty.
+# MarkdownCode > services > gpt service
+- GPT service communicates with the open-ai api backend for specific tasks.
+- It uses the openai node.js library for communication.
+- The sendRequest function sends a list of json objects to openai using createChatCompletion function, retrying 3 times if the request fails.
+- The getModels method retrieves the list of available models using the openai nodejs library, only if a valid key is available.
+- The apiKey is stored and loaded from localStorage during service construction.
+- The setApiKey function updates the api key, saves it to localStorage, recreates the openAI object, and resets the error flag.
+- The OpenAI library is instantiated only if a valid apiKey is provided.

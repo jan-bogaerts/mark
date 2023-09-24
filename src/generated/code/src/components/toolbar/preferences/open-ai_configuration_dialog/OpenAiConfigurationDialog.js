@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Modal, Input, Button } from 'antd';
-import GptService from '../../../services/gpt-service/GptService';
-import DialogService from '../../../services/dialog-service/DialogService';
-import ThemeService from '../../../services/theme-service/ThemeService';
+import GptService from '../../../../services/gpt_service/GPTService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+import ThemeService from '../../../../services/Theme_service/ThemeService';
 
 /**
  * OpenAiConfigurationDialog component
@@ -17,12 +17,16 @@ const OpenAiConfigurationDialog = ({ visible, onClose }) => {
 
   useEffect(() => {
     if (visible) {
-      GptService.getApiKey().then(setApiKey).catch(DialogService.showErrorDialog);
+      setApiKey(GptService.apiKey);
     }
   }, [visible]);
 
   const handleOk = () => {
-    GptService.setApiKey(apiKey).then(onClose).catch(DialogService.showErrorDialog);
+    try {
+      GptService.setApiKey(apiKey);
+    } catch (error) {    
+      DialogService.showErrorDialog(error);
+    }
   };
 
   const handleCancel = () => {

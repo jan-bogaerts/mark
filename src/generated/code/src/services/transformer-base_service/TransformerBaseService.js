@@ -1,8 +1,7 @@
 
-const { ipcRenderer } = require('electron');
-const React = require('react');
-const { ResultCacheService } = require('../result-cache_service/ResultCacheService');
-const { GPTService } = require('../gpt_service/GPTService');
+import ResultCacheService from '../result-cache_service/ResultCacheService';
+import GPTService from '../gpt_service/GPTService';
+import cybertronService from '../cybertron_service/CybertronService';
 
 /**
  * TransformerBaseService class
@@ -15,8 +14,9 @@ class TransformerBaseService {
    */
   constructor(name, dependencies) {
     this.name = name;
+    this.language = 'markdown';
     this.dependencies = dependencies.map((dependency) => {
-      const transformer = transformers.find((t) => t.name === dependency);
+      const transformer = cybertronService.transformers.find((t) => t.name === dependency);
       if (!transformer) {
         throw new Error(`Transformer ${dependency} not found`);
       }
@@ -47,4 +47,4 @@ class TransformerBaseService {
   }
 }
 
-module.exports = TransformerBaseService;
+export default TransformerBaseService;

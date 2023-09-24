@@ -1,18 +1,8 @@
 
 import React, { Component } from 'react';
 import { Button, Tooltip } from 'antd';
-import { 
-  FormatBoldOutlined, 
-  FormatItalicOutlined, 
-  FormatUnderlinedOutlined, 
-  OrderedListOutlined, 
-  UnorderedListOutlined, 
-  CodeOutlined, 
-  QuoteOutlined, 
-  AlignLeftOutlined, 
-  AlignCenterOutlined, 
-  AlignRightOutlined 
-} from '@ant-design/icons';
+import { LuHeading1, LuHeading2, LuHeading3, LuHeading4, LuHeading5, LuHeading6, LuQuote, LuCode2, LuList } from "react-icons/lu";
+import { PiParagraph, PiListNumbers } from "react-icons/pi";
 import SelectionService from '../../../../services/Selection_service/SelectionService';
 import DialogService from '../../../../services/dialog_service/DialogService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
@@ -32,17 +22,17 @@ const styles = [
 ];
 
 const styleIcons = {
-  heading1: <FormatBoldOutlined />,
-  heading2: <FormatItalicOutlined />,
-  heading3: <FormatUnderlinedOutlined />,
-  heading4: <OrderedListOutlined />,
-  heading5: <UnorderedListOutlined />,
-  heading6: <CodeOutlined />,
-  paragraph: <QuoteOutlined />,
-  quote: <AlignLeftOutlined />,
-  code: <AlignCenterOutlined />,
-  bulletList: <AlignRightOutlined />,
-  numberedList: <OrderedListOutlined />
+  heading1: <LuHeading1 />,
+  heading2: <LuHeading2 />,
+  heading3: <LuHeading3 />,
+  heading4: <LuHeading4 />,
+  heading5: <LuHeading5 />,
+  heading6: <LuHeading6 />,
+  paragraph: <PiParagraph />,
+  quote: <LuQuote />,
+  code: <LuCode2 />,
+  bulletList: <LuList />,
+  numberedList: <PiListNumbers />
 };
 
 /**

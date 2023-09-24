@@ -12,15 +12,6 @@
 - It includes the following components:
   - Toolbar: positioned at the top of the window.
   - Body: occupies the remaining space in the window.
-# MarkdownCode > components > toolbar > home > edit section
-- The edit-section component handles actions related to the clipboard and selected data.
-- It supports the following actions:
-  - Cut: Initiates the cut command of the selection service. Enabled when there is selected data.
-  - Copy: Initiates the copy command of the selection service. Enabled when there is selected data.
-  - Paste: Initiates the paste command of the selection service. Enabled when there is text data in the clipboard.
-  - Delete: Initiates the delete command of the selection service. Enabled when there is selected data.
-  - Select All: Selects all text in the active window.
-  - Clear Selection: Clears the current selection buffer. Enabled when there is selected data.
 # MarkdownCode > components > toolbar > home > undo section
 - The undo-section component holds actions for the undo/redo service.
 - It supports the following actions:
@@ -31,10 +22,6 @@
 # MarkdownCode > services > Undo service
 - The undo service records user text edits in different monaco-editors.
 - It includes both an undo and redo list.
-# MarkdownCode > services > dialog service
-- The dialog service is a shared interface for displaying dialog boxes in other components and services.
-- It supports dialog boxes for errors, warnings, and information.
-- All user-triggered actions or functions in a component should be wrapped in an error handler. If an error occurs, an electron dialog box will be shown to the user, providing details about the error.
 # MarkdownCode > components > toolbar > preferences
 - The preferences-tab component is a wrapper that arranges its children in a row.
 - This component includes the following child components (sections on the toolbar):
@@ -47,22 +34,6 @@
   - Edit section
   - Undo section
   - Build section
-# MarkdownCode > components > body > horizontal splitter
-- The horizontal splitter manages the layout of 2 child components, allowing users to resize the panels above and below it.
-- The horizontal-splitter component has the following properties:
-  - top: the component placed at the top
-  - bottom: the component placed at the bottom
-  - position: the height assigned to the bottom component
-  - onPositionChanged: a callback function called when the position value needs to be updated. It takes one parameter: the new value for position (number)
-- The splitter includes a div component of 8 pixels height between the top and bottom components. When the user drags this bar, the onPositionChanged callback is triggered (if provided) with the new position value.
-# MarkdownCode > components > body > vertical splitter
-- The vertical splitter manages the layout of two child components, allowing users to adjust the width of the left panel while simultaneously changing the size of the right panel.
-- The vertical-splitter component has the following properties:
-  - left: the component placed on the left side
-  - right: the component placed on the right side
-  - position: the width assigned to the left component
-  - onPositionChanged: a callback function that updates the position value. It takes one parameter: the new position value (number)
-- The splitter includes a div component of 8 pixels width between the left and right components. When the user drags this bar, the onPositionChanged callback is triggered (if provided) with the new position value.
 # MarkdownCode > components > toolbar > format
 - The format-tab component is a wrapper that arranges its children in a row.
 - Child components of the format-tab component include:
@@ -137,20 +108,6 @@
   - Delete: Requests the monaco editor to delete the selected text.
   - Clear selection: Requests the monaco editor to clear the current selection.
   - Select all: Requests the monaco editor to select all the text.
-# MarkdownCode > components > body
-- The body component is the main part of the application.
-- It contains a horizontal splitter that divides its area.
-- On the left side of the horizontal splitter is an outline component.
-- On the right side is a vertical splitter.
-- The vertical splitter has an editor component at the top and a results view component at the bottom.
-- The body component has event handlers for the 'onPositionChanged' callback of both the horizontal and vertical splitters.
-- These event handlers store the new position values.
-- When the body component is unloaded, the last positions of the splitters are stored in local storage.
-- When the body component is loaded:
-  - The last positions of the splitters are restored from local storage.
-  - The clientWidth and clientHeight of the component are retrieved.
-  - If there is no previous value for the vertical splitter or the value is larger than the clientWidth, the value 'clientWidth / 4' is used instead.
-  - If there is no previous value for the horizontal splitter or the value is larger than the clientHeight, the value 'clientHeight / 4' is used instead.
 # MarkdownCode > components > body > results view > results view context menu
 - The results-view-context-menu is a component that wraps the Dropdown antd component.
 - It requires the properties 'transformer' and 'key' to be provided.
@@ -182,14 +139,6 @@
   - move to (new project file): moves the current project and related files to the new location
   - copy (new project file): saves the current project to a new location
   - set location (location): stores the new folder and project name
-# MarkdownCode > services > gpt service
-- GPT service is a global singleton responsible for communicating with the open-ai api backend, mainly used by transformers for specific tasks.
-- It utilizes the openai node.js library to interact with the backend.
-- The service offers a function for other services or components to make api requests to open-ai.
-  - This function accepts a list of json objects called `messages`, containing `role` and `content` fields.
-  - The `messages` list is sent to openai using the `createChatCompletion` function.
-  - In case of failure, the service retries the request 3 times before raising an error.
-- Additionally, the service provides a method to retrieve the available models list, utilizing the openai nodejs library.
 # MarkdownCode > services > cybertron service
 - Cybertron-service is a global singleton that manages available transformers.
 - The service maintains a sub-list of entry-points, which are transformers used as starting points for building text-fragments.
@@ -230,19 +179,6 @@
 - The position-tracking service is monitored for changes to the selected text-fragment, and the corresponding tree node is selected.
 - The tree is displayed with lines.
 - The 'convertToTreeData' function creates a tree structure based on the data items, setting the parent-child relationships based on the level count of each item.
-# MarkdownCode > services > line parser
-- The line-parser service is a global singleton object that parses markdown lines and updates the text-fragments stored in the project-service.
-- It has the following functions:
-  - createTextFragment: creates a new text-fragment object. It takes a line and an index as input and performs several operations to extract relevant information from the line and store it in the text-fragment.
-  - calculateKey: calculates the key of a text-fragment based on its depth-level and the titles of previous fragments.
-  - clear: clears the fragmentsIndex list.
-- The parse function and related pseudo code are provided to demonstrate how the line-parser service can be used to handle different types of lines.
-# MarkdownCode > components > body > results view
-- Results-view component is at the bottom of the main body.
-- Users can see results generated by registered transformers for the selected text block.
-- Each transformer in the list creates a tab at the top left of the view.
-- The tab's title is the transformer's name.
-- The tab content displays a results-view-tab component.
 # MarkdownCode > services > position-tracking service
 - The position-tracking service is responsible for tracking the text-fragment that the user is currently working on.
 - It keeps track of the currently selected line number and the text-fragment related to that line.
@@ -256,31 +192,6 @@
 - The available tabs are: Home (shown as the first tab when the application starts), Format, and Preferences.
 - A JSON structure should be created for all the tabs, including fields for key, label, and children.
 - The JSON structure should be assigned to the items property.
-# MarkdownCode > services > project service > change-processor service
-- The change-processor service ensures that the project structure stays synchronized with the source by processing changes in the project content.
-- Functions:
-  - process(changes, full): Updates the project service to reflect user edits. Pseudo code:
-    ```python (pseudo)
-    def process(changes, full):
-      projectService.content = full
-      for change in changes:
-        lines = change.text.split('\n')
-        curLine = change.range.startLineNumber - 1
-        lineEnd = change.range.endLineNumber - 1
-        lineIdx = 0
-        # Replace overwritten lines
-        while lineIdx < len(lines) and curLine < lineEnd:
-          lineParser.parse(lines[lineIdx], curLine)
-          lineIdx += 1
-          curLine += 1
-        # Delete or insert lines
-        while curLine < lineEnd:
-          lineParser.deleteLine(curLine)
-          curLine += 1
-        while lineIdx < len(lines):
-          LineParser.insert(line, index)
-        storageService.markDirty()
-    ```
 # MarkdownCode > services > build-stack service
 - The build-stack service prevents circular references in the build process.
 - It uses a dictionary called "running" to keep track of the currently running textframe - transformer pairs.
@@ -305,14 +216,6 @@
   - Save As: saves the current project to a new location, prompts to select a file, and calls `storageService.save()` with the new location.
   - Auto-save: a toggle button that updates the auto-save state in the project service.
 - The buttons' states are updated based on changes in the undo service.
-# MarkdownCode > services > project service
-- The project service is a global singleton that manages a data-list of text fragments and stores the raw content displayed to the user.
-- It provides functions to work with the text fragments, such as deleting, adding, marking as out of date, and retrieving fragments by key.
-- It also keeps track of user configurations, such as auto-save settings.
-- The project service uses an EventTarget field to dispatch events, allowing other objects to listen for and handle these events.
-- It raises events for content changes, fragment deletion and insertion, marking fragments as out of date, and changing fragment keys.
-# MarkdownCode > services > line parser > line parser helpers
-The 'LineParserHelpers' module contains helper functions used by the line parser service. These functions are described in pseudo code and perform various tasks such as getting a fragment at a specific index, handling empty lines, updating fragment titles, removing fragment titles, inserting fragments, handling title lines, and updating fragment lines.
 # MarkdownCode > services > project service > storage service
 - The storage service is a global singleton responsible for reading and writing project data to and from storage.
 - Functions:
@@ -394,3 +297,143 @@ The 'LineParserHelpers' module contains helper functions used by the line parser
 - A results-view-context-menu component is placed on top of the monaco editor.
 - The component monitors the position-tracking service for changes to the currently selected text-fragment.
   - When this changes, the key value is updated and the text is retrieved from the result-cache and shown in the monaco editor.
+# MarkdownCode > components > toolbar > home > edit section
+- The edit-section component has actions related to clipboard and selected data.
+- Buttons in the component use icons instead of text.
+- Supported actions include:
+  - Cut: initiates the cut command of the selection service. Enabled when there is selected data.
+  - Copy: initiates the copy command of the selection service. Enabled when there is selected data.
+  - Paste: initiates the paste command of the selection service. Enabled when there is text data in the clipboard. Uses the BiPaste icon from react-icons. Retrieves the data to be pasted using `clipboard.readText()`.
+  - Delete: initiates the delete command of the selection service. Enabled when there is selected data.
+  - Select all: selects all text in the active window.
+  - Clear selection: clears the current selection buffer. Enabled when there is selected data.
+- To check if the clipboard contains text data:
+  - Use the clipboard imported from electron.
+  - Call `clipboard.has('text/plain')` when the component is loaded or when the ipcRenderer emits the 'focused' event.
+# MarkdownCode > services > project service
+- The project service is a global singleton that manages data related to text fragments in a project.
+  - It keeps track of the currently loaded text fragments, stores the raw content displayed to the user, and the filename of the project.
+  - It provides functions to work with the text fragments:
+    - deleteTextFragment: removes a text fragment from the list and raises an event.
+    - addTextFragment: adds a text fragment to the list at a specified position and raises an event.
+    - markOutOfDate: marks a fragment as out of date and raises an event.
+    - getFragment: searches for a fragment with a specified key and returns it.
+    - tryAddToOutOfDate: adds a transformer to a fragment if it is not already out of date, or adds it to the list of transformers if it is partially out of date.
+    - isAnyFragmentOutOfDate: returns true if any fragment is marked as out of date.
+- The project service also stores user configurations, such as the auto-save setting.
+- It uses an EventTarget field to dispatch events, allowing other objects to listen for and handle these events.
+- It raises events for various actions, such as when the project is loaded or created, when a fragment is deleted or inserted, when a fragment is marked as out of date, and when the key of a fragment is changed externally.
+# MarkdownCode > components > body
+- The main body of the application is represented by the body component.
+- The @geoffcox/react-splitter library's Split component is used.
+- The entire area of the body component is filled with a Split component.
+  - The initial size of the primary split is set to the value of verticalSplitSize in the state.
+  - The minimum size of the primary split is set to '50px'.
+  - The minimum size of the secondary split is set to '15%'.
+  - The children of the body component are an outline component and a Split component.
+    - The initial size of the primary split in the Split component is set to the value of horizontalSplitSize in the state.
+    - The minimum size of the primary split is set to '50px'.
+    - The minimum size of the secondary split is set to '15%'.
+    - The Split component is set to be horizontal.
+    - The children of the Split component are an editor component and a results view component.
+- The body component has an event handler for the 'onSplitChanged' callback of both the horizontal and vertical split. It stores the new position value (as a percentage) in the state (verticalSplitSize / horizontalSplitSize).
+- When the body component is unloaded, the last position of the horizontal and vertical splitters are stored in the local storage.
+- When the body component is loaded, the last position of the horizontal and vertical splitters are restored from the local storage. If no value is found, the default value of '30%' is used.
+# MarkdownCode > services > dialog service
+- The dialog service is a global singleton that provides a common interface for displaying dialog boxes.
+- The service can show dialog boxes for errors, warnings, and information.
+- All user-triggered actions or functions in a component should have proper error handling. If an error occurs, an electron dialog box should be shown to the user with error details.
+- Functions:
+  - showErrorDialog(param1, param2): Shows an error dialog box with the title and content specified in the parameters.
+  - showSaveDialog(): Shows a save dialog box with filters for markdown and any file types.
+  - showOpenDialog(): Shows an open dialog box with filters for markdown and any file types.
+# MarkdownCode > components > body > results view
+- Results-view component is positioned at the bottom of the main body.
+- Users can view results generated by registered transformers from the cybertron-service for the selected text block.
+- Each transformer in the transformers list creates a tab in the view.
+  - Tabs are located at the top of the view.
+  - The transformer name is used as the title and key of the tab.
+  - The tab content displays a results-view-tab component.
+- Create a JSON structure for all the tabs with fields: key, label, and children.
+- Assign the JSON structure to the items property.
+# MarkdownCode > services > line parser
+- The line-parser service is a global singleton object that parses markdown lines and updates the text-fragments stored in the project-service.
+- It has:
+  - fragmentIndex: an empty array that stores text-fragment objects.
+  - createTextFragment: a function that creates new text-fragments. It takes a line and an index as input.
+    - Trims and converts the line to lowercase.
+    - Counts the number of '#' at the beginning of the line to determine the depth-level of the text-fragment.
+    - Removes the '#' from the line and assigns it as the title of the text-fragment.
+    - Calculates the key for the text-fragment and stores it.
+    - Sets the 'out-of-date' flag to true.
+    - Initializes empty arrays for the 'lines' and 'outOfDateTransformers' fields.
+    - Asks the project-service to add the text-fragment to its list.
+  - calculateKey: calculates the key of a text-fragment. It takes a text-fragment and an index position as input.
+    - Sets the current depth to the depth-level of the text-fragment.
+    - Sets the result value to the title of the text-fragment.
+    - Loops from the given index position until 0.
+    - Compares the depth-level of the previous text-fragment with the current depth.
+    - If the previous depth-level is smaller, updates the current depth and prepends the title of the previous text-fragment to the result.
+    - Stops the loop if the new current depth is 1.
+  - clear: clears the fragmentsIndex list.
+  - Pseudo code for the parse function and related:
+    ```python (pseudo)
+
+      def parse(line, index):
+        if line == '':
+          handleEmptyLine(this, index)
+        elif line.startsWith('#'):
+          handleTitleLine(this, line, index)
+        else:
+          handleRegularLine(this, line, index)
+
+      def insertLine(line, index):
+        fragmentsIndex.insert(index, null)
+        parse(line, index)
+
+      def deleteLine(index):
+        deleteLine(index)
+        del fragmentsIndex[index]
+    ```
+# MarkdownCode > services > all-spark service
+- The all-spark service is a global singleton that creates and registers transformers into the cybertron service.
+- Functions:
+  - Load: Creates transformers and registers them with the cybertron service.
+    - Called during application construction.
+    - To register, use `cybertronService.register(transformer, false)`. To register as an entry point, use `cybertronService.register(transformer, true)`.
+    - Transformers to create:
+      - Compress service (entry point)
+      - Constant-extractor service
+# MarkdownCode > services > line parser > line parser helpers
+- The 'LineParserHelpers' module contains helper functions used by the line parser service.
+- The 'getFragmentAt' function retrieves a fragment at a given index.
+- The 'handleEmptyLine' function handles an empty line by adding or updating fragments.
+- The 'updateFragmentTitle' function updates the title of a fragment.
+- The 'removeFragmentTitle' function removes the title of a fragment and updates the index.
+- The 'insertFragment' function inserts a new fragment at a given index.
+- The 'handleTitleLine' function handles a line with a title by creating or updating fragments.
+- The 'updateFragmentLines' function updates the lines of a fragment.
+- The 'handleRegularLine' function handles a regular line by creating or updating fragments.
+- The 'deleteLine' function deletes a line from a fragment.
+# MarkdownCode > services > project service > change-processor service
+- The change-processor service ensures that the project structure stays synchronized with the source by processing changes in the project content.
+- Functions:
+  - `process(changes, full)`: Updates the project service when the user makes edits. Here's a simplified version of the code:
+    - Set the project service content to the editor's value.
+    - Get the editor's model.
+    - Iterate through each change in the changes list.
+    - Split the change's text into lines.
+    - Set the current line to the start line number of the change.
+    - Set the line end to the end line number of the change.
+    - Set the line index to 0.
+    - Replace overwritten lines by parsing the line content and incrementing the line and index.
+    - Delete or insert lines based on the remaining lines and increment the line and index accordingly.
+    - Mark the storage service as dirty.
+# MarkdownCode > services > gpt service
+- GPT service communicates with the open-ai api backend and is used by transformers for specific tasks.
+- The service uses the openai node.js library for communication.
+- sendRequest function accepts a list of json objects containing role and content fields, and sends them to openai using createChatCompletion function. It retries 3 times if the request fails.
+- getModels method retrieves the list of available models using the openai nodejs library. It only retrieves the list if a valid key is available, otherwise it asks the user for a valid key once. The retrieved list is stored in a local variable.
+- apiKey stores the api key and is loaded from localStorage during service construction.
+- setApiKey updates the api key, saves it to localStorage, recreates the openAI object, and resets the error flag.
+- OpenAI library is instantiated only if a valid apiKey is provided.
