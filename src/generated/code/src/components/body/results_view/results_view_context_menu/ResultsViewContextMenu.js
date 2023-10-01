@@ -1,54 +1,50 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dropdown, Menu, Button } from 'antd';
+import { Dropdown, Menu, Button, Divider } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
-import GptService from '../../../../services/gpt_service/GPTService';
-import DialogService from '../../../../services/dialog_service/DialogService';
+import gptService from '../../../../services/gpt_service/GPTService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
+import DialogService from '../../../../services/dialog_service/DialogService';
+
 
 /**
  * ResultsViewContextMenu component
  * @param {Object} props - properties for the component
- * @returns {JSX.Element} ResultsViewContextMenu component
+ * @param {string} props.transformer - transformer name
+ * @param {string} props.key - key name
  */
 const ResultsViewContextMenu = ({ transformer, key }) => {
   const [models, setModels] = useState([]);
-  const [defaultModel, setDefaultModel] = useState('');
-  const [theme, setTheme] = useState('');
+  const [currentModel, setCurrentModel] = useState(null);
+  const [currentFragmentModel, setCurrentFragmentModel] = useState(null);
+  const theme = ThemeService.getCurrentTheme();
 
   useEffect(() => {
     fetchModels();
-    fetchDefaultModel();
-    fetchTheme();
   }, []);
 
   const fetchModels = async () => {
     try {
-      const models = await GptService.getModels();
+      const models = await gptService.getModels();
       setModels(models);
+      const model = gptService.getModelForFragment(transformer);
+      setCurrentModel(model);
+      const fragmentModel = gptService.getModelForFragment(transformer, key);
+      setCurrentFragmentModel(fragmentModel);
     } catch (error) {
       DialogService.showErrorDialog(error);
     }
   };
 
-  const fetchDefaultModel = async () => {
+  const handleModelChange = async (model, forFragment = false) => {
     try {
-      const defaultModel = await GptService.getDefaultModel();
-      setDefaultModel(defaultModel);
-    } catch (error) {
-      DialogService.showErrorDialog(error);
-    }
-  };
-
-  const fetchTheme = () => {
-    const theme = ThemeService.getCurrentTheme();
-    setTheme(theme);
-  };
-
-  const handleModelChange = async (model) => {
-    try {
-      await GptService.setDefaultModel(model);
-      fetchDefaultModel();
+      if (forFragment) {
+        await gptService.setModelForFragment(model, transformer, key);
+        setCurrentFragmentModel(model);
+      } else {
+        await gptService.setModelForFragment(model, transformer);
+        setCurrentModel(model);
+      }
     } catch (error) {
       DialogService.showErrorDialog(error);
     }
@@ -61,23 +57,36 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
           <Menu.Item
             key={model}
             onClick={() => handleModelChange(model)}
-            className={model === defaultModel ? 'selected' : ''}
+            className={model === currentModel ? `selected-${theme}` : ''}
           >
             {model}
           </Menu.Item>
         ))}
       </Menu.SubMenu>
-      <Menu.Divider />
-      <Menu.Item key="refresh">Refresh</Menu.Item>
+      <Menu.SubMenu title="Model for fragment">
+        {models.map((model) => (
+          <Menu.Item
+            key={model}
+            onClick={() => handleModelChange(model, true)}
+            className={model === currentFragmentModel ? `selected-${theme}` : ''}
+          >
+            {model}
+          </Menu.Item>
+        ))}
+      </Menu.SubMenu>
+      <Divider />
+      <Menu.Item onClick={() => transformer.refresh()}>
+        Refresh
+      </Menu.Item>
     </Menu>
   );
 
   return (
     <Dropdown overlay={menu} trigger={['click']}>
       <Button
-        className={`more-button ${theme}`}
-        style={{ float: 'right', right: '16px', top: '0px', position: 'absolute' }}
         icon={<MoreOutlined />}
+        style={{ position: 'absolute', top: 0, right: 16 }}
+        className={`more-button-${theme}`}
       />
     </Dropdown>
   );

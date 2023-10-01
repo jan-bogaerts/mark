@@ -8,9 +8,7 @@
 {"FolderService": "yes"}
 # MarkdownCode > services > cybertron service
 {"CybertronService": "yes"}
-# MarkdownCode > services > transformer-base service
-{"TransformerBaseService": "no"}
-# MarkdownCode > services > compress service
+# MarkdownCode > services > transformers > compress service
 {"CompressService": "yes"}
 # MarkdownCode > services > build service
 {"BuildService": "yes"}
@@ -18,23 +16,31 @@
 {"PositionTrackingService": "yes"}
 # MarkdownCode > services > build-stack service
 {"BuildStackService": "yes"}
-# MarkdownCode > services > constant-extractor service
+# MarkdownCode > services > transformers > constant-extractor service
 {"ConstantExtractorService": "yes"}
-# MarkdownCode > services > project service > storage service
-{"StorageService": "yes"}
 # MarkdownCode > services > result-cache service
 {"ResultCacheService": "no"}
-# MarkdownCode > services > project service
-{"ProjectService": "yes"}
 # MarkdownCode > services > dialog service
 {"DialogService": "yes"}
 # MarkdownCode > services > line parser
 {"LineParser": "yes"}
-# MarkdownCode > services > all-spark service
-{"AllSparkService": "yes"}
-# MarkdownCode > services > line parser > line parser helpers
-{"LineParserHelpers": "yes"}
 # MarkdownCode > services > project service > change-processor service
 {"ChangeProcessorService": "yes"}
 # MarkdownCode > services > gpt service
 {"GPTService": "yes"}
+# MarkdownCode > services > transformer-base service
+{"TransformerBaseService": "no"}
+# MarkdownCode > services > transformers > double-compress service
+{"double-compress-service": "no"}
+# MarkdownCode > services > all-spark service
+{"AllSparkService": "yes"}
+# MarkdownCode > services > project service > storage service
+{"StorageService": "yes"}
+# MarkdownCode > services > line parser > line parser helpers
+{"LineParserHelpers": "yes"}
+# MarkdownCode > services > project service
+{"ProjectService": "yes"}
+# MarkdownCode > services > transformers > triple-compress service
+{"TripleCompressService": "no"}
+# MarkdownCode > services > transformers > component-lister service
+{"component-lister service": "no"}

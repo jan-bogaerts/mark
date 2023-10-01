@@ -1,8 +1,7 @@
 
-const remote = window.require("@electron/remote");
-const fs = remote.require('fs');
-const path = remote.require('path');
-const os = remote.require('os');
+import fs from 'fs';
+import path from 'path';
+import os from'os';
 
 /**
  * FolderService class

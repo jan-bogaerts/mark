@@ -2,7 +2,7 @@
 MarkdownCode is an ideation and software building tool driven by machine learning. It allows users to enter text in markdown which is automatically analyzed for various parameters and which can be converted into executable software code.
 
 ## development stack
-- developed in javascript
+- developed in javascript (ES6)
 - it uses electron as it's runtime
 - The UI is built using react and antd
 
@@ -41,14 +41,14 @@ the following tabs are available:
 - all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - New Project: a button to create a new project
-    - if there is a project loaded with changes (the project's undo-service has data in the undo list), ask to save first.
+    - if there is a project loaded with changes `projectService.isDirty == true`, ask to save first.
     - call `storageService.new()`
   - open: a button to open an existing project.
     - show a dialog box to select a file `filename = await dialogService.showOpenDialog()`
-    - if a file is selected, ask the storage-service to load the file.
+    - if a file is selected, ask the storage-service to open the file.
     - wrap in an exception handler that shows an error dialog
   - save: a button to save the current project to file.
-    - enabled when the project service has a filename for the project (field 'filename' has a value) and the undo service has undo data (indicating that the project has changed since the last save).
+    - enabled when the project service has a filename for the project (field 'filename' has a value) and projectService.isDirty == true
     - if the project file does not yet have a filename, show a save-as dialog `filename = await dialogService.showSaveDialog()`
     - if the user doesn't provide a valid filename, stop the action
     - if the user provides a valid filename,
@@ -57,13 +57,13 @@ the following tabs are available:
       - call storage-service save without param.
     - wrap in an error handler and show the error
   - save as: a button to save the current project to a new location.
-    - enabled the undo service has undo data (indicating that the project has changed since the last save).
+    - enabled when `projectService.isDirty = True`
     - show a save-as dialog `filename = await dialogService.showSaveDialog()`
     - if the user selects a file, ask the storage-service to save the project to the new location.
     - wrap in an exceptions handler and show the error
   - auto-save: a toggle button, when pressed, asks the project service to update the auto-save state.
     - the toggle button's state follows that of the project service's auto-save state.
-- The undo service needs to be monitored for changes so that the state of the buttons can be updated.
+- The project-service needs to be monitored for changes so that the state of the buttons can be updated (field: eventTarget, event: 'is-dirty-changed').
   
 ##### edit section
 - the edit-section component contains actions related to the clipboard and the currently selected data.
@@ -236,7 +236,9 @@ Remember that each button needs it's own appropriate icon.
   - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
 - Whenever the project service triggers the 'content-changed' event, the editor will reload the text
   - note: register using `projectService.eventTarget.addEventListener('content-changed', handleContentChanged)`
+- Whenever the position-tracking service raises the event 'moveTo', do: `this.editorRef.current.revealLineNearTop(e.detail)`
 - monitor the following events on the monaco editor:
+  - editorDidMount: store a reference to the editor for further use and register the other event handlers with the mounted editor.
   - onDidChangeModelContent: ask the change-processor-service to process the changes. in pseudo:
   ```python (pseudo)
   def handleDidChangeModelContent(ev):
@@ -249,8 +251,8 @@ Remember that each button needs it's own appropriate icon.
   ```
   - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
   - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
-  - onDidChangeCursorPosition: if the selection service currently references this monaco editor, update the position-tracking service with the new cursor position
-  - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed
+  - onDidChangeCursorPosition: if the selection service currently references this monaco editor, ask the position-tracking service to update the current line with the new cursor position `setCurrentLine(e.position.lineNumber - 1)`
+  - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed `selectionService.notifySubscribers()`
 - the monaco editor always occupies all the space that is available.
 
 #### outline
@@ -263,8 +265,15 @@ Remember that each button needs it's own appropriate icon.
 - when the user selects a tree item, the key of the first selected item is assigned to the position-tracking service's activeFragment
 - this component monitors the position-tracking service for changes to the currently selected text-fragment.
   - use `positionTrackingService.eventTarget.addEventListener('change', eventHandler)` to attach the event handler
-  - when the position changes, set the tree's selectedKeys property to the key of the selected text-fragment so that the corresponding tree node becomes selected.
+  - when the position changes, set the tree's selectedKeys property to the key (if any) of the text-fragment so that the corresponding tree node becomes selected. `key = e.detail?.key`
 - show the tree with lines
+- when the user clicks on a tree-item (onSelect):
+  ```python
+    if len(selectedKeys) > 0:
+      fragment = projectService.getFragment(selectedKeys[0])
+      if fragment:
+        positionTrackingService.setActiveFragment(fragment)
+  ```
 
 - the function 'convertToTreeData' is described as:
   set parent to null
@@ -272,9 +281,9 @@ Remember that each button needs it's own appropriate icon.
     create a new node for the data item. Set the title & key of the node to the title & key of the data item. also keep a reference to the data item itself in the node
     if the item's field depth = 1, add the new node to the root node and make that node the parent 
     else if there is no parent yet, skip the item
-    if the item's depth is higher then parent.data.depth: add the new node to the parent's children. make the new node parent 
+    if the item's depth is higher then parent.data.depth: add the new node to the parent's children. assign node.parent = parent. make the new node parent 
     if the item's depth equals parent.data.depth or is lower:
-      get the parent of the current parent until the depth of this new parent is 1 higher then the depth of the item and add the item as a child of this new parent. Make the item the new parent.
+      get the parent of the current parent until the depth of this new parent is 1 higher then the depth of the item and add the item as a child of this new parent. assign node.parent = parent. Make the item the new parent.
   
 - pseudo for removeNodeFromTree:
   ```javascript (pseudo)
@@ -340,7 +349,7 @@ Remember that each button needs it's own appropriate icon.
   - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed
 - put a results-view-context-menu component below the monaco editor (so it's rendered after the editor)
 - the component monitors the position-tracking service (field: eventTarget, event: change) for changes to the currently selected text-fragment. 
-  - when this changes update the key value and retrieve the text from the result-cache and show in the monaco-editor
+  - when this changes update the key value and retrieve the json object from the result-cache, convert to a string and show in the monaco-editor
 
 
 ##### results view context menu
@@ -350,15 +359,15 @@ Remember that each button needs it's own appropriate icon.
 - the 'more' button is positioned in the top-right corner of the parent as a floating button (position: 'absolute', top: 0, right: 16).
 - it contains the following menu items:
   - model for all: select the gpt model to be used by the transformer.
-    - the sub menu items are provided by the gpt-service's list of available models (fetched from the internet).
+    - the sub menu items are provided by the gpt-service's list of available models. `await gptService.getModels()`
     - the menu item that contains the name of the currently selected model, is shown as selected.
-      - Get the value for the current model, registered under the name of the current transformer, from the gpt-service
-    - when an other model is selected, ask the gpt-service to update the model-name of the transformer related to the results-view.
+      - Get the value for the current model, registered for the current transformer, from the gpt-service. `gptService.getModelForFragment(transformer)`
+    - when an other model is selected, ask the gpt-service to update the model-name used for the transformer. `gptService.setModelForFragment(model, transformer)`
   - model for fragment: select the gpt model to be used by the transformer, for the current key.
     - the sub menu items are provided by the gpt-service's list of available models.
     - the menu item that contains the name of the currently selected model, is shown as selected.
-      - Get the value for the current model, registered under the name of the current transformer and current key, from the gpt-service
-    - when an other model is selected, ask the gpt-service to update the model-name of the transformer and the current title.
+      - Get the value for the current model, registered under the name of the current transformer and current key, from the gpt-service `gptService.setModelForFragment(transformer, key)`
+    - when an other model is selected, ask the gpt-service to update the model-name of the transformer and the current title. `gptService.setModelForFragment(model, transformer, key)`
   - a splitter
   - refresh: when pressed, the transformer associated with the current tab recalculates the result
 
@@ -397,11 +406,12 @@ Remember that each button needs it's own appropriate icon.
   - manages a data-list of the currently loaded text-fragments (field: text-fragments). This stores the parsed text.
   - stores the raw data content (field: content): this is the text displayed to the user.
   - keep track of the filename of the currently loaded project (field: filename)
+  - isDirty: a property, when set and the value changes, raises the 'is-dirty-changed' event.
   - provide the following functions to work with the text-fragments:
     - deleteTextFragment(fragment): remove the object from the text-fragments list & raise the fragment-deleted event, parameter = fragment.key
     - addTextFragment(fragment, index): if index is at end of the text-fragments list, add to list, otherwise insert the fragment at the specified position in the text-fragments list. raise the fragment-inserted event.
     - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date, param = fragment.key
-    - getFragment(key): search for the fragmenet with the specified key and return it `this.textFragments.find(t => t.key == key)`
+    - getFragment(key): search for the text-fragment with the specified key and return it: `return this.textFragments.find(t => t.key == key)`
     - tryAddToOutOfDate(key, transformer):
       ```python
       fragment = this.getFragment(key)
@@ -413,12 +423,16 @@ Remember that each button needs it's own appropriate icon.
         this.markOutOfDate(fragment)
       elif len(fragment.outOfDateTransformers) > 0: # only part is dirty, not yet full fragment
         fragment.outOfDateTransformers.push(transformer)
-        if len(fragment.outOfDateTransformers) == len(cybertronService.tranformers): # fragment just became full dirty
+        if len(fragment.outOfDateTransformers) == len(CybertronService.transformers): # fragment just became full dirty
           fragment.outOfDateTransformers = []
-        this.eventTarget.dispatchEvent('fragment-out-of-date', key) # raise again so ui can adjust
+        this.dispatchEvent('fragment-out-of-date', key) # raise again so ui can adjust
       # fragment is already marked as fully out-of-date (no specific fragment.outOfDateTransformers)
       ```
     - isAnyFragmentOutOfDate(): returns true if any of the fragments in textFragments array is marked as isOutOfDate.
+    - dispatchEvent(event, value): dispatches events
+      - creates a custom event object if there is a value, otherwise a regular event object, and 
+      - calls eventTarget.dispatch if this.blockEvents == false (initialize blockEvents to false during construction)
+    - setIsDirty(value): if this.isDirty !== value: this.isDirty = value; this.dispatchEvent('is-dirty-changed', value)
 - the project service also keeps track of some user configs like:
   - wether auto-save is on or not. This value is stored in the local storage. 
 - The project service uses an EventTarget field to dispatch events. Other objects can add / remove event listeners to / from the event target to receive events. 
@@ -428,6 +442,7 @@ Remember that each button needs it's own appropriate icon.
   - fragment-inserted: when a text fragment is added to the list
   - fragment-out-of-date: when a fragment is marked as out of date.
   - key-changed: when the key of a fragment was changed (raised externally)
+  - is-dirty-changed: when the project was saved or first time it is modified after saving/loading/creating.
 
 
 #### storage service
@@ -442,24 +457,36 @@ Remember that each button needs it's own appropriate icon.
     folderService.clear()
     for transformer in cybertronService.transformers:
       transformer.cache.clearCache()
+    gptService.modelsMap = {}
     ```
   - new(): set everything up for a new project.
     ```python
       this.clear()
-      projectService.eventTarget.dispatchEvent(new Event('content-changed'))
+      projectService.dispatchEvent('content-changed')
+      projectService.setIsDirty(True)
       ```
   - open(filePath): load all the data from disk 
     ```python (pseudo)
-      this.clear()
-      folderService.setLocation(filePath)
-      content = fs.readFileSync(filePath, 'utf8')
-      projectService.content = content
-      content.split('\n').forEach((line, index) => lineParser.parse(line, index));
-      for transformer in cybertronService.transformers:
-        transformer.cache.loadCacheFromFile()
+      projectService.blockEvents = True
+      try:
+        this.clear()
+        folderService.setLocation(filePath)
+        content = fs.readFileSync(filePath, 'utf8')
+        projectService.content = content
+        content.split('\n').forEach((line, index) => lineParser.parse(line, index));
+        for transformer in cybertronService.transformers:
+          transformer.cache.loadCache()
+        this.loadModelsMap(filePath)
+      finally:
+        projectService.blockEvents = False
+        projectService.setIsDirty(False)
+        projectService.dispatchEvent('content-changed')
       this.updateOutOfDate()
-      projectService.eventTarget.dispatchEvent(new Event('content-changed'))
     ```
+  - loadModelsMap(filePath): loads the json file that defines the models to be used with the project
+    - build the json file name by replacing '.md' with '_models.json' at the end of the field 'file'
+    - if the json file exists, load it and assign the parsed json to `gptService.modelsMap`
+  
   - updateOutOfDate(): updates the list of out-of-date transformers for each text-fragment.
     ```python (pseudo)
     def updateOutOfDate():
@@ -474,9 +501,10 @@ Remember that each button needs it's own appropriate icon.
           fragment.outOfDateTransformers = outOfDateTransformers
           projectService.markOutOfDate(fragment)
     ```
-  - markdirty():
+  - markDirty():
     ```python
     def markDirty():
+      projectService.setIsDirty(True)
       if projectService.autoSave and projectService.filename and not this.saveTimer:
         this.saveTimer = setTimeout(() => {
           this.save(projectService.filename)
@@ -493,10 +521,16 @@ Remember that each button needs it's own appropriate icon.
       await fs.writeFileASync(file, projectService.content, 'utf8')
       for transformer in cybertronService.transformers:
         await transformer.cache.saveCacheToFile()
+      await this.saveModelsMap(file)
       projectService.filename = file
+      projectService.setIsDirty(False)
       this.saveTimer = None
     ```
-- note: the fs module should be loaded from @electron/remote.
+  - saveModelsMap(file): 
+    - build the json file name by replacing '.md' wit '_models.json' at the end of the field 'file'
+    - convert the json object in `gptService.modelsMap` to a string
+    - save the stringified json to the json file name
+
 
 
 #### change-processor service
@@ -513,18 +547,20 @@ Remember that each button needs it's own appropriate icon.
         lineEnd = change.range.endLineNumber - 1
         lineIdx = 0
         # first replace lines that are overwritten. change can contain only part of line so get full line
-        while lineIdx < len(lines) and curLine <= lineEnd:
-          lineParser.parse(model.getLineContent(curLine + 1), curLine)
-          lineIdx += 1
-          curLine += 1
+        if change.text.length > 0 or (change.rangeLength > 0 and curLine === lineEnd):
+          while lineIdx < len(lines) and curLine <= lineEnd:
+            lineParser.parse(model.getLineContent(curLine + 1), curLine)
+            lineIdx += 1
+            curLine += 1
         # now there are either lines to delete or to insert
         while curLine < lineEnd:
-          lineParser.deleteLine(curLine)
-          curLine += 1
-        while lineIdx < len(lines):
-          LineParser.insertLine(model.getLineContent(curLine + 1), curLine)
-          lineIdx += 1
-          curLine += 1
+          lineParser.deleteLine(lineEnd) # need to do in reverse otherwise the wrong line is removed
+          lineEnd -= 1
+        if change.text.length > 0 and change.rangeLength > 0:
+          while lineIdx < len(lines):
+            LineParser.parse(model.getLineContent(curLine + 1), curLine)
+            lineIdx += 1
+            curLine += 1
         storageService.markDirty()
   ``` 
 
@@ -587,7 +623,7 @@ Remember that each button needs it's own appropriate icon.
   - createTextFragment: a function for creating new text-fragments (json objects). it accepts as input a string which is the line that is being processed and the index nr at which the object should be placed.
     - trim the line and convert it to lower case.
     - count the nr of '#' that are in front of the title and assign to the depth-level of the text-fragment. so '#' is level 1, '##' is level 2, '###' is level 3 and so on.
-    - remove all the '#' from the line and assign to the title value of the text-fragment.
+    - remove all the '#' from the line, trim again (to remove any spaces at the front) and assign to the title value of the text-fragment.
     - calculate the key for the text-fragment and store in the text-fragment.
     - set the 'out-of-date' flag to true, indicating that this fragment hasn't been processed yet
     - initialize an empty array for the 'lines' field
@@ -605,10 +641,12 @@ Remember that each button needs it's own appropriate icon.
         - prepend the title of the prev-fragment + ' > ' to the result
         - if the new current depth == 1, stop the loop
   - clear: clear the fragmentsIndex list.
+  - getStartLine(fragment): `return this.fragmentsIndex.indexOf(fragment)`
   - pseudo code for the parse function and related:
     ```python (pseudo)
 
       def parse(line, index):
+        line = line.trim()
         if line == '':
           lineParserHelpers.handleEmptyLine(this, index)
         elif line.startsWith('#'):
@@ -621,7 +659,7 @@ Remember that each button needs it's own appropriate icon.
         this.parse(line, index)
 
       def deleteLine(index):
-        lineParserHelpers.deleteLine(index)
+        lineParserHelpers.deleteLine(this, index)
         del this.fragmentsIndex[index]
     ```
 
@@ -651,18 +689,23 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           fragment, fragmentStart = getFragmentAt(service, index)
           if not fragment:
             raise Exception('internal error: no fragment found in non empty index table')
-          fragmentLineIndex = index - fragmentStart
-          while fragment.lines.length < fragmentLineIndex:
-            fragment.lines.push('')
-          if fragment.lines.length > fragmentLineIndex:
-            fragment.lines.insert(fragmentLineIndex, '')
+          if index == fragmentStart:
+            this.removeFragmentTitle(service, fragment, null, index)
+          else:
+            fragmentLineIndex = index - fragmentStart + 1
+            while fragment.lines.length < fragmentLineIndex:
+              fragment.lines.push('')
+              service.fragmentsIndex[fragmentStart + fragment.lines.length] = fragment
+            if fragment.lines.length > fragmentLineIndex:
+              fragment.lines.insert(fragmentLineIndex, '')
+              service.fragmentsIndex[index] = fragment
 
 
       def updateFragmentTitle(service, fragment, line, fragmentPrjIndex):
         oldKey = fragment.key
         line = line.trim().toLowerCase()
         fragment.depth = line.split('#').length - 1
-        fragment.title = line.replace(/#/g, '');
+        fragment.title = line.replace(/#/g, '').trim();
         fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
         eventParams = { fragment, oldKey }
         projectService.eventTarget.dispatchEvent(new CustomEvent('key-changed', { detail: eventParams } ))
@@ -691,33 +734,45 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       def insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index):
         toAdd = service.createTextFragment(line, fragmentPrjIndex)
         service.fragmentsIndex[index] = toAdd
-        fragmentLineIndex = index - fragmentStart
+        fragmentLineIndex = index - (fragmentStart + fragment.lines.length + 1)
         # copy over all the lines and adjust the index
-        while fragmentLineIndex > 0:
+        while fragmentLineIndex > 0 and fragment.lines.length > 0:
           toAdd.lines.insert(0, fragment.lines.pop())
           service.fragmentsIndex[index + fragmentLineIndex] = toAdd
+          fragmentLineIndex -= 1
         projectService.markOutOfDate(fragment)
+
+
+      def isInCode(fragment):
+        linesStartingWithCode = 0
+        for line in fragment.lines:
+          trimmed = line.trim()
+          if trimmed.startsWith('```'):
+            linesStartingWithCode += 1
+        return linesStartingWithCode % 2 == 1
 
 
       def handleTitleLine(service, line, index):
         if fragmentsIndex.length == 0 or fragmentsIndex.length < index or fragmentsIndex[index] == null:
           toAdd = service.createTextFragment(line, projectService.textFragments.length)
-          while service.fragmentsIndex.length < index:
+          while service.fragmentsIndex.length <= index:
              service.fragmentsIndex.push(null)
-          service.fragmentsIndex.push(toAdd)
+          service.fragmentsIndex[index] = toAdd
         else:
           fragment, fragmentStart = getFragmentAt(service, index)
           if not fragment:
             raise Exception('internal error: no fragment found in non empty index table')
           fragmentPrjIndex = projectService.textFragments.indexOf(fragment)
           if fragmentStart == index:
-            updateFragmentTitle(service. fragment, line, fragmentPrjIndex)
+            updateFragmentTitle(service, fragment, line, fragmentPrjIndex)
+          elif isInCode(fragment):
+            handleRegularLine(service, line, index)
           else:
-            insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index)
+            insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex + 1, index)
 
 
       def updateFragmentLines(service, fragment, line, index, fragmentStart):
-        fragmentLineIndex = index - fragmentStart
+        fragmentLineIndex = index - fragmentStart - 1 # extra - 1 cause the text starts at the line below the title
         if fragmentLineIndex < fragment.lines.length: # changing existing line
           fragment.lines[fragmentLineIndex] = line
         else:
@@ -750,7 +805,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           if fragmentStart == index: # fragment is being removed. if it still has lines, copy to prev, if no prev, leave with no title
             removeFragmentTitle(service, fragment None, index)
           else:
-            del fragment.lines[index - fragmentStart]
+            del fragment.lines[index - fragmentStar + 1]
 
     ```
   
@@ -765,17 +820,65 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - set currently selected line, input: line-index.
       - if the new value is different from the current selected line index:
         - get the object at the line-index position found on the fragmentsIndex array of the line-parser service.
-        - If this object differs from currently selected text-fragment, then store the object as the new currently selected text-fragment and trigger the on-changed event for all the registered event handlers.
+        - If this object differs from currently selected text-fragment, then store the object as the new currently selected text-fragment and trigger the 'change' event for all the registered event handlers, passing the text-fragment as event data.
   - clear:
     - set activeFragment & currentLine to null
+  - setActiveFragment(fragment):
+    ```python
+      if not this.activeFragment == fragment:
+        startPos = lineParser.getStartLine(fragment)
+        if startPos > -1:
+          event = new CustomEvent('moveTo', {detail: startPos + 1})
+          this.eventTarget.dispatchEvent(event)
+
+    ```
   
 
 ### gpt service
 - the GPT service is a global singleton that is responsible for communicating with the open-ai api backend. It is primarily used by transformers that perform more specific tasks.
 - the service uses the openai node.js library to communicate with the backend.
+- defaultModel: stores the default model to use during api calls.
+  - setDefaultModel: store the default model in the field & in localStorage
+  - getDefaultModel: return the field
+  - during construction, load the defaultModel from localStorage
+- modelsMap: a field (initialized as dictionary), stores which model should be used for individual transformers and also per transformer, for each individual text-fragment.
+  - setModelForTransformer(model, transformer): assign a model to a transformer:
+    ```python
+      if not transformer.name in this.modelsMap:
+        map = {}
+        this.modelsMap[transformer.name] = map
+      else:
+        map = this.modelsMap[transformer.name]
+      map['__default'] = model
+    ```
+  - getModelForTransformer(transformer): `return this.modelsMap[transformer.name]?.['__default']`
+  - setModelForFragment(model, transformer, key): assign a model to a transformer:
+    ```python
+      if not transformer.name in this.modelsMap:
+        map = {}
+        this.modelsMap[transformer.name] = map
+      else:
+        map = this.modelsMap[transformer.name]
+      map[key] = model
+    ```
+  - getModelForFragment(transformer, key): `return this.modelsMap[transformer.name]?.[key]`
 - sendRequest: other services (or components) can call to send an api request to open-ai.
-  - this function accepts a list (called `messages`) json objects that contain a `role` and `content` field.
-  - this `messages` list is sent to openai using the `createChatCompletion` function.
+  - function parameters:
+    - messages: json objects that contain a `role` and `content` field.
+    - transformerName: the name of the object that is calling the function
+    - fragmentKey: the key of the fragment that is being processed 
+  - the `messages` list is sent to openai using the `createChatCompletion` function.
+  - the model parameter for createChatCompletion can be found in the modelsMap dictionary:
+    ```python
+    def getModelForRequest(transformerName, fragmentKey):
+      if transformerName in this.modelsMap:
+        section = this.modelsMap[transformerName]
+        if fragmentKey in section:
+          return section[fragmentKey]
+        if '__default' in section:
+          return section['__default']
+      return this.getDefaultModel()
+    ```
   - if the request fails, the service will retry 3 times before giving up and raising an error (use the async-es lib).
 - getModels: a method to retrieve the list of available models. 
   - To retrieve this list, the openai nodejs library is used. `(await this.openai.models.list())?.data?.map((model) => model.id) ?? [];`
@@ -921,6 +1024,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - async runTransformer(fragment, transformer):
   - ask the transformer to render it's result (renderResult) (async)
 - debug: a property to indicate if the build service is currently in debug mode or not. Load the value from local storage upon creation. Save to local storage whenever the value is updated.
+- isBuilding: a property to indicate if one of the build functions is currently running or not.
   
 
 ### build-stack service
@@ -947,6 +1051,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - the service also maintains a list of entry-points: this is a sub-list of the available transformers which can be used as starting points for building text-fragments.
 - Transformers can be register. this adds them to the list. A second parameter indicates if the transformer should also be added as an entry-point
 - Transformers can also be unregister. this will remove them from the list of available transformers and the list of entry-points.
+- getTransformer(name): search for the transformer with the specified name in this.transformers and return the result
 
 
 ### all-spark service
@@ -955,9 +1060,13 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - load: create the transformers and register them with the cybertron-service. 
     - This function is called during construction of the application
     - to register, use: `cybertronService.register(transformer, false)`, to register as entry point, use: `cybertronService.register(transformer, true)`
+    - register every transformer after construction so that it can be found in the list by other transformers.
     - transformers to create:
       - compress service (entry point)
       - constant-extractor service
+      - double-compress service
+      - triple-compress service
+      - component-lister service
 
 
 ### transformer-base service
@@ -975,6 +1084,8 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     ```python (pseudo)
     def renderResult(textFragment):
       message, keys = await this.buildMessage(textFragment)
+      if not message: 
+        return None
       result = await GPT-service.sendRequest(this.name, textFragment.key, message) # need name and key so the gpt service can select the correct model
       key = ' | '.join(keys)
       this.cache.setResult(key, result)
@@ -994,8 +1105,9 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         buildStackService.unregister(this, fragment.key)
     ```
 
+### transformers
 
-### compress service
+#### compress service
 - The compress service takes a text fragment and makes it shorter.
 - Useful to check if the system understands the fragment and can be used as input for other processes.
 - inherits from transformer-base service. Constructor parameters:
@@ -1015,7 +1127,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - return result, [ text-fragment.key ]
 
 
-### constant-extractor service
+#### constant-extractor service
 - The constant-extractor service makes certain all constant definitions (between quotes) are extracted from the source code, rendered to a json file and replaced with references to the json-entries in the source texts.
 - inherits from transformer-base service. Constructor parameters:
   - name: 'constants'
@@ -1033,7 +1145,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           line = line.lstrip()
           if line.startswith('>'):
               line = line[1:] # remove the > 
-              if line[0] == ' ':  # and the space but leave everything else cause we want the exact quote
+              if len(line) > 0 and line[0] == ' ':  # and the space but leave everything else cause we want the exact quote
                   line = line[1:]
               cur_lines.append(line)
               if not current_quote:
@@ -1089,4 +1201,93 @@ The module 'LineParserHelpers' contains the following helper functions used by t
                 new_lines.append(lines[cur_line])
                 cur_line += 1
         return new_lines.join('\n')
+    ```
+
+
+#### double-compress service
+- The double-compress-service takes the result of compress-service and makes it even shorter.
+- Useful to check if the system understands the fragment and can be used as input for other processes.
+- inherits from transformer-base service. Constructor parameters:
+  - name: 'double compress'
+  - dependencies: ['compress']
+  - isJson: false
+- set during construction: `this.compressService = this.dependencies[0]`
+- function build-message(text-fragment):
+  - result (json array):
+    - role: system, content:
+      
+     > condense the following text as much as possible, without loosing any meaning:
+
+    - role: user, content: `await this.compressService.getResult(text-fragment)`.
+  - return result, [ text-fragment.key ]
+
+
+#### triple-compress service
+- The triple-compress-service takes the result of double-compress-service and shortens it to 1 line.
+- Used as a description for each fragment when searching for linked components and services.
+- inherits from transformer-base service. Constructor parameters:
+  - name: 'triple compress'
+  - dependencies: ['double compress']
+  - isJson: false
+- set during construction: `this.doubleCompressService = this.dependencies[0]`
+- function build-message(text-fragment):
+  - result (json array):
+    - role: system, content:
+      
+     > condense the following text to 1 sentence:
+
+    - role: user, content: `await this.doubleCompressService.getResult(text-fragment)`.
+  - return result, [ text-fragment.key ]
+
+#### component-lister service
+- the component-lister services is responsible for extracting all the component names it can find in a text.
+- part of finding out which components need to be rendered
+- inherits from transformer-base service. Constructor parameters:
+  - name: 'components'
+  - dependencies: []
+  - isJson: true
+- function build-message(textFragment):
+  - if projectService.textFragments.indexOf(textFragment) < 2: return null
+  - result (json array):
+    - role: system, content:
+      
+      > Act as an ai software analyst.
+      > It is your task to list all the components that you can find in the text, keeping in mind that the following development stack is used:
+      > {{dev_stack_title}}
+      > {{dev_stack_content}}
+      >
+      > Do not include UI components that are provided by the UI framework. So don't include: buttons, dropdowns, inputs, sliders, toggle buttons, but only list the components that need to be custom built.
+      > Don't include any non visual services.
+      > Don't include any explanation, just write the list of component names as a json array and nothing else.
+      > If no components can be found, return an empty json array.
+      >
+      > good response:
+      > ["SomethingX", "SomethingY"]
+      > 
+      > bad response:
+      > ["something-x", "something y"]
+
+      replace:
+      - dev_stack_title: `projectService.textFragments[1]?.title`
+      - dev_stack_title: `projectService.textFragments[1]?.lines.join('\n')`
+
+    - role: user, content:
+
+      > {{title}}
+      > {{content}}
+      
+      replace:
+      - title: `textFragment.title`
+      - content: `textFragment.lines.join('\n')`
+
+    - role: assistant, content:
+
+      > Remember: only components and use CamelCasing for the component names.
+
+  - return:
+    ```python
+    if len(projectService.textFragments) >= 1:
+      return result, [ textFragment.key, projectService.textFragments[1].key ]
+    else:
+      result, [ textFragment.key ]
     ```

@@ -15,7 +15,7 @@ class LineParser {
   createTextFragment(line, index) {
     const trimmedLine = line.trim().toLowerCase();
     const depth = (trimmedLine.match(/#/g) || []).length;
-    const title = trimmedLine.replace(/#/g, '');
+    const title = trimmedLine.replace(/#/g, '').trim();
     const key = this.calculateKey({ title, depth }, index);
     const textFragment = {
       title,
@@ -56,12 +56,17 @@ class LineParser {
     this.fragmentsIndex = [];
   }
 
+  getStartLine(fragment) {
+    return this.fragmentsIndex.indexOf(fragment);
+  }
+
   /**
    * Parse a line of text
    * @param {string} line - The line to be parsed
    * @param {number} index - The current line number
    */
   parse(line, index) {
+    line = line.trim();
     if (line === '') {
       LineParserHelpers.handleEmptyLine(this, index);
     } else if (line.startsWith('#')) {
@@ -76,7 +81,7 @@ class LineParser {
    * @param {number} index - The line number to be deleted
    */
   deleteLine(index) {
-    LineParserHelpers.deleteLine(index);
+    LineParserHelpers.deleteLine(this, index);
     this.fragmentsIndex.splice(index, 1);
   }
 

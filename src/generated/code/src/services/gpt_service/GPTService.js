@@ -5,69 +5,90 @@ import DialogService from '../dialog_service/DialogService';
 
 class GPTService {
   constructor() {
+    this.defaultModel = localStorage.getItem('defaultModel');
+    this.modelsMap = {};
     this.apiKey = localStorage.getItem('apiKey');
-    this.openai = this.apiKey ? new OpenAI({apiKey: this.apiKey, dangerouslyAllowBrowser: true}) : null;
-    this.models = null;
     this.errorShown = false;
-  }
-
-  /**
-   * Send a request to the OpenAI API.
-   * @param {Array} messages - The list of messages to send.
-   * @returns {Promise} The API response.
-   */
-  async sendRequest(messages) {
-    if (!this.openai) {
-      throw new Error('OpenAI not initialized. Please set the API key.');
+    if (this.apiKey) {
+      this.openai = new OpenAI({ apiKey: this.apiKey, dangerouslyAllowBrowser: true });
     }
-
-    return retry(async () => {
-      return this.openai.createChatCompletion({ model: 'text-davinci-002', messages });
-    }, { retries: 3 });
   }
 
-  /**
-   * Get the list of available models.
-   * @returns {Promise} The list of models.
-   */
+  setDefaultModel(model) {
+    this.defaultModel = model;
+    localStorage.setItem('defaultModel', model);
+  }
+
+  getDefaultModel() {
+    return this.defaultModel;
+  }
+
+  setModelForTransformer(model, transformer) {
+    let map = this.modelsMap[transformer.name] || {};
+    map['__default'] = model;
+    this.modelsMap[transformer.name] = map;
+  }
+
+  getModelForTransformer(transformer) {
+    return this.modelsMap[transformer.name]?.['__default'];
+  }
+
+  setModelForFragment(model, transformer, key) {
+    let map = this.modelsMap[transformer.name] || {};
+    map[key] = model;
+    this.modelsMap[transformer.name] = map;
+  }
+
+  getModelForFragment(transformer, key) {
+    return this.modelsMap[transformer.name]?.[key];
+  }
+
+  getModelForRequest(transformerName, fragmentKey) {
+    if (transformerName in this.modelsMap) {
+      let section = this.modelsMap[transformerName];
+      if (fragmentKey in section) {
+        return section[fragmentKey];
+      }
+      if ('__default' in section) {
+        return section['__default'];
+      }
+    }
+    return this.getDefaultModel();
+  }
+
+  async sendRequest(messages, transformerName, fragmentKey) {
+    const model = this.getModelForRequest(transformerName, fragmentKey);
+    try {
+      return await retry(async () => {
+        return await this.openai.createChatCompletion({ model, messages });
+      }, { retries: 3 });
+    } catch (error) {
+      throw new Error('Failed to send request to OpenAI');
+    }
+  }
+
   async getModels() {
-    if (!this.openai && !this.errorShown) {
-      DialogService.showErrorDialog('Please provide a valid OpenAI API key.');
-      this.errorShown = true;
-      this.models = [];
-      return [];
+    if (!this.models) {
+      if (!this.apiKey && !this.errorShown) {
+        DialogService.showDialog('Please provide a valid OpenAI API key');
+        this.errorShown = true;
+        return [];
+      }
+      this.models = (await this.openai.models.list())?.data?.map((model) => model.id) ?? [];
+      this.models.sort();
     }
-
-    if (this.models) {
-      return this.models;
-    }
-
-    this.models = (await this.openai.models.list())?.data?.map((model) => model.id) ?? [];
-    this.models.sort();
     return this.models;
   }
 
-  getDefaultModel () {
-    return 'text-davinci-002';
-  }
-
-  /**
-   * Get the current API key.
-   * @returns {string} The API key.
-   */
-  getApiKey() {
-    return this.apiKey;
-  }
-
-  /**
-   * Set the API key.
-   * @param {string} apiKey - The new API key.
-   */
   setApiKey(apiKey) {
     this.apiKey = apiKey;
     localStorage.setItem('apiKey', apiKey);
-    this.openai = new OpenAI({apiKey, dangerouslyAllowBrowser: true});
+    this.openai = new OpenAI({ apiKey: this.apiKey, dangerouslyAllowBrowser: true });
     this.errorShown = false;
+  }
+
+  getApiKey() {
+    return this.apiKey;
   }
 }
 

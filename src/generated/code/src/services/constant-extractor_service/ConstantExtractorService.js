@@ -25,7 +25,7 @@ class ConstantExtractorService extends TransformerBaseService {
       line = line.trimLeft();
       if (line.startsWith('>')) {
         line = line.slice(1);
-        if (line[0] === ' ') {
+        if (line.length > 0 && line[0] === ' ') {
           line = line.slice(1);
         }
         cur_lines.push(line);

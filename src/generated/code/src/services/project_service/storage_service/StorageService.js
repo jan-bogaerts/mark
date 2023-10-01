@@ -1,11 +1,10 @@
 
-const remote = window.require("@electron/remote");
-const fs = remote.require('fs');
-const FolderService = require('../../folder_service/FolderService');
-const CybertronService = require('../../cybertron_service/CybertronService');
-const PositionTrackingService = require('../../position-tracking_service/PositionTrackingService');
-const ProjectService = require('../ProjectService');
-const LineParser = require('../../line_parser/LineParser');
+import fs from 'fs';
+import folderService from '../../folder_service/FolderService';
+import cybertronService from '../../cybertron_service/CybertronService';
+import lineParser from '../../line_parser/LineParser';
+import gptService from '../../gpt_service/GPTService';
+import projectService from '../ProjectService';
 
 class StorageService {
   constructor() {
@@ -13,82 +12,115 @@ class StorageService {
   }
 
   /**
-   * Clears all references to data that was previously loaded
+   * Clears all references to data that was previously loaded.
    */
   clear() {
-    ProjectService.textFragments = [];
-    ProjectService.content = '';
-    LineParser.clear();
-    PositionTrackingService.clear();
-    FolderService.clear();
-    CybertronService.transformers.forEach(transformer => transformer.cache.clearCache());
+    projectService.textFragments = [];
+    projectService.content = '';
+    lineParser.clear();
+    folderService.clear();
+    cybertronService.transformers.forEach(transformer => transformer.cache.clearCache());
+    gptService.modelsMap = {};
   }
 
   /**
-   * Sets up everything for a new project
+   * Sets everything up for a new project.
    */
   new() {
     this.clear();
-    ProjectService.eventTarget.dispatchEvent(new Event('content-changed'));
+    projectService.dispatchEvent('content-changed');
+    projectService.setIsDirty(false);
   }
 
   /**
-   * Loads all the data from disk
-   * @param {string} filePath - The path of the file to be loaded
+   * Loads all the data from disk.
+   * @param {string} filePath - The path of the file to be loaded.
    */
   open(filePath) {
-    this.clear();
-    FolderService.setLocation(filePath);
-    const content = fs.readFileSync(filePath, 'utf8');
-    ProjectService.content = content;
-    content.split('\n').forEach((line, index) => LineParser.parse(line, index));
-    CybertronService.transformers.forEach(transformer => transformer.cache.loadCacheFromFile());
+    projectService.blockEvents = true;
+    try {
+      this.clear();
+      folderService.setLocation(filePath);
+      const content = fs.readFileSync(filePath, 'utf8');
+      projectService.content = content;
+      content.split('\n').forEach((line, index) => lineParser.parse(line, index));
+      cybertronService.transformers.forEach(transformer => transformer.cache.loadCache());
+      this.loadModelsMap(filePath);
+    } finally {
+      projectService.blockEvents = false;
+      projectService.setIsDirty(false);
+      projectService.dispatchEvent('content-changed');
+    }
     this.updateOutOfDate();
-    ProjectService.eventTarget.dispatchEvent(new Event('content-changed'))
   }
 
   /**
-   * Updates the list of out-of-date transformers for each text-fragment
+   * Loads the json file that defines the models to be used with the project.
+   * @param {string} filePath - The path of the file to be loaded.
+   */
+  loadModelsMap(filePath) {
+    const jsonFilePath = filePath.replace('.md', '_models.json');
+    if (fs.existsSync(jsonFilePath)) {
+      const modelsMap = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
+      gptService.modelsMap = modelsMap;
+    }
+  }
+
+  /**
+   * Updates the list of out-of-date transformers for each text-fragment.
    */
   updateOutOfDate() {
-    ProjectService.textFragments.forEach(fragment => {
-      const outOfDateTransformers = CybertronService.transformers.filter(transformer => transformer.cache.isOutOfDate(fragment.key));
-      if (outOfDateTransformers.length === CybertronService.transformers.length) {
-        ProjectService.markOutOfDate(fragment);
+    projectService.textFragments.forEach(fragment => {
+      const outOfDateTransformers = cybertronService.transformers.filter(transformer => transformer.cache.isOutOfDate(fragment.key));
+      if (outOfDateTransformers.length === cybertronService.transformers.length) {
+        projectService.markOutOfDate(fragment);
       } else if (outOfDateTransformers.length > 0) {
         fragment.outOfDateTransformers = outOfDateTransformers;
-        ProjectService.markOutOfDate(fragment);
+        projectService.markOutOfDate(fragment);
       }
     });
   }
 
   /**
-   * Marks the project as dirty after changes have been made
+   * Marks the current state of the storage as 'dirty', indicating that changes have been made that are not yet saved.
    */
   markDirty() {
-    if (ProjectService.autoSave && ProjectService.filename && !this.saveTimer) {
+    projectService.setIsDirty(true);
+    if (projectService.autoSave && projectService.filename && !this.saveTimer) {
       this.saveTimer = setTimeout(() => {
-        this.save(ProjectService.filename);
+        this.save(projectService.filename);
       }, 5000);
     }
   }
 
   /**
-   * Saves the project to disk
-   * @param {string} file - The path where the project will be saved
+   * Saves the project to disk.
+   * @param {string} file - The path where the project will be saved.
    */
   async save(file) {
-    if (!ProjectService.filename) {
-      FolderService.moveTo(file);
-    } else if (ProjectService.filename !== file) {
-      FolderService.copyTo(file);
+    if (!projectService.filename) {
+      folderService.moveTo(file);
+    } else if (projectService.filename !== file) {
+      folderService.copyTo(file);
     }
-    await fs.promises.writeFile(file, ProjectService.content, 'utf8');
-    for (const transformer of CybertronService.transformers) {
+    await fs.promises.writeFile(file, projectService.content, 'utf8');
+    for (const transformer of cybertronService.transformers) {
       await transformer.cache.saveCacheToFile();
     }
-    ProjectService.filename = file;
+    await this.saveModelsMap(file);
+    projectService.filename = file;
+    projectService.setIsDirty(false);
     this.saveTimer = null;
+  }
+
+  /**
+   * Saves the models map to a json file.
+   * @param {string} file - The path where the json file will be saved.
+   */
+  async saveModelsMap(file) {
+    const jsonFilePath = file.replace('.md', '_models.json');
+    const modelsMapString = JSON.stringify(gptService.modelsMap);
+    await fs.promises.writeFile(jsonFilePath, modelsMapString, 'utf8');
   }
 }
 

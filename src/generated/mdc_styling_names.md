@@ -24,7 +24,7 @@
 {}
 # MarkdownCode > services > build service
 {}
-# MarkdownCode > services > compress service
+# MarkdownCode > services > transformers > compress service
 {}
 # MarkdownCode > components > toolbar > format
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\FormatTab.js": ["format-tab"]}
@@ -40,8 +40,6 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\open-ai configuration dialog\\OpenAiConfigurationDialog.js": ["openai-configuration-dialog", "openai-configuration-input"]}
 # MarkdownCode > components > toolbar > preferences > view section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\preferences\\view section\\ViewSection.js": ["view-section", "theme-select", "font-select", "font-size-select"]}
-# MarkdownCode > components > body > results view > results view context menu
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js": ["more-button", "selected"]}
 # MarkdownCode > services > line parser
 {}
 # MarkdownCode > components > body > outline
@@ -58,22 +56,18 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.js": ["toolbar-home", "toolbar-format", "toolbar-preferences"]}
 # MarkdownCode > services > position-tracking service
 {}
-# MarkdownCode > components > toolbar > home > file section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.js": ["file-section", "primary", "default"]}
 # MarkdownCode > services > project service > storage service
 {}
 # MarkdownCode > services > project service > change-processor service
 {}
 # MarkdownCode > services > build-stack service
 {}
-# MarkdownCode > services > constant-extractor service
+# MarkdownCode > services > transformers > constant-extractor service
 {}
 # MarkdownCode > services > project service
 {}
 # MarkdownCode > components > toolbar > home > build section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js": []}
-# MarkdownCode > components > body > editor
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": ["editor", "editorDidMount", "className"]}
 # MarkdownCode > components > body > results view > results view tab
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.js": ["results-view-tab"]}
 # MarkdownCode > components > toolbar > home > edit section
@@ -82,3 +76,17 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js": ["Split", "Layout", "Outline", "Editor", "ResultsView"]}
 # MarkdownCode > components > body > results view
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js": ["results-view", "ant-tabs", "ant-tabs-tabpane"]}
+# MarkdownCode > components > body > results view > results view context menu
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js": ["more-button", "selected", "more-button"]}
+# MarkdownCode > services > all-spark service
+{}
+# MarkdownCode > services > transformers > double-compress service
+{}
+# MarkdownCode > components > body > editor
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": []}
+# MarkdownCode > services > transformers > triple-compress service
+{}
+# MarkdownCode > components > toolbar > home > file section
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.js": ["file-section", "primary", "default"]}
+# MarkdownCode > services > transformers > component-lister service
+{}

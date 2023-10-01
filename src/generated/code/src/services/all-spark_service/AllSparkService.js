@@ -1,12 +1,14 @@
 
-// Importing required services
-import cybertronService from '../cybertron_service/CybertronService';
+import CybertronService from '../cybertron_service/CybertronService';
 import CompressService from '../compress_service/CompressService';
 import ConstantExtractorService from '../constant-extractor_service/ConstantExtractorService';
+import DoubleCompressService from '../double-compress_service/DoubleCompressService';
+import TripleCompressService from '../transformers/triple-compress_service/TripleCompressService';
+import ComponentListerService from '../transformers/component-lister_service/component-lister_service';
 
 /**
  * AllSparkService class
- * Responsible for creating all the transformers and registering them into the cybertron service.
+ * This class is responsible for creating all the transformers and registering them into the cybertron service.
  */
 class AllSparkService {
   constructor() {
@@ -14,25 +16,26 @@ class AllSparkService {
   }
 
   /**
-   * Create the transformers and register them with the cybertron-service.
+   * Load function
+   * This function creates the transformers and register them with the cybertron-service.
    */
   load() {
-    this.registerServices();
+    this.registerTransformer(new CompressService(), true);
+    this.registerTransformer(new ConstantExtractorService(), false);
+    this.registerTransformer(new DoubleCompressService(), false);
+    this.registerTransformer(new TripleCompressService(), false);
+    this.registerTransformer(new ComponentListerService(), false);
   }
 
   /**
-   * Register services with the cybertron service.
+   * RegisterTransformer function
+   * This function registers a transformer with the cybertron-service.
+   * @param {Object} transformer - The transformer to register.
+   * @param {boolean} isEntryPoint - Whether the transformer is an entry point.
    */
-  registerServices() {
-    const compressService = new CompressService();
-    const constantExtractorService = new ConstantExtractorService();
-
-    // Registering services
-    cybertronService.register(compressService, true); // Registering as entry point
-    cybertronService.register(constantExtractorService, false);
+  registerTransformer(transformer, isEntryPoint) {
+    CybertronService.register(transformer, isEntryPoint);
   }
 }
 
-const allSparkService = new AllSparkService();
-
-export default allSparkService;
+export default new AllSparkService();

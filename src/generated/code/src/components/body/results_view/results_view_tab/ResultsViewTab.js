@@ -37,9 +37,7 @@ class ResultsViewTab extends Component {
     const editorKey = PositionTrackingService.activeFragment?.key;
     if (editorKey) {
       let editorValue = this.props.transformer.cache.getFragmentResults(editorKey);
-      if (this.props.transformer.isJson) {
-        editorValue = JSON.stringify(editorValue, null, 2);
-      }
+      editorValue = JSON.stringify(editorValue, null, 2);
       this.setState({ editorKey, editorValue });
     }
   }

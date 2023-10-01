@@ -62,8 +62,37 @@ div {
     height: 100%;
 }
 
+.outline {
+    overflow: auto;
+}
+
+.outline.dark {
+    background-color: #001b35;
+    color: white;
+}
+
+.outline.light {
+    background-color: white;
+    color: black;
+}
+
+
+.ant-tree {
+    background: transparent; /* need this to allow the outline component to determine the background color*/
+}
+
 
 .ant-dropdown-menu {
     max-height: 300px;
     overflow-y: auto;
+}
+
+.selected-light {
+    background-color: #537a8b;
+    color: black
+}
+
+.selected-dark {
+    background-color: #001b35;
+    color:white
 }

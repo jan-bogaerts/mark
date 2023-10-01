@@ -20,6 +20,7 @@ def collect_response(title, quotes, result, writer):
         count = 0
         for quote in quote_lines:
             quote_key = '{0}_{1}'.format(key, count)
+            quote_key = quote_key.replace(' ', '_').replace('-', '_').replace('(', '').replace(')', '')
             quote_locs[count]['name'] = quote_key # this helps later on when we need to rebuild the orignal text but with the texts replaced with the contant names
             count += 1
             result[quote_key] = '\n'.join(quote)
@@ -59,7 +60,7 @@ def process_data(root_path, writer):
             line = line.lstrip()
             if line.startswith('>'):
                 line = line[1:] # remove the > 
-                if line[0] == ' ':  # and the space but leave everything else cause we want the exact quote
+                if len(line) > 0 and line[0] == ' ':  # and the space but leave everything else cause we want the exact quote
                     line = line[1:]
                 cur_lines.append(line)
                 if not current_quote:

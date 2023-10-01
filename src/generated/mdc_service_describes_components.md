@@ -8,9 +8,7 @@
 {}
 # MarkdownCode > services > cybertron service
 {}
-# MarkdownCode > services > transformer-base service
-{}
-# MarkdownCode > services > compress service
+# MarkdownCode > services > transformers > compress service
 {}
 # MarkdownCode > services > build service
 {}
@@ -18,23 +16,31 @@
 {}
 # MarkdownCode > services > build-stack service
 {}
-# MarkdownCode > services > constant-extractor service
+# MarkdownCode > services > transformers > constant-extractor service
 {}
-# MarkdownCode > services > project service > storage service
-{"StorageService": "Components should use the storage service as follows:\n\n1. Use the `clear()` function to clear all references to previously loaded data.\n2. Use the `new()` function to set up a new project.\n3. Use the `open(filePath)` function to load all data from disk.\n4. Use the `updateOutOfDate()` function to update the list of out-of-date transformers for each text-fragment.\n5. Use the `markDirty()` function to mark the project as needing to be saved.\n6. Use the `save(file)` function to save the project to disk.\n7. The fs module should be remotely loaded through electron."}
 # MarkdownCode > services > result-cache service
-{}
-# MarkdownCode > services > project service
 {}
 # MarkdownCode > services > dialog service
 {"DialogService": "Components should use the dialog service to show dialog boxes for errors, warnings, and info. User-triggered actions or functions should be wrapped in an error handler to display an error dialog box when necessary. Components can use the showErrorDialog function to display an error dialog, the showSaveDialog function to display a save dialog, and the showOpenDialog function to display an open dialog."}
 # MarkdownCode > services > line parser
 {}
-# MarkdownCode > services > all-spark service
-{}
-# MarkdownCode > services > line parser > line parser helpers
-{}
 # MarkdownCode > services > project service > change-processor service
 {}
 # MarkdownCode > services > gpt service
+{}
+# MarkdownCode > services > transformer-base service
+{}
+# MarkdownCode > services > transformers > double-compress service
+{}
+# MarkdownCode > services > all-spark service
+{}
+# MarkdownCode > services > project service > storage service
+{}
+# MarkdownCode > services > line parser > line parser helpers
+{}
+# MarkdownCode > services > project service
+{}
+# MarkdownCode > services > transformers > triple-compress service
+{}
+# MarkdownCode > services > transformers > component-lister service
 {}

@@ -22,26 +22,31 @@ class ChangeProcessorService {
     changes.forEach(change => {
       const lines = change.text.split('\n');
       let curLine = change.range.startLineNumber - 1;
-      const lineEnd = change.range.endLineNumber - 1;
+      let lineEnd = change.range.endLineNumber - 1;
       let lineIdx = 0;
 
       // First replace lines that are overwritten. Change can contain only part of line so get full line
-      while (lineIdx < lines.length && curLine <= lineEnd) {
-        LineParser.parse(model.getLineContent(curLine + 1), curLine);
-        lineIdx += 1;
-        curLine += 1;
+      if (change.text.length > 0 || (change.rangeLength > 0 && curLine === lineEnd)) { // when rangeLength on same line with no text: chars removed
+        while (lineIdx < lines.length && curLine <= lineEnd) {
+          LineParser.parse(model.getLineContent(curLine + 1), curLine);
+          lineIdx += 1;
+          curLine += 1;
+        }
       }
 
       // Now there are either lines to delete or to insert
       while (curLine < lineEnd) {
-        LineParser.deleteLine(curLine);
-        curLine += 1;
+        LineParser.deleteLine(lineEnd); // need to do in reverse
+        lineEnd -= 1;
       }
 
-      while (lineIdx < lines.length) {
-        LineParser.insertLine(model.getLineContent(curLine + 1), curLine);
-        lineIdx += 1;
-        curLine += 1;
+      if (change.text.length > 0 && change.rangeLength > 0) {
+
+        while (lineIdx < lines.length) {
+          LineParser.parse(model.getLineContent(curLine + 1), curLine);
+          lineIdx += 1;
+          curLine += 1;
+        }
       }
 
       StorageService.markDirty();

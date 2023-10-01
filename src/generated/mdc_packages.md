@@ -76,5 +76,5 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\cybertron_service\\CybertronService.js": "{\n  \"Object.freeze\": \"latest\"\n}"}
 # MarkdownCode > services > transformer-base service
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformer-base_service\\TransformerBaseService.js": "{\n    \"electron\": \"latest\",\n    \"react\": \"latest\"\n}"}
-# MarkdownCode > services > compress service
+# MarkdownCode > services > transformers > compress service
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\compress_service\\CompressService.js": "{\n    \"resources\": \"latest\",\n    \"cybertron_service\": \"latest\",\n    \"transformer-base_service\": \"latest\"\n}"}

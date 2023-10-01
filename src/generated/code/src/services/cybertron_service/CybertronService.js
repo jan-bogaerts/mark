@@ -41,6 +41,10 @@ class CybertronService {
   getEntryPoints() {
     return this.entryPoints;
   }
+
+  getTransformer(name) {
+    return this.transformers.find(t => t.name === name);
+  }
 }
 
 const cybertronService = new CybertronService();

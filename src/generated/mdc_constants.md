@@ -60,31 +60,37 @@
 []
 # MarkdownCode > services > cybertron service
 []
-# MarkdownCode > services > transformer-base service
-[]
-# MarkdownCode > services > compress service
+# MarkdownCode > services > transformers > compress service
 [{"start": 11, "end": 15, "name": "MarkdownCode_services_compress_service_0"}]
 # MarkdownCode > services > position-tracking service
 []
 # MarkdownCode > services > build-stack service
 []
-# MarkdownCode > services > constant-extractor service
-[]
-# MarkdownCode > services > project service > storage service
+# MarkdownCode > services > transformers > constant-extractor service
 []
 # MarkdownCode > services > result-cache service
-[]
-# MarkdownCode > services > project service
 []
 # MarkdownCode > services > dialog service
 []
 # MarkdownCode > services > line parser
 []
-# MarkdownCode > services > all-spark service
-[]
-# MarkdownCode > services > line parser > line parser helpers
-[]
 # MarkdownCode > services > project service > change-processor service
 []
 # MarkdownCode > services > gpt service
 []
+# MarkdownCode > services > transformer-base service
+[]
+# MarkdownCode > services > transformers > double-compress service
+[{"start": 10, "end": 12, "name": "MarkdownCode_services_double-compress_service_0"}]
+# MarkdownCode > services > all-spark service
+[]
+# MarkdownCode > services > project service > storage service
+[]
+# MarkdownCode > services > line parser > line parser helpers
+[]
+# MarkdownCode > services > transformers > triple-compress service
+[{"start": 10, "end": 12, "name": "MarkdownCode_services_transformers_triple_compress_service_0"}]
+# MarkdownCode > services > project service
+[]
+# MarkdownCode > services > transformers > component-lister service
+[{"start": 10, "end": 26, "name": "MarkdownCode_services_transformers_component_lister_service_0"}, {"start": 32, "end": 35, "name": "MarkdownCode_services_transformers_component_lister_service_1"}, {"start": 41, "end": 43, "name": "MarkdownCode_services_transformers_component_lister_service_2"}]

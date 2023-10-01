@@ -49,8 +49,11 @@ class PositionTrackingService {
    */
   setActiveFragment(fragment) {
     if (this.activeFragment !== fragment) {
-      this.activeFragment = fragment;
-      this.triggerChangeEvent();
+      const startPos = LineParser.getStartLine(fragment) ;
+      if (startPos > -1) {
+        const event = new CustomEvent('moveTo', { detail: startPos + 1 });
+        this.eventTarget.dispatchEvent(event);
+      }
     }
   }
 }

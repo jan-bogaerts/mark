@@ -44,7 +44,8 @@ class Outline extends Component {
   };
 
   handlePositionChanged = (e) => {
-    const key = e.detail;
+    const key = e.detail?.key;
+    if (!key) return;
     this.setState({ selectedKeys: [key] });
   };
 
@@ -60,6 +61,7 @@ class Outline extends Component {
         return;
       } else if (item.depth > parent.data.depth) {
         parent.children.push(node);
+        node.parent = parent;
         parent = node;
       } else {
         while (parent && parent.data.depth >= item.depth) {
@@ -67,6 +69,7 @@ class Outline extends Component {
         }
         if (parent) {
           parent.children.push(node);
+          node.parent = parent;
           parent = node;
         }
       }
@@ -87,7 +90,11 @@ class Outline extends Component {
   };
 
   onSelect = (selectedKeys) => {
-    positionTrackingService.setActiveFragment(selectedKeys[0]);
+    if (selectedKeys.length === 0) return;
+    const fragment = projectService.getFragment(selectedKeys[0]);
+    if (fragment) {
+      positionTrackingService.setActiveFragment(fragment);
+    }
   };
 
   render() {
