@@ -66,27 +66,23 @@
 {}
 # MarkdownCode > services > project service
 {}
-# MarkdownCode > components > toolbar > home > build section
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js": []}
 # MarkdownCode > components > body > results view > results view tab
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.js": ["results-view-tab"]}
 # MarkdownCode > components > toolbar > home > edit section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.js": ["edit-section", "ant-btn", "ant-tooltip", "anticon-scissor", "anticon-copy", "react-icons-bi", "anticon-delete", "anticon-select", "anticon-close-circle"]}
 # MarkdownCode > components > body
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js": ["Split", "Layout", "Outline", "Editor", "ResultsView"]}
-# MarkdownCode > components > body > results view
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js": ["results-view", "ant-tabs", "ant-tabs-tabpane"]}
 # MarkdownCode > components > body > results view > results view context menu
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js": ["more-button", "selected", "more-button"]}
 # MarkdownCode > services > all-spark service
 {}
 # MarkdownCode > services > transformers > double-compress service
 {}
-# MarkdownCode > components > body > editor
-{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": []}
 # MarkdownCode > services > transformers > triple-compress service
 {}
 # MarkdownCode > components > toolbar > home > file section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.js": ["file-section", "primary", "default"]}
 # MarkdownCode > services > transformers > component-lister service
 {}
+# MarkdownCode > components > body > editor
+{"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js": ["editor-container", "markdown", "vs-light", "vs-dark"]}

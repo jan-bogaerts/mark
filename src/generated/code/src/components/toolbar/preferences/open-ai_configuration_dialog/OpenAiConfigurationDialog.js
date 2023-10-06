@@ -24,6 +24,7 @@ const OpenAiConfigurationDialog = ({ visible, onClose }) => {
   const handleOk = () => {
     try {
       GptService.setApiKey(apiKey);
+      onClose();
     } catch (error) {    
       DialogService.showErrorDialog(error);
     }

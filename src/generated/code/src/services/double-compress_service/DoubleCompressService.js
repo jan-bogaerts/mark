@@ -35,7 +35,7 @@ class DoubleCompressService extends TransformerBaseService {
         content: await this.compressService.getResult(textFragment),
       },
     ];
-    return [result, textFragment.key];
+    return [result, [textFragment.key]];
   }
 }
 

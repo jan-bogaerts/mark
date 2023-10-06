@@ -1,30 +1,43 @@
 
 import React, { Component } from 'react';
 import MonacoEditor from 'react-monaco-editor';
+import ThemeService from '../../../services/Theme_service/ThemeService';
 import SelectionService from '../../../services/Selection_service/SelectionService';
 import PositionTrackingService from '../../../services/position-tracking_service/PositionTrackingService';
 import DialogService from '../../../services/dialog_service/DialogService';
 import ChangeProcessorService from '../../../services/project_service/change-processor_service/ChangeProcessorService';
 import ProjectService from '../../../services/project_service/ProjectService';
-import ThemeService from '../../../services/Theme_service/ThemeService';
 
-/**
- * Editor component
- */
 class Editor extends Component {
   constructor(props) {
     super(props);
     this.editorRef = React.createRef();
-  }
-
-  componentDidMount() {
+    this.handleThemeChanged = this.handleThemeChanged.bind(this);
+    ThemeService.subscribe(this.handleThemeChanged);
     ProjectService.eventTarget.addEventListener('content-changed', this.handleContentChanged);
     PositionTrackingService.eventTarget.addEventListener('moveTo', this.handleMoveTo);
   }
 
   componentWillUnmount() {
+    ThemeService.unsubscribe(this.handleThemeChanged);
     ProjectService.eventTarget.removeEventListener('content-changed', this.handleContentChanged);
     PositionTrackingService.eventTarget.removeEventListener('moveTo', this.handleMoveTo);
+  }
+
+  handleThemeChanged() {
+    if (!this.editorRef.current) return;
+    const theme = ThemeService.getCurrentTheme();
+    const font = ThemeService.getCurrentFont();
+    const fontSize = ThemeService.getCurrentFontSize();
+    this.editorRef.current.updateOptions({
+      theme: theme === 'light' ? 'vs-light' : 'vs-dark',
+      fontFamily: font,
+      fontSize: fontSize,
+      automaticLayout: true,
+      selectOnLineNumbers: true,
+      roundedSelection: false,
+      readOnly: false,
+    });
   }
 
   handleContentChanged = () => {
@@ -35,13 +48,10 @@ class Editor extends Component {
   }
 
   handleMoveTo = (e) => {
-    const editor = this.editorRef.current;
-    if (editor) {
-      editor.revealLineNearTop(e.detail);
-    }
+    this.editorRef.current.revealLineNearTop(e.detail);
   }
 
-  handleEditorDidMount = (editor) => {
+  editorDidMount = (editor) => {
     this.editorRef.current = editor;
     editor.onDidChangeModelContent(this.handleDidChangeModelContent);
     editor.onDidFocusEditorWidget(this.handleDidFocusEditorWidget);
@@ -52,20 +62,18 @@ class Editor extends Component {
 
   handleDidChangeModelContent = (ev) => {
     try {
-      const editor = this.editorRef.current;
-      if (editor) {
-        ChangeProcessorService.process(ev.changes, editor);
-      }
+      if (!this.editorRef.current) return;
+      ChangeProcessorService.process(ev.changes, this.editorRef.current);
     } catch (e) {
       DialogService.showErrorDialog(e);
     }
   }
 
-  handleDidFocusEditorWidget = () => {
+  handleDidFocusEditorWidget = () =>  {
     SelectionService.editor = this.editorRef.current;
   }
 
-  handleDidBlurEditorWidget = () => {
+  handleDidBlurEditorWidget = () =>  {
     if (SelectionService.editor === this.editorRef.current) {
       SelectionService.editor = null;
     }
@@ -84,23 +92,21 @@ class Editor extends Component {
   }
 
   render() {
-    const options = {
-      theme: ThemeService.getCurrentTheme(),
-      fontFamily: ThemeService.getCurrentFont(),
-      fontSize: ThemeService.getCurrentFontSize(),
-      automaticLayout: true,
-      selectOnLineNumbers: true,
-      roundedSelection: false,
-      readOnly: false,
-    };
-
     return (
       <MonacoEditor
         language="markdown"
-        theme={options.theme}
+        theme={ThemeService.getCurrentTheme() === 'light' ? 'vs-light' : 'vs-dark'}
         value={ProjectService.content}
-        options={options}
-        editorDidMount={this.handleEditorDidMount}
+        options={{
+          fontFamily: ThemeService.getCurrentFont(),
+          fontSize: ThemeService.getCurrentFontSize(),
+          automaticLayout: true,
+          selectOnLineNumbers: true,
+          roundedSelection: false,
+          readOnly: false,
+        }}
+        editorDidMount={this.editorDidMount.bind(this)}
+        className="editor"
       />
     );
   }

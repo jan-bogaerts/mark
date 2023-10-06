@@ -8,12 +8,6 @@ SelectionService
 FolderService
 # MarkdownCode > services > cybertron service
 CybertronService
-# MarkdownCode > services > transformers > compress service
-CompressService
-# MarkdownCode > services > build service
-BuildService
-# MarkdownCode > services > position-tracking service
-PositionTrackingService
 # MarkdownCode > services > build-stack service
 BuildStackService
 # MarkdownCode > services > transformers > constant-extractor service
@@ -28,8 +22,6 @@ LineParser
 ChangeProcessorService
 # MarkdownCode > services > gpt service
 GPTService
-# MarkdownCode > services > transformer-base service
-TransformerBaseService
 # MarkdownCode > services > transformers > double-compress service
 double-compress-service
 # MarkdownCode > services > all-spark service
@@ -44,3 +36,11 @@ ProjectService
 TripleCompressService
 # MarkdownCode > services > transformers > component-lister service
 component-lister service
+# MarkdownCode > services > position-tracking service
+PositionTrackingService
+# MarkdownCode > services > build service
+BuildService
+# MarkdownCode > services > transformers > compress service
+CompressService
+# MarkdownCode > services > transformer-base service
+TransformerBaseService

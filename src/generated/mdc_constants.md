@@ -56,13 +56,7 @@
 []
 # MarkdownCode > services > Undo service
 []
-# MarkdownCode > services > build service
-[]
 # MarkdownCode > services > cybertron service
-[]
-# MarkdownCode > services > transformers > compress service
-[{"start": 11, "end": 15, "name": "MarkdownCode_services_compress_service_0"}]
-# MarkdownCode > services > position-tracking service
 []
 # MarkdownCode > services > build-stack service
 []
@@ -78,8 +72,6 @@
 []
 # MarkdownCode > services > gpt service
 []
-# MarkdownCode > services > transformer-base service
-[]
 # MarkdownCode > services > transformers > double-compress service
 [{"start": 10, "end": 12, "name": "MarkdownCode_services_double-compress_service_0"}]
 # MarkdownCode > services > all-spark service
@@ -94,3 +86,11 @@
 []
 # MarkdownCode > services > transformers > component-lister service
 [{"start": 10, "end": 26, "name": "MarkdownCode_services_transformers_component_lister_service_0"}, {"start": 32, "end": 35, "name": "MarkdownCode_services_transformers_component_lister_service_1"}, {"start": 41, "end": 43, "name": "MarkdownCode_services_transformers_component_lister_service_2"}]
+# MarkdownCode > services > position-tracking service
+[]
+# MarkdownCode > services > build service
+[]
+# MarkdownCode > services > transformers > compress service
+[{"start": 10, "end": 14, "name": "MarkdownCode_services_transformers_compress_service_0"}]
+# MarkdownCode > services > transformer-base service
+[]

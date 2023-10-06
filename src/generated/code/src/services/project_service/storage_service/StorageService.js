@@ -38,18 +38,21 @@ class StorageService {
    */
   open(filePath) {
     projectService.blockEvents = true;
+    this.loading = true;
     try {
       this.clear();
       folderService.setLocation(filePath);
       const content = fs.readFileSync(filePath, 'utf8');
       projectService.content = content;
+      projectService.filename = filePath;
       content.split('\n').forEach((line, index) => lineParser.parse(line, index));
       cybertronService.transformers.forEach(transformer => transformer.cache.loadCache());
       this.loadModelsMap(filePath);
     } finally {
       projectService.blockEvents = false;
-      projectService.setIsDirty(false);
       projectService.dispatchEvent('content-changed');
+      this.loading = false
+      projectService.setIsDirty(false);
     }
     this.updateOutOfDate();
   }
@@ -85,11 +88,15 @@ class StorageService {
    * Marks the current state of the storage as 'dirty', indicating that changes have been made that are not yet saved.
    */
   markDirty() {
+    if (this.loading) return;
     projectService.setIsDirty(true);
+    // console.log(projectService.autoSave);
+    // console.log(projectService.filename);
+    // console.log(!projectService.saveTimer);
     if (projectService.autoSave && projectService.filename && !this.saveTimer) {
       this.saveTimer = setTimeout(() => {
         this.save(projectService.filename);
-      }, 5000);
+      }, 5000)
     }
   }
 
@@ -105,7 +112,7 @@ class StorageService {
     }
     await fs.promises.writeFile(file, projectService.content, 'utf8');
     for (const transformer of cybertronService.transformers) {
-      await transformer.cache.saveCacheToFile();
+      await transformer.cache.saveCache();
     }
     await this.saveModelsMap(file);
     projectService.filename = file;

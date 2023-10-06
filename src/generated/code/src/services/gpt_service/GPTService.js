@@ -1,6 +1,5 @@
-
 import OpenAI from 'openai';
-import { retry } from 'async-es';
+import { encodingForModel } from "js-tiktoken";
 import DialogService from '../dialog_service/DialogService';
 
 class GPTService {
@@ -24,9 +23,10 @@ class GPTService {
   }
 
   setModelForTransformer(model, transformer) {
-    let map = this.modelsMap[transformer.name] || {};
-    map['__default'] = model;
-    this.modelsMap[transformer.name] = map;
+    if (!this.modelsMap[transformer.name]) {
+      this.modelsMap[transformer.name] = {};
+    }
+    this.modelsMap[transformer.name]['__default'] = model;
   }
 
   getModelForTransformer(transformer) {
@@ -34,9 +34,10 @@ class GPTService {
   }
 
   setModelForFragment(model, transformer, key) {
-    let map = this.modelsMap[transformer.name] || {};
-    map[key] = model;
-    this.modelsMap[transformer.name] = map;
+    if (!this.modelsMap[transformer.name]) {
+      this.modelsMap[transformer.name] = {};
+    }
+    this.modelsMap[transformer.name][key] = model;
   }
 
   getModelForFragment(transformer, key) {
@@ -56,14 +57,34 @@ class GPTService {
     return this.getDefaultModel();
   }
 
-  async sendRequest(messages, transformerName, fragmentKey) {
-    const model = this.getModelForRequest(transformerName, fragmentKey);
-    try {
-      return await retry(async () => {
-        return await this.openai.createChatCompletion({ model, messages });
-      }, { retries: 3 });
-    } catch (error) {
-      throw new Error('Failed to send request to OpenAI');
+  calculateTokens(messages, model) {
+    let result = {};
+    let encoding = encodingForModel(model);
+    for (let message of messages) {
+      result[message.role] = encoding.encode(message.content).length;
+    }
+    return result;
+  }
+
+  async sendRequest(transformer, fragmentKey, messages) {
+    if (!this.openai) {
+      return;
+    }
+    let model = this.getModelForRequest(transformer.name, fragmentKey);
+    let tokens = this.calculateTokens(messages, model);
+    let inputData = {
+      model: model,
+      messages: messages,
+      max_tokens: transformer.calculateMaxTokens(tokens),
+      temperature: transformer.temperature || 0
+    };
+    let config = {
+      maxRetries: 3,
+    };
+    let response = await this.openai.chat.completions.create(inputData, config);
+    if (response) {
+      let reply = response.choices[0]?.message?.content;
+      return reply;
     }
   }
 

@@ -3,6 +3,7 @@ import LineParser from '../line_parser/LineParser';
 
 /**
  * PositionTrackingService class
+ * This class is responsible for tracking the text-fragment and transformer that the user is currently working on / with.
  */
 class PositionTrackingService {
   constructor() {
@@ -13,47 +14,56 @@ class PositionTrackingService {
   }
 
   /**
-   * Set the currently selected line
-   * @param {number} lineIndex - The line index
+   * Sets the currently selected line
+   * @param {number} lineIndex - The line index to set
    */
   setCurrentLine(lineIndex) {
     if (this.currentLine !== lineIndex) {
-      const fragment = LineParser.fragmentsIndex[lineIndex];
+      let fragment = LineParser.fragmentsIndex[lineIndex];
+      if (!fragment) {
+        fragment = LineParser.fragmentsIndex[lineIndex - 1];
+      }
       if (this.activeFragment !== fragment) {
         this.activeFragment = fragment;
-        this.triggerChangeEvent();
+        const changeEvent = new CustomEvent('change', { detail: fragment });
+        this.eventTarget.dispatchEvent(changeEvent);
       }
+      this.currentLine = lineIndex;
     }
-    this.currentLine = lineIndex;
   }
 
   /**
-   * Clear the current line and active fragment
+   * Clears the activeFragment and currentLine
    */
   clear() {
-    this.currentLine = null;
     this.activeFragment = null;
+    this.currentLine = null;
   }
 
   /**
-   * Trigger the change event
-   */
-  triggerChangeEvent() {
-    const event = new CustomEvent('change', { detail: this.activeFragment });
-    this.eventTarget.dispatchEvent(event);
-  }
-
-  /**
-   * Set the active fragment
-   * @param {object} fragment - The fragment object
+   * Sets the active fragment
+   * @param {object} fragment - The fragment to set
    */
   setActiveFragment(fragment) {
     if (this.activeFragment !== fragment) {
-      const startPos = LineParser.getStartLine(fragment) ;
+      const startPos = LineParser.getStartLine(fragment);
       if (startPos > -1) {
-        const event = new CustomEvent('moveTo', { detail: startPos + 1 });
-        this.eventTarget.dispatchEvent(event);
+        const moveToEvent = new CustomEvent('moveTo', { detail: startPos + 1 });
+        this.eventTarget.dispatchEvent(moveToEvent);
       }
+      this.activeFragment = fragment;
+    }
+  }
+
+  /**
+   * Sets the active transformer
+   * @param {object} transformer - The transformer to set
+   */
+  setActiveTransformer(transformer) {
+    if (this.activeTransformer !== transformer) {
+      this.activeTransformer = transformer;
+      const changeEvent = new CustomEvent('change', { detail: transformer });
+      this.eventTarget.dispatchEvent(changeEvent);
     }
   }
 }

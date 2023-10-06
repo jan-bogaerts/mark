@@ -1,85 +1,108 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button, Divider } from 'antd';
-import { BuildOutlined, CodeOutlined, PlayCircleOutlined, BugOutlined, RightOutlined } from '@ant-design/icons';
+import React, { Component } from 'react';
+import { Tooltip, Button, Divider } from 'antd';
+import { BuildOutlined, PlayCircleOutlined, CodeOutlined, BugOutlined, StepForwardOutlined } from '@ant-design/icons';
 import buildService from '../../../../services/build_service/BuildService';
-import positionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
 import projectService from '../../../../services/project_service/ProjectService';
-import dialogService from '../../../../services/dialog_service/DialogService';
+import positionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
 import themeService from '../../../../services/Theme_service/ThemeService';
+import dialogService from '../../../../services/dialog_service/DialogService';
 
 /**
  * BuildSection component
  */
-function BuildSection() {
-  const [disabledButtons, setDisabledButtons] = useState({
-    all: true,
-    code: true,
-    active: true,
-    debug: false,
-    next: true,
-  });
+class BuildSection extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      allDisabled: true,
+      fragmentDisabled: true,
+      transformerDisabled: true,
+      debugDisabled: false,
+      nextDisabled: true,
+    };
+  }
 
-  useEffect(() => {
-    initializeButtonStates();
-    registerEventHandlers();
-    return unregisterEventHandlers;
-  }, []);
+  componentDidMount() {
+    this.updateButtonStates();
+    projectService.eventTarget.addEventListener('fragment-out-of-date', this.updateButtonStates);
+    positionTrackingService.eventTarget.addEventListener('change', this.updateButtonStates);
+  }
 
-  const initializeButtonStates = () => {
-    setDisabledButtons({
-      all: !projectService.isAnyFragmentOutOfDate(),
-      code: !positionTrackingService.activeFragment?.isOutOfDate,
-      active: !(positionTrackingService.activeFragment && positionTrackingService.activeTransformer && (!positionTrackingService.activeFragment.isOutOfDate || !positionTrackingService.activeTransformer.cache.isOutOfDate(positionTrackingService.activeFragment.key))),
-      debug: false,
-      next: !buildService.debug,
+  componentWillUnmount() {
+    projectService.eventTarget.removeEventListener('fragment-out-of-date', this.updateButtonStates);
+    positionTrackingService.eventTarget.removeEventListener('change', this.updateButtonStates);
+  }
+
+  updateButtonStates = () => {
+    this.setState({
+      allDisabled: !projectService.isAnyFragmentOutOfDate(),
+      fragmentDisabled: !positionTrackingService.activeFragment?.isOutOfDate,
+      transformerDisabled: !positionTrackingService.activeFragment || !positionTrackingService.activeTransformer,
+      nextDisabled: !buildService.debug,
     });
-  };
+  }
 
-  const registerEventHandlers = () => {
-    projectService.eventTarget.addEventListener('fragment-out-of-date', initializeButtonStates);
-    positionTrackingService.eventTarget.addEventListener('change', initializeButtonStates);
-  };
-
-  const unregisterEventHandlers = () => {
-    projectService.eventTarget.removeEventListener('fragment-out-of-date', initializeButtonStates);
-    positionTrackingService.eventTarget.removeEventListener('change', initializeButtonStates);
-  };
-
-  const handleButtonClick = (action) => {
-    switch (action) {
-      case 'all':
-        buildService.buildAll();
-        break;
-      case 'code':
-        buildService.buildFragment(positionTrackingService.activeFragment);
-        break;
-      case 'active':
-        buildService.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer);
-        break;
-      case 'debug':
-        buildService.debug = !buildService.debug;
-        break;
-      case 'next':
-        buildService.runNext();
-        break;
-      default:
-        dialogService.showError('Invalid action');
+  handleAllClick = () => {
+    try {
+      buildService.buildAll();
+    } catch (error) {
+      dialogService.showErrorDialog(error.message);
     }
-  };
+  }
 
-  const theme = themeService.getCurrentTheme();
+  handleFragmentClick = () => {
+    try {
+      buildService.buildFragment(positionTrackingService.activeFragment);
+    } catch (error) {
+      dialogService.showErrorDialog(error.message);
+    }
+  }
 
-  return (
-    <div className={`build-section ${theme}`}>
-      <Button icon={<BuildOutlined />} disabled={disabledButtons.all} onClick={() => handleButtonClick('all')} />
-      <Button icon={<CodeOutlined />} disabled={disabledButtons.code} onClick={() => handleButtonClick('code')} />
-      <Button icon={<PlayCircleOutlined />} disabled={disabledButtons.active} onClick={() => handleButtonClick('active')} />
-      <Divider type='vertical' style={{height: '24px'}}/>
-      <Button icon={<BugOutlined />} disabled={disabledButtons.debug} onClick={() => handleButtonClick('debug')} />
-      <Button icon={<RightOutlined />} disabled={disabledButtons.next} onClick={() => handleButtonClick('next')} />
-    </div>
-  );
+  handleTransformerClick = () => {
+    try {
+      buildService.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer);
+    } catch (error) {
+      dialogService.showErrorDialog(error.message);
+    }
+  }
+
+  handleDebugClick = () => {
+    buildService.debug = !buildService.debug;
+    this.setState({ nextDisabled: !buildService.debug });
+  }
+
+  handleNextClick = () => {
+    try {
+      buildService.runNext();
+    } catch (error) {
+      dialogService.showErrorDialog(error.message);
+    }
+  }
+
+  render() {
+    const theme = themeService.getCurrentTheme();
+    return (
+      <div className={`build-section ${theme}`}>
+        <Tooltip title="Build all fragments">
+          <Button icon={<BuildOutlined />} onClick={this.handleAllClick} disabled={this.state.allDisabled} />
+        </Tooltip>
+        <Tooltip title="Build active fragment">
+          <Button icon={<CodeOutlined />} onClick={this.handleFragmentClick} disabled={this.state.fragmentDisabled} />
+        </Tooltip>
+        <Tooltip title="Run active transformer">
+          <Button icon={<PlayCircleOutlined />} onClick={this.handleTransformerClick} disabled={this.state.transformerDisabled} />
+        </Tooltip>
+        <Divider type="vertical" style={{ height: '24px' }} />
+        <Tooltip title="Toggle debug mode">
+          <Button icon={<BugOutlined />} onClick={this.handleDebugClick} disabled={this.state.debugDisabled} />
+        </Tooltip>
+        <Tooltip title="Run next transformer">
+          <Button icon={<StepForwardOutlined />} onClick={this.handleNextClick} disabled={this.state.nextDisabled} />
+        </Tooltip>
+      </div>
+    );
+  }
 }
 
 export default BuildSection;

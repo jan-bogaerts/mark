@@ -8,12 +8,6 @@
 {"FolderService": "declare"}
 # MarkdownCode > services > cybertron service
 {"CybertronService": "declare"}
-# MarkdownCode > services > transformers > compress service
-{"CompressService": "declare"}
-# MarkdownCode > services > build service
-{"BuildService": "declare"}
-# MarkdownCode > services > position-tracking service
-{"PositionTrackingService": "declare"}
 # MarkdownCode > services > build-stack service
 {"BuildStackService": "declare"}
 # MarkdownCode > services > transformers > constant-extractor service
@@ -28,8 +22,6 @@
 {"ChangeProcessorService": "declare"}
 # MarkdownCode > services > gpt service
 {"GPTService": "declare"}
-# MarkdownCode > services > transformer-base service
-{"TransformerBaseService": "declare"}
 # MarkdownCode > services > transformers > double-compress service
 {"double-compress-service": "declare"}
 # MarkdownCode > services > all-spark service
@@ -44,3 +36,11 @@
 {"TripleCompressService": "declare"}
 # MarkdownCode > services > transformers > component-lister service
 {"component-lister service": "declare"}
+# MarkdownCode > services > position-tracking service
+{"PositionTrackingService": "declare"}
+# MarkdownCode > services > build service
+{"BuildService": "declare"}
+# MarkdownCode > services > transformers > compress service
+{"CompressService": "declare"}
+# MarkdownCode > services > transformer-base service
+{"TransformerBaseService": "declare"}

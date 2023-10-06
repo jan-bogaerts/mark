@@ -66,6 +66,7 @@ class ThemeService {
   setCurrentFont(font) {
     this.font = font;
     localStorage.setItem('font', font);
+    this.notifySubscribers();
   }
 
   /**
@@ -75,6 +76,7 @@ class ThemeService {
   setCurrentFontSize(fontSize) {
     this.fontSize = fontSize;
     localStorage.setItem('fontSize', fontSize);
+    this.notifySubscribers();
   }
 
   /**

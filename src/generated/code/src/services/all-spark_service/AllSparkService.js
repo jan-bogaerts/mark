@@ -1,6 +1,6 @@
 
 import CybertronService from '../cybertron_service/CybertronService';
-import CompressService from '../compress_service/CompressService';
+import CompressService from '../transformers/compress_service/CompressService';
 import ConstantExtractorService from '../constant-extractor_service/ConstantExtractorService';
 import DoubleCompressService from '../double-compress_service/DoubleCompressService';
 import TripleCompressService from '../transformers/triple-compress_service/TripleCompressService';
@@ -20,11 +20,11 @@ class AllSparkService {
    * This function creates the transformers and register them with the cybertron-service.
    */
   load() {
-    this.registerTransformer(new CompressService(), true);
     this.registerTransformer(new ConstantExtractorService(), false);
+    this.registerTransformer(new CompressService(), false);
     this.registerTransformer(new DoubleCompressService(), false);
     this.registerTransformer(new TripleCompressService(), false);
-    this.registerTransformer(new ComponentListerService(), false);
+    this.registerTransformer(new ComponentListerService(), true);
   }
 
   /**

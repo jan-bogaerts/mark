@@ -77,7 +77,7 @@ class ConstantExtractorService extends TransformerBaseService {
       quotes = await this.renderResult(fragment);
     }
 
-    if (!quotes) {
+    if (!quotes || quotes.length === 0) {
       return fragment.lines.join('\n');
     } else {
       let lines = fragment.lines;

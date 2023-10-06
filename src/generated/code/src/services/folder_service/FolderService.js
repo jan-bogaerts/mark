@@ -30,10 +30,10 @@ class FolderService {
 
   moveTo(newProjectFile) {
     const newFolder = path.dirname(newProjectFile);
-    const newProjectName = path.basename(newProjectFile, '.json');
+    const newProjectName = path.basename(newProjectFile, '.md');
 
     if (fs.existsSync(this.projectFile)) {
-      fs.renameSync(this.projectFile, path.join(newFolder, `${newProjectName}.json`));
+      fs.renameSync(this.projectFile, path.join(newFolder, `${newProjectName}.md`));
     }
 
     const newProjectConfig = path.join(newFolder, `${newProjectName}_config.json`);
@@ -42,7 +42,9 @@ class FolderService {
     }
 
     const newCache = path.join(newFolder, 'cache');
-    fs.mkdirSync(newCache);
+    if (!fs.existsSync(newCache)) {
+      fs.mkdirSync(newCache);
+    }
     if (fs.existsSync(this.cache)) {
       fs.readdirSync(this.cache).forEach(file => {
         fs.renameSync(path.join(this.cache, file), path.join(newCache, file));
@@ -81,9 +83,9 @@ class FolderService {
   }
 
   setLocation(location) {
-    this.folder = location;
+    this.folder = path.dirname(location);
     this.projectName = path.basename(location);
-    this.cache = path.join(location, 'cache');
+    this.cache = path.join(this.folder, 'cache');
   }
 }
 

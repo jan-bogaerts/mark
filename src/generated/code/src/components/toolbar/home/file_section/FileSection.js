@@ -35,19 +35,16 @@ class FileSection extends Component {
 
   newProject = async () => {
     if (this.state.isDirty) {
-      const save = await dialogService.showSaveDialog();
-      if (save) {
-        storageService.save();
-      }
+      await this.saveProject();
     }
     storageService.new();
   }
 
   openProject = async () => {
     try {
-      const filename = await dialogService.showOpenDialog();
-      if (filename) {
-        storageService.open(filename);
+      const dialogResult = await dialogService.showOpenDialog();
+      if (dialogResult && !dialogResult.canceled && dialogResult.filePaths) {
+        storageService.open(dialogResult.filePaths[0]);
       }
     } catch (error) {
       dialogService.showErrorDialog(error);
@@ -61,7 +58,7 @@ class FileSection extends Component {
         filename = await dialogService.showSaveDialog();
         if (!filename) return;
       }
-      storageService.save(filename);
+      await storageService.save(filename);
     } catch (error) {
       dialogService.showErrorDialog(error);
     }
@@ -69,9 +66,9 @@ class FileSection extends Component {
 
   saveProjectAs = async () => {
     try {
-      const filename = await dialogService.showSaveDialog();
-      if (filename) {
-        storageService.save(filename);
+      const dialogResult = await dialogService.showSaveDialog();
+      if (dialogResult && !dialogResult.canceled && dialogResult.filePath) {
+        storageService.save(dialogResult.filePath);
       }
     } catch (error) {
       dialogService.showErrorDialog(error);
@@ -79,8 +76,9 @@ class FileSection extends Component {
   }
 
   toggleAutoSave = () => {
-    projectService.autoSave = !this.state.autoSave;
-    this.setState({ autoSave: projectService.autoSave });
+    const newValue = !this.state.autoSave;
+    projectService.setAutoSaveState(newValue);
+    this.setState({ autoSave: newValue });
   }
 
   render() {

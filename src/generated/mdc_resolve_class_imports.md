@@ -8,12 +8,6 @@
 {"FolderService": []}
 # MarkdownCode > services > cybertron service
 {"CybertronService": []}
-# MarkdownCode > services > transformers > compress service
-{"CompressService": [{"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
-# MarkdownCode > services > build service
-{"BuildService": [{"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}, {"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}]}
-# MarkdownCode > services > position-tracking service
-{"PositionTrackingService": [{"service": "LineParser", "path": "src\\services\\line_parser\\LineParser", "service_loc": "# MarkdownCode > services > line parser"}]}
 # MarkdownCode > services > build-stack service
 {"BuildStackService": []}
 # MarkdownCode > services > transformers > constant-extractor service
@@ -28,8 +22,6 @@
 {"ChangeProcessorService": [{"service": "StorageService", "path": "src\\services\\project_service\\storage_service\\StorageService", "service_loc": "# MarkdownCode > services > project service > storage service"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}, {"service": "LineParser", "path": "src\\services\\line_parser\\LineParser", "service_loc": "# MarkdownCode > services > line parser"}]}
 # MarkdownCode > services > gpt service
 {"GPTService": [{"service": "DialogService", "path": "src\\services\\dialog_service\\DialogService", "service_loc": "# MarkdownCode > services > dialog service"}]}
-# MarkdownCode > services > transformer-base service
-{"TransformerBaseService": [{"service": "BuildStackService", "path": "src\\services\\build-stack_service\\BuildStackService", "service_loc": "# MarkdownCode > services > build-stack service"}, {"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}, {"service": "ResultCacheService", "path": "src\\services\\result-cache_service\\ResultCacheService", "service_loc": "# MarkdownCode > services > result-cache service"}, {"service": "GPTService", "path": "src\\services\\gpt_service\\GPTService", "service_loc": "# MarkdownCode > services > gpt service"}]}
 # MarkdownCode > services > transformers > double-compress service
 {"double-compress-service": [{"service": "CompressService", "path": "src\\services\\compress_service\\CompressService", "service_loc": "# MarkdownCode > services > transformers > compress service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
 # MarkdownCode > services > all-spark service
@@ -44,3 +36,11 @@
 {"TripleCompressService": [ {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}, {"service": "double-compress-service", "path": "src\\services\\transformers\\double-compress_service\\double-compress-service", "service_loc": "# MarkdownCode > services > transformers > double-compress service"}]}
 # MarkdownCode > services > transformers > component-lister service
 {"component-lister service": [{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}]}
+# MarkdownCode > services > position-tracking service
+{"PositionTrackingService": [{"service": "LineParser", "path": "src\\services\\line_parser\\LineParser", "service_loc": "# MarkdownCode > services > line parser"}]}
+# MarkdownCode > services > build service
+{"BuildService": [{"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}]}
+# MarkdownCode > services > transformers > compress service
+{"CompressService": [{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
+# MarkdownCode > services > transformer-base service
+{"TransformerBaseService": [{"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}, {"service": "BuildStackService", "path": "src\\services\\build-stack_service\\BuildStackService", "service_loc": "# MarkdownCode > services > build-stack service"}, {"service": "ResultCacheService", "path": "src\\services\\result-cache_service\\ResultCacheService", "service_loc": "# MarkdownCode > services > result-cache service"}, {"service": "GPTService", "path": "src\\services\\gpt_service\\GPTService", "service_loc": "# MarkdownCode > services > gpt service"}]}

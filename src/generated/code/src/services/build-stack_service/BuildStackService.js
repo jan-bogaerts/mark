@@ -37,4 +37,5 @@ class BuildStackService {
   }
 }
 
-module.exports = BuildStackService;
+const buildStackService = new BuildStackService();
+export default buildStackService;

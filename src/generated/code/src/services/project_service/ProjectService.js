@@ -10,6 +10,7 @@ class ProjectService {
     this.isDirty = false;
     this.blockEvents = false;
     this.eventTarget = new EventTarget();
+    this.autoSave = this.getAutoSaveState();
   }
 
   /**
@@ -33,6 +34,7 @@ class ProjectService {
    * @param {boolean} state The new state of the auto-save feature.
    */
   setAutoSaveState(state) {
+    this.autoSave = state;
     localStorage.setItem('autoSave', state);
   }
 

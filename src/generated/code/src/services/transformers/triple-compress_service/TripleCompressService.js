@@ -1,7 +1,6 @@
 
 import resources from '../../../resources.json';
 import TransformerBaseService from '../../transformer-base_service/TransformerBaseService';
-import DoubleCompressService from '../../double-compress_service/DoubleCompressService';
 
 /**
  * TripleCompressService class
@@ -36,7 +35,7 @@ class TripleCompressService extends TransformerBaseService {
         content: await this.doubleCompressService.getResult(textFragment),
       },
     ];
-    return [result, textFragment.key];
+    return [result, [textFragment.key]];
   }
 }
 

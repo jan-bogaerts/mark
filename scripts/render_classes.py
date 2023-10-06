@@ -36,7 +36,7 @@ A file always contains the definition for 1 component, service or object, no mor
 Add documentation to your code.
 Only write valid code.
 Fully implement all pseudo code.
-do not include any intro or explanation, only write code"""
+Do not include any intro or explanation, only write code"""
 
 
 def generate_response(params, key):

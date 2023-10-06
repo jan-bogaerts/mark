@@ -24,19 +24,19 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\outline\\Outline.js"]
 # MarkdownCode > components > toolbar
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\Toolbar.js"]
-# MarkdownCode > components > toolbar > home > build section
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js"]
 # MarkdownCode > components > body > results view > results view tab
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_tab\\ResultsViewTab.js"]
 # MarkdownCode > components > toolbar > home > edit section
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.js"]
 # MarkdownCode > components > body
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\Body.js"]
-# MarkdownCode > components > body > results view
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js"]
 # MarkdownCode > components > body > results view > results view context menu
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\results_view_context_menu\\ResultsViewContextMenu.js"]
-# MarkdownCode > components > body > editor
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js"]
 # MarkdownCode > components > toolbar > home > file section
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\file_section\\FileSection.js"]
+# MarkdownCode > components > body > editor
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js"]
+# MarkdownCode > components > body > results view
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js"]
+# MarkdownCode > components > toolbar > home > build section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js"]

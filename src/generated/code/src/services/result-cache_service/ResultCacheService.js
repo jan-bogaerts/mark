@@ -24,7 +24,7 @@ class ResultCacheService {
     ProjectService.eventTarget.addEventListener('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
 
     inputServices.forEach(service => {
-      service.cache.eventTarget.addEventListener('fragment-out-of-date', this.handleTextFragmentChanged.bind(this));
+      service.cache.eventTarget.addEventListener('result-changed', this.handleTextFragmentChanged.bind(this));
     });
   }
 
@@ -120,7 +120,7 @@ class ResultCacheService {
     }
     if (isModified) {
       this.isDirty = true;
-      this.eventTarget.dispatchEvent(new CustomEvent('fragment-out-of-date', { detail: key }));
+      this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }));
     }
   }
 
@@ -147,20 +147,28 @@ class ResultCacheService {
     if (this.overwrites[fragmentKey]) {
       return this.overwrites[fragmentKey];
     }
-    const result = {};
+    let result = null;
     const cacheKeys = this.secondaryCache[fragmentKey];
     if (cacheKeys) {
       for (const key of cacheKeys) {
         const cacheValue = this.getResult(key);
         const keyParts = key.split(' | ');
-        let addTo = result;
+        let addTo = null;
+        if (keyParts.length > 1) {
+          result = {};
+          addTo = result;
+        }
         for (const part of keyParts.slice(0, -1)) {
           if (!addTo[part]) {
             addTo[part] = {};
           }
           addTo = addTo[part];
         }
-        addTo[keyParts[keyParts.length - 1]] = cacheValue;
+        if (addTo) {
+          addTo[keyParts[keyParts.length - 1]] = cacheValue;
+        } else {
+          result = cacheValue;
+        }
       }
     }
     return result;

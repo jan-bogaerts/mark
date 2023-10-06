@@ -24,19 +24,19 @@
 {"Outline": "declare"}
 # MarkdownCode > components > toolbar
 {"Toolbar": "declare", "HomeTab": "# MarkdownCode > components > toolbar > home", "FormatTab": "# MarkdownCode > components > toolbar > format", "PreferencesTab": "# MarkdownCode > components > toolbar > preferences"}
-# MarkdownCode > components > toolbar > home > build section
-{"BuildSection": "declare"}
 # MarkdownCode > components > body > results view > results view tab
 {"ResultsViewTab": "declare", "ResultsViewContextMenu": "MarkdownCode > components > body > results view > results view context menu"}
 # MarkdownCode > components > toolbar > home > edit section
 {"EditSection": "declare"}
 # MarkdownCode > components > body
 {"Body": "declare", "Outline": "MarkdownCode > components > body > outline", "Editor": "MarkdownCode > components > body > editor", "ResultsView": "MarkdownCode > components > body > results view"}
-# MarkdownCode > components > body > results view
-{"ResultsView": "declare", "ResultsViewTab": "MarkdownCode > components > body > results view > results view tab"}
 # MarkdownCode > components > body > results view > results view context menu
 {"ResultsViewContextMenu": "declare"}
-# MarkdownCode > components > body > editor
-{"Editor": "declare"}
 # MarkdownCode > components > toolbar > home > file section
 {"FileSection": "declare"}
+# MarkdownCode > components > body > editor
+{"Editor": "declare"}
+# MarkdownCode > components > body > results view
+{"ResultsView": "declare", "ResultsViewTab": "MarkdownCode > components > body > results view > results view tab"}
+# MarkdownCode > components > toolbar > home > build section
+{"BuildSection": "declare"}

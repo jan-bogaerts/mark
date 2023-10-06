@@ -8,12 +8,6 @@
 {}
 # MarkdownCode > services > cybertron service
 {}
-# MarkdownCode > services > transformers > compress service
-{}
-# MarkdownCode > services > build service
-{}
-# MarkdownCode > services > position-tracking service
-{}
 # MarkdownCode > services > build-stack service
 {}
 # MarkdownCode > services > transformers > constant-extractor service
@@ -28,8 +22,6 @@
 {}
 # MarkdownCode > services > gpt service
 {}
-# MarkdownCode > services > transformer-base service
-{}
 # MarkdownCode > services > transformers > double-compress service
 {}
 # MarkdownCode > services > all-spark service
@@ -43,4 +35,12 @@
 # MarkdownCode > services > transformers > triple-compress service
 {}
 # MarkdownCode > services > transformers > component-lister service
+{}
+# MarkdownCode > services > position-tracking service
+{}
+# MarkdownCode > services > build service
+{}
+# MarkdownCode > services > transformers > compress service
+{}
+# MarkdownCode > services > transformer-base service
 {}
