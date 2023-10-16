@@ -5,9 +5,11 @@ import ThemeService from '../../services/Theme_service/ThemeService';
 import HomeTab from './home/HomeTab';
 import FormatTab from './format/FormatTab';
 import PreferencesTab from './preferences/PreferencesTab';
+import TransformersTab from './transformers/TransformersTab';
 
 const tabs = [
   { key: 'home', label: 'Home', children: <HomeTab /> },
+  { key: 'transformers', label: 'Transformers', children: <TransformersTab /> },
   { key: 'format', label: 'Format', children: <FormatTab /> },
   { key: 'preferences', label: 'Preferences', children: <PreferencesTab /> },
 ]

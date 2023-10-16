@@ -6,8 +6,8 @@ import ProjectService from '../project_service/ProjectService';
  */
 class BuildService {
   constructor() {
-    this.debug = localStorage.getItem('debug') === 'true';
-    this.isBuilding = false;
+    this._debug = localStorage.getItem('debug') === 'true';
+    this._isBuilding = false;
   }
 
   /**
@@ -23,16 +23,27 @@ class BuildService {
   }
 
   /**
+   * Indicates if the build service is currently building
+   */
+  get isBuilding() {
+    return this._isBuilding;
+  }
+
+  /**
    * Builds all fragments
    */
   async buildAll() {
-    this.isBuilding = true;
+    this._isBuilding = true;
     try {
-      for (let fragment of ProjectService.textFragments) {
-        await this.buildFragment(fragment);
+      if (CybertronService.activeEntryPoint.renderResults) {
+        await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
+      } else {
+        for (let fragment of ProjectService.textFragments) {
+          await CybertronService.activeEntryPoint.renderResult(fragment);
+        }
       }
     } finally {
-      this.isBuilding = false;
+      this._isBuilding = false;
     }
   }
 
@@ -41,13 +52,11 @@ class BuildService {
    * @param {Object} fragment - The fragment to build
    */
   async buildFragment(fragment) {
-    this.isBuilding = true;
+    this._isBuilding = true;
     try {
-      for (let transformer of CybertronService.entryPoints) {
-        await this.runTransformer(fragment, transformer);
-      }
+      await CybertronService.activeEntryPoint.renderResult(fragment);
     } finally {
-      this.isBuilding = false;
+      this._isBuilding = false;
     }
   }
 
@@ -57,11 +66,11 @@ class BuildService {
    * @param {Object} transformer - The transformer to use
    */
   async runTransformer(fragment, transformer) {
-    this.isBuilding = true;
+    this._isBuilding = true;
     try {
       await transformer.renderResult(fragment);
     } finally {
-      this.isBuilding = false;
+      this._isBuilding = false;
     }
   }
 }

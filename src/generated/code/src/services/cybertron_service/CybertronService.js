@@ -1,4 +1,3 @@
-
 /**
  * CybertronService class
  */
@@ -7,6 +6,7 @@ class CybertronService {
     if (!CybertronService.instance) {
       this.transformers = [];
       this.entryPoints = [];
+      this.activeEntryPoint = null;
       CybertronService.instance = this;
     }
 
@@ -22,6 +22,9 @@ class CybertronService {
     this.transformers.push(transformer);
     if (isEntryPoint) {
       this.entryPoints.push(transformer);
+      if (!this.activeEntryPoint) {
+        this.activeEntryPoint = transformer;
+      }
     }
   }
 
@@ -32,6 +35,9 @@ class CybertronService {
   unregister(transformer) {
     this.transformers = this.transformers.filter(t => t !== transformer);
     this.entryPoints = this.entryPoints.filter(t => t !== transformer);
+    if (this.activeEntryPoint === transformer) {
+      this.activeEntryPoint = this.entryPoints[0] || null;
+    }
   }
 
   /**
@@ -42,6 +48,11 @@ class CybertronService {
     return this.entryPoints;
   }
 
+  /**
+   * Get transformer by name
+   * @param {string} name - The name of the transformer
+   * @returns {Object} - The transformer object
+   */
   getTransformer(name) {
     return this.transformers.find(t => t.name === name);
   }

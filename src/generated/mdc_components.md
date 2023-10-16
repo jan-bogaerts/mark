@@ -38,5 +38,11 @@
 ["Editor"]
 # MarkdownCode > components > body > results view
 ["ResultsView", "ResultsViewTab"]
-# MarkdownCode > components > toolbar > home > build section
+# MarkdownCode > components > toolbar > transformers > build section
 ["BuildSection"]
+# MarkdownCode > components > body > fragment-status icon
+["FragmentStatusIcon"]
+# MarkdownCode > components > toolbar > transformers
+["TransformersTab", "ConfigurationSection", "BuildSection"]
+# MarkdownCode > components > toolbar > transformers > transformers-configuration section
+["ConfigurationSection"]

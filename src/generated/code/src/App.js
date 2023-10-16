@@ -5,7 +5,11 @@ import StorageService from './services/project_service/storage_service/StorageSe
 
 import allSpark from './services/all-spark_service/AllSparkService';  // import so that everything is registered
 
-StorageService.new(); // initate to new project
+if (window.electron.fileToOpen) {
+  StorageService.open(window.electron.fileToOpen);
+} else {
+  StorageService.new(); // initate to new project
+}
 
 function App() {
   return (

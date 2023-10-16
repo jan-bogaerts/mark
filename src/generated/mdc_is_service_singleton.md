@@ -44,3 +44,11 @@
 {"CompressService": "no"}
 # MarkdownCode > services > transformer-base service
 {"TransformerBaseService": "no"}
+# MarkdownCode > services > project service > project configuration service
+{"ProjectConfigurationService": "yes"}
+# MarkdownCode > services > transformers > plugin-transformer service
+{"PluginTransformerService": "no"}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"PluginRendererService": "no"}
+# MarkdownCode > services > transformers > plugin-list renderer service
+{"PluginListRendererService": "no"}

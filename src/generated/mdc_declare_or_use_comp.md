@@ -3,7 +3,7 @@
 # MarkdownCode > components > toolbar > home > undo section
 {"UndoSection": "declare", "UndoButton": "declare", "RedoButton": "declare"}
 # MarkdownCode > components > toolbar > home
-{"HomeTab": "declare", "FileSection": "MarkdownCode > components > toolbar > home > file section", "EditSection": "MarkdownCode > components > toolbar > home > edit section", "UndoSection": "MarkdownCode > components > toolbar > home > undo section", "BuildSection": "MarkdownCode > components > toolbar > home > build section"}
+{"HomeTab": "declare", "FileSection": "MarkdownCode > components > toolbar > home > file section", "EditSection": "MarkdownCode > components > toolbar > home > edit section", "UndoSection": "MarkdownCode > components > toolbar > home > undo section", "BuildSection": "MarkdownCode > components > toolbar > transformers > build section"}
 # MarkdownCode > components > toolbar > format
 {"FormatTab": "declare", "StyleSection": "MarkdownCode > components > toolbar > format > style section", "ParagraphSection": "MarkdownCode > components > toolbar > format > paragraph section", "FontSection": "MarkdownCode > components > toolbar > format > font section"}
 # MarkdownCode > components > toolbar > format > paragraph section
@@ -38,5 +38,11 @@
 {"Editor": "declare"}
 # MarkdownCode > components > body > results view
 {"ResultsView": "declare", "ResultsViewTab": "MarkdownCode > components > body > results view > results view tab"}
-# MarkdownCode > components > toolbar > home > build section
+# MarkdownCode > components > toolbar > transformers > build section
 {"BuildSection": "declare"}
+# MarkdownCode > components > body > fragment-status icon
+{"FragmentStatusIcon": "declare"}
+# MarkdownCode > components > toolbar > transformers
+{"TransformersTab": "declare", "ConfigurationSection": "MarkdownCode > components > toolbar > transformers > transformers-configuration section", "BuildSection": "MarkdownCode > components > toolbar > transformers > build section"}
+# MarkdownCode > components > toolbar > transformers > transformers-configuration section
+{"ConfigurationSection": "declare"}

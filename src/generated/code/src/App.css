@@ -34,7 +34,8 @@ div {
     padding: 10px;
   }
 
-.home-tab {
+.home-tab,
+.transformers-tab {
     display: flex;
   }
 
@@ -46,6 +47,7 @@ div {
 .paragraph-section, 
 .style-section,
 .gpt-section,
+.configuration-section,
 .view-section {
     display: flex;
     flex-direction: row;

@@ -3,6 +3,7 @@ import { Tree } from 'antd';
 import projectService from '../../../services/project_service/ProjectService';
 import positionTrackingService from '../../../services/position-tracking_service/PositionTrackingService';
 import themeService from '../../../services/Theme_service/ThemeService';
+import FragmentStatusIcon from '../fragment-status_icon/FragmentStatusIcon';
 
 /**
  * Outline component
@@ -19,8 +20,8 @@ class Outline extends Component {
   componentDidMount() {
     projectService.eventTarget.addEventListener('content-changed', this.handleContentChanged);
     projectService.eventTarget.addEventListener('fragment-deleted', this.handleFragmentDeleted);
-    projectService.eventTarget.addEventListener('fragment-inserted', this.handleFragmentInserted);
-    projectService.eventTarget.addEventListener('key-changed', this.handleKeyChanged);
+    projectService.eventTarget.addEventListener('fragment-inserted', this.handleContentChanged);
+    projectService.eventTarget.addEventListener('key-changed', this.handleContentChanged);
     positionTrackingService.eventTarget.addEventListener('change', this.handlePositionChanged);
   }
 
@@ -35,14 +36,6 @@ class Outline extends Component {
     this.removeNode(key);
   };
 
-  handleFragmentInserted = () => {
-    this.handleContentChanged();
-  };
-
-  handleKeyChanged = () => {
-    this.handleContentChanged();
-  };
-
   handlePositionChanged = (e) => {
     const key = e.detail?.key;
     if (!key) return;
@@ -53,7 +46,13 @@ class Outline extends Component {
     let parent = null;
     const treeData = [];
     data.forEach(item => {
-      const node = { title: item.title, key: item.key, data: item, children: [] };
+      const node = { 
+        title: item.title, 
+        key: item.key, 
+        data: item, 
+        icon: <FragmentStatusIcon fragment={item} />, 
+        children: [] 
+      };
       if (item.depth === 1) {
         treeData.push(node);
         parent = node;
@@ -102,8 +101,11 @@ class Outline extends Component {
     return (
       <div className={`outline ${theme}`}>
         <Tree
+          showIcon
           treeData={this.state.treeData}
           selectedKeys={this.state.selectedKeys}
+          autoExpandParent
+          expandedKeys={this.state.selectedKeys}
           onSelect={this.onSelect}
           showLine
         />

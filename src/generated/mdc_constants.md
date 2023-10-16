@@ -14,7 +14,7 @@
 []
 # MarkdownCode > components > toolbar > home > undo section
 []
-# MarkdownCode > components > toolbar > home > build section
+# MarkdownCode > components > toolbar > transformers > build section
 []
 # MarkdownCode > components > toolbar > format
 []
@@ -93,4 +93,18 @@
 # MarkdownCode > services > transformers > compress service
 [{"start": 10, "end": 14, "name": "MarkdownCode_services_transformers_compress_service_0"}]
 # MarkdownCode > services > transformer-base service
+[]
+# MarkdownCode > components > body > fragment-status icon
+[]
+# MarkdownCode > services > project service > project configuration service
+[]
+# MarkdownCode > services > transformers > plugin-transformer service
+[]
+# MarkdownCode > components > toolbar > transformers
+[]
+# MarkdownCode > components > toolbar > transformers > transformers-configuration section
+[]
+# MarkdownCode > services > transformers > plugin-renderer service
+[{"start": 45, "end": 91, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 93, "end": 96, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}]
+# MarkdownCode > services > transformers > plugin-list renderer service
 []

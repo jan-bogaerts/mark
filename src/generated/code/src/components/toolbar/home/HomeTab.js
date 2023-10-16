@@ -4,7 +4,6 @@ import ThemeService from '../../../services/Theme_service/ThemeService';
 import FileSection from './file_section/FileSection';
 import EditSection from './edit_section/EditSection';
 import UndoSection from './undo_section/UndoSection';
-import BuildSection from './build_section/BuildSection';
 
 /**
  * HomeTab component
@@ -19,7 +18,6 @@ const HomeTab = () => {
       <FileSection />
       <EditSection />
       <UndoSection />
-      <BuildSection />
     </div>
   );
 };

@@ -37,10 +37,13 @@ class FileSection extends Component {
     if (this.state.isDirty) {
       await this.saveProject();
     }
-    storageService.new();
+    if (!window.electron.isPluginMode) {
+      storageService.new();
+    }
   }
 
   openProject = async () => {
+    if (window.electron.isPluginMode) return;
     try {
       const dialogResult = await dialogService.showOpenDialog();
       if (dialogResult && !dialogResult.canceled && dialogResult.filePaths) {
@@ -55,8 +58,9 @@ class FileSection extends Component {
     try {
       let filename = this.state.filename;
       if (!filename) {
-        filename = await dialogService.showSaveDialog();
-        if (!filename) return;
+        const dialogResult = await dialogService.showSaveDialog();
+        if (dialogResult.canceled || !dialogResult.filePath) return;
+        filename = dialogResult.filePath;
       }
       await storageService.save(filename);
     } catch (error) {
@@ -86,10 +90,10 @@ class FileSection extends Component {
     return (
       <div className={`file-section ${theme}`}>
         <Tooltip title="New Project">
-          <Button icon={<PlusOutlined />} onClick={this.newProject} />
+          <Button icon={<PlusOutlined />} onClick={this.newProject} disabled={window.electron.isPluginMode} />
         </Tooltip>
         <Tooltip title="Open Project">
-          <Button icon={<FolderOpenOutlined />} onClick={this.openProject} />
+          <Button icon={<FolderOpenOutlined />} onClick={this.openProject} disabled={window.electron.isPluginMode} />
         </Tooltip>
         <Tooltip title="Save Project">
           <Button icon={<SaveOutlined />} onClick={this.saveProject} disabled={!this.state.isDirty || !this.state.filename} />

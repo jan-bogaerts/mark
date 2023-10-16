@@ -44,3 +44,11 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\compress_service\\CompressService.js"]
 # MarkdownCode > services > transformer-base service
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformer-base_service\\TransformerBaseService.js"]
+# MarkdownCode > services > project service > project configuration service
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\project_service\\project_configuration_service\\ProjectConfigurationService.js"]
+# MarkdownCode > services > transformers > plugin-transformer service
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\plugin-transformer_service\\PluginTransformerService.js"]
+# MarkdownCode > services > transformers > plugin-renderer service
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\plugin-renderer_service\\PluginRendererService.js"]
+# MarkdownCode > services > transformers > plugin-list renderer service
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\plugin-list_renderer_service\\PluginListRendererService.js"]

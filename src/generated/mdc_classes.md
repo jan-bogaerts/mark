@@ -90,3 +90,19 @@
 [
   "TransformerBaseService"
 ]
+# MarkdownCode > services > project service > project configuration service
+[
+  "ProjectConfigurationService"
+]
+# MarkdownCode > services > transformers > plugin-transformer service
+[
+  "PluginTransformerService"
+]
+# MarkdownCode > services > transformers > plugin-renderer service
+[
+  "PluginRendererService"
+]
+# MarkdownCode > services > transformers > plugin-list renderer service
+[
+  "PluginListRendererService"
+]

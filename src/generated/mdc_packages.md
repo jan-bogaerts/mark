@@ -14,7 +14,7 @@
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\edit_section\\EditSection.js": "{\n  \"react\": \"latest\",\n  \"antd\": \"latest\",\n  \"@ant-design/icons\": \"latest\"\n}"}
 # MarkdownCode > components > toolbar > home > undo section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\undo_section\\UndoSection.js": "{\n  \"react\": \"latest\",\n  \"react-dom\": \"latest\",\n  \"antd\": \"latest\",\n  \"@ant-design/icons\": \"latest\",\n  \"../../../../services/project-service/ProjectService\": \"latest\",\n  \"../../../../services/undo-service/UndoService\": \"latest\",\n  \"../../../../services/dialog-service/DialogService\": \"latest\",\n  \"../../../../services/theme-service/ThemeService\": \"latest\"\n}"}
-# MarkdownCode > components > toolbar > home > build section
+# MarkdownCode > components > toolbar > transformers > build section
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build section\\BuildSection.js": "{\n  \"react\": \"latest\",\n  \"antd\": \"latest\",\n  \"@ant-design/icons\": \"latest\"\n}"}
 # MarkdownCode > components > toolbar > format
 {"C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\format\\FormatTab.js": "{\n    \"react\": \"latest\",\n    \"antd\": \"latest\"\n}"}

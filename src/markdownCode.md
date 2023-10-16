@@ -25,6 +25,7 @@ the application uses a toolbar similar to applications like mS Access, excel, wo
   
 the following tabs are available:
 - home: this is shown as the first tab when the application starts.
+- transformers
 - format
 - preferences
 
@@ -34,8 +35,8 @@ the following tabs are available:
   - file section
   - edit section
   - undo section
-  - build section
-  
+
+
 ##### file section
 - the file-section component contains actions related to the project and file management.
 - all buttons use an appropriate icon as content, no text.
@@ -43,7 +44,9 @@ the following tabs are available:
   - New Project: a button to create a new project
     - if there is a project loaded with changes `projectService.isDirty == true`, call this.saveProject().
     - call `storageService.new()`
+    - disabled when `window.electron.isPluginMode == true`
   - open: a button to open an existing project.
+    - disabled when `window.electron.isPluginMode == true`
     - show a dialog box to select a file `dialogResult = await dialogService.showOpenDialog()`
     - if not dialogResult.canceled and dialogResult.filePaths, ask the storage-service to open the first file in filePaths (can only open 1 file at a time).
     - wrap in an exception handler that shows an error dialog
@@ -97,6 +100,23 @@ the following tabs are available:
     - enabled when the undo-service has redo actions
     - calls the undo-service's redo function.
 - The undo service needs to be monitored for changes so that the state of the buttons can be updated.
+
+
+#### transformers
+- the transformers-tab component is a wrapper that displays it's children in a row.
+- This component contains the following child components :
+  - configuration section
+  - build section
+
+
+##### transformers-configuration section
+- The transformers-configuration section contains actions that are related to the transformers that are available in the application.
+- all buttons are wrapped in a tooltip (from the antd library) containing a description of the action.
+- it contains the following actions:
+  - edit transformers: a button that calls the function `window.electron.openPluginEditor(folderService.plugins)` which will open a new window of the markdownCode editor in plugin-mode, using the project at the specified path.
+    - disabled when `window.electron.isPluginMode == true`
+    - icon: MdRebaseEdit
+  - active entry point: a drop down list, populated with the names of the transformers (entryPoint.name) found in `cybertronService.entryPoints`. The selected item in the dropdownlist comes from `cyberTronService.activeEntryPoint`. Whenever the selection changes in the drop down list, this field is updated.
 
 ##### build section
 - the build-section component contains actions that the build-service can perform.
@@ -274,7 +294,7 @@ Remember that each button needs it's own appropriate icon.
 - when the user selects a tree item, the key of the first selected item is assigned to the position-tracking service's activeFragment
 - this component monitors the position-tracking service for changes to the currently selected text-fragment.
   - use `positionTrackingService.eventTarget.addEventListener('change', eventHandler)` to attach the event handler
-  - when the position changes, set the tree's selectedKeys property to the key (if any) of the text-fragment so that the corresponding tree node becomes selected. `key = e.detail?.key`
+  - when the position changes, set the tree's selectedKeys and defaultExpandedKeys properties to the key (if any) of the text-fragment so that the corresponding tree node becomes selected. `key = e.detail?.key`
 - show the tree with lines
 - when the user clicks on a tree-item (onSelect):
   ```python
@@ -287,11 +307,14 @@ Remember that each button needs it's own appropriate icon.
 - the function 'convertToTreeData' is described as:
   set parent to null
   for every data item:
-    create a new node for the data item. Set the title & key of the node to the title & key of the data item. also keep a reference to the data item itself in the node
-    if the item's field depth = 1, add the new node to the root node and make that node the parent 
-    else if there is no parent yet, skip the item
-    if the item's depth is higher then parent.data.depth: add the new node to the parent's children. assign node.parent = parent. make the new node parent 
-    if the item's depth equals parent.data.depth or is lower:
+    Create a new node for the data item. 
+      Set the title & key of the node to the title & key of the data item.
+      Use the fragment-status-icon component as the icon for the node. Assign the data item as the value for the property 'fragment' .
+      Also keep a reference to the data item itself in the node.
+    If the item's field depth = 1, add the new node to the root node and make that node the parent 
+    Else if there is no parent yet, skip the item
+    If the item's depth is higher then parent.data.depth: add the new node to the parent's children. assign node.parent = parent. make the new node parent 
+    If the item's depth equals parent.data.depth or is lower:
       get the parent of the current parent until the depth of this new parent is 1 higher then the depth of the item and add the item as a child of this new parent. assign node.parent = parent. Make the item the new parent.
   
 - pseudo for removeNodeFromTree:
@@ -311,6 +334,32 @@ Remember that each button needs it's own appropriate icon.
 
   ```
 
+
+#### fragment-status icon
+- The fragment-status icon component is used to indicate the current status of a text-fragment object.
+- the component has the following properties that need to be supplied by consumers of the component:
+  - fragment: a reference to the text-fragment object for which the status needs to be shown
+- based on `fragment?.depth` value, the following icon should be shown:
+  - 1: LuHeading1
+  - 2: LuHeading2
+  - ...
+  - 6 or more: LuHeading6
+-the LuHeading1, LuHeading2, LuHeading3, LuHeading4, LuHeading5, LuHeading6 icons are imported from the 'react-icons/lu' library.
+- select which icon to use in the render function. Use the state 'depth' to select which icon to use.
+- the component shows a tooltip (from the antd library) which shows the status of the component. 
+- for the color of the icon, use:
+  - green if `!fragment?.isOutOfDate`
+    - this status indicates that the fragment is up to date
+  - orange if `fragment?.isOutOfDate && fragment?.outOfDateTransformers?.length > 0`
+    - this indicates that the fragment is no longer up to date for a sub-set of the transformers. This list contains the transformer objects. Display the `name` of each transformer in the tooltip. 
+  - red if `fragment?.isOutOfDate && !(fragment?.outOfDateTransformers?.length > 0)`
+    - this indicates that the fragment is no longer up to date for all of the transformers. 
+- upon construction register an event handler with the project-service (prop: eventTarget) to handle the following events (Unregister when unloading):
+  - `fragment-out-of-date`: 
+    - if `e.detail === fragment?.key` then refresh the color of the icon and content of the tooltip when the event is triggered.
+  - `key-changed`:
+    - if `e.detail?.key === fragment?.key` then refresh the icon that is used, based on the new value for `fragment?.depth`
+  
 
 #### results view
 - the results-view component is positioned at the bottom of the main body
@@ -467,6 +516,13 @@ Remember that each button needs it's own appropriate icon.
   - is-dirty-changed: when the project was saved or first time it is modified after saving/loading/creating.
 
 
+#### project configuration service
+- The project configuration service keeps track of various configurations of the project.
+- fields:
+  - eventTarget: to register/unregister event handlers that monitor configuration changes
+  - config: json object that provides full access to the entire configuration set.
+
+
 #### storage service
 - the storage service is a global singleton that is responsible for reading and writing project data to and from storage.
 - functions:
@@ -480,13 +536,21 @@ Remember that each button needs it's own appropriate icon.
     for transformer in cybertronService.transformers:
       transformer.cache.clearCache()
     gptService.modelsMap = {}
+    projectConfigurationService.loadConfig({})
     ```
   - new(): set everything up for a new project.
     ```python
-      this.clear()
-      projectService.dispatchEvent('content-changed')
-      projectService.setIsDirty(True)
+      projectService.blockEvents = True
+      this.loading = True # to prevent marking it dirty while loading
+      try:
+        this.clear()
+      finally:
+        projectService.blockEvents = False
+        projectService.dispatchEvent('content-changed')
+        this.loading = False
+        projectService.setIsDirty(False)
       ```
+
   - open(filePath): load all the data from disk 
     ```python (pseudo)
       projectService.blockEvents = True
@@ -496,11 +560,12 @@ Remember that each button needs it's own appropriate icon.
         folderService.setLocation(filePath)
         content = fs.readFileSync(filePath, 'utf8')
         projectService.content = content
-        projectService.filePath = filePath
+        projectService.filename = filePath
         content.split('\n').forEach((line, index) => lineParser.parse(line, index));
         for transformer in cybertronService.transformers:
           transformer.cache.loadCache()
         this.loadModelsMap(filePath)
+        this.loadProjectConfig(filePath)
       finally:
         projectService.blockEvents = False
         projectService.dispatchEvent('content-changed')
@@ -511,6 +576,9 @@ Remember that each button needs it's own appropriate icon.
   - loadModelsMap(filePath): loads the json file that defines the models to be used with the project
     - build the json file name by replacing '.md' with '_models.json' at the end of the field 'file'
     - if the json file exists, load it and assign the parsed json to `gptService.modelsMap`
+  - loadProjectConfig(filePath): loads the json file that contains the configuration settings for the project
+    - json file name = folderService.projectConfig
+    - if the json file exists, load it and store the parsed json with `projectConfigurationService.loadConfig(configString)`
   
   - updateOutOfDate(): updates the list of out-of-date transformers for each text-fragment.
     ```python (pseudo)
@@ -548,6 +616,7 @@ Remember that each button needs it's own appropriate icon.
       for transformer in cybertronService.transformers:
         await transformer.cache.saveCache()
       await this.saveModelsMap(file)
+      await this.saveProjectConfig(file)
       projectService.filename = file
       projectService.setIsDirty(False)
       this.saveTimer = None
@@ -555,6 +624,10 @@ Remember that each button needs it's own appropriate icon.
   - saveModelsMap(file): 
     - build the json file name by replacing '.md' wit '_models.json' at the end of the field 'file'
     - convert the json object in `gptService.modelsMap` to a string
+    - save the stringified json to the json file name
+  - saveProjectConfig(file): 
+    - json file name = folderService.projectConfig
+    - convert the json object in `projectConfigurationService.config` to a string
     - save the stringified json to the json file name
 
 
@@ -598,11 +671,16 @@ Remember that each button needs it's own appropriate icon.
   - project-file: folder + project name + '.json'
   - cache: sub-folder of the root folder = folder + '\cache'
   - project-config: configuration file that accompanies the project = folder + project name + '_config.json'
+  - plugins: sub-folder of the root folder = folder + '\plugins'. This folder does not have to exist
+  - pluginsOutput: sub-folder of the plugins folder = plugins + '\output'. This is a prop that dynamically builds the result
+  - output: sub-folder of the root folder = folder + '\output'. This folder does not have to exist
 - it can:
   - clear: called when a new project is created and the location & name is not yet known.
     - create a temp folder, set value as 'folder'
     - create a temp name, set as project name
     - create the cache folder
+    - create the output folder
+    - calculate the value for 'plugins', but don't try to create the folder
   - move to (new project file): moves the current project and related files to the new location
     - split 'new project file' into new-folder and new-project name (remove extension .md)
     - move the file project-file (if it exists) to the 'new project file'
@@ -610,21 +688,34 @@ Remember that each button needs it's own appropriate icon.
     - move the configuration file (if it exists) to the new project config location.
     - create a new cache folder at new-folder + '\cache', if this folder doesn't already exist
     - move all files from the cache (if it exists) to the new-cache-folder location
+    - if the plugins folder exists in the current project:
+      - create a new plugins folder at new-folder + '\plugins', if this folder doesn't already exist
+      - move all the files and sub-folders (recursively) to the new-plugins-folder location
+    - if the output folder exists in the current project:
+      - create a new output folder at new-folder + '\output', if this folder doesn't already exist
+      - move all the files and sub-folders (recursively) to the new-output-folder location
     - store the new folder and project name
   - copy (new project file): saves the current project to a new location.
     - split 'new project file' into new-folder and new-project name (remove extension .md)
     - copy the file project-file (if it exists) to the 'new project file'
     - build the new project config : new-folder + new-project-file + '_config.json'
     - copy the configuration file (if it exists) to the new project config location.
-    - create a new cache folder at new-folder + '\cache'
+    - create a new cache folder at new-folder + '\cache', if this folder doesn't already exist
     - copy all files from the cache (if it exists) to the new-cache-folder location
+    - if the plugins folder exists in the current project:
+      - create a new plugins folder at new-folder + '\plugins', if this folder doesn't already exist
+      - copy all the files and sub-folders (recursively, use fs.cpSync) to the new-plugins-folder location
+    - if the output folder exists in the current project:
+      - create a new plugins folder at new-folder + '\output', if this folder doesn't already exist
+      - copy all the files and sub-folders (recursively, use fs.cpSync) to the new-output-folder location
     - store the new folder and project name
   - set location (location)
     - store the new folder and project name
       - this.folder = path.dirname(location)
       - this.cache = path.join(this.folder, 'cache')
+      - this.plugins = path.join(this.folder, 'plugins')
+      - this.output = path.join(this.folder, 'output')
       - this.projectName = path.basename(location)
-- The fs module should be remotely loaded through @electron/remote.
 
 ### Selection service
 - The selection service is a global singleton object that keeps track of the currently selected text.
@@ -1088,10 +1179,11 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
 ### build service
 - the build service is a global singleton that processes all the text-fragments of the project-service. It uses a set of transformers to iteratively generate conversions on the different text-fragments.
-- async buildAll: to build the project, the service performs the following actions:
-  - for each text-fragment in project-service.textFragments: `this.buildFragment(text-fragment)`
+- async buildAll: to build the project, do:
+  - if `CybertronService.activeEntryPoint.renderResults` exists, call it (async)with param `ProjectService.textFragments`
+  - otherwise: for each fragment in project-service.textFragments: `await CybertronService.activeEntryPoint.renderResult(fragment)`
 - async buildFragment(fragment): 
-  - for every transformer in the list of entry-points of the cybertron-service: `await this.runTransformer(text-fragment, transformer)`
+  - `await CybertronService.activeEntryPoint.renderResult(fragment)`
 - async runTransformer(fragment, transformer):
   - ask the transformer to render it's result (renderResult) (async)
 - debug: a property to indicate if the build service is currently in debug mode or not. Load the value from local storage upon creation. Save to local storage whenever the value is updated.
@@ -1120,24 +1212,45 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 ### cybertron service
 - the cybertron-service is a global singleton that is responsible for managing the list of available transformers.
 - the service also maintains a list of entry-points: this is a sub-list of the available transformers which can be used as starting points for building text-fragments.
-- Transformers can be register. this adds them to the list. A second parameter indicates if the transformer should also be added as an entry-point
-- Transformers can also be unregister. this will remove them from the list of available transformers and the list of entry-points.
+- the field `activeEntryPoint` keeps track of the currently selected entrypoint, which is one of the transformers of the entryPoints list. 
+- Transformers can be registered. this adds them to the list. A second parameter indicates if the transformer should also be added as an entry-point. If the field 'activeEntryPoint' is still empty and the transformer being registered, is an entrypoint, set it as the activeEntryPoint.
+- Transformers can also be unregistered. this will remove them from the list of available transformers and the list of entry-points.
 - getTransformer(name): search for the transformer with the specified name in this.transformers and return the result
 
 
 ### all-spark service
 - the all-spark service is a global singleton that is responsible for creating all the transformers and registering them into the cybertron service. 
 - functions:
+  - getPlugins: returns a list of plugin definitions
+    - if the list has not yet been loaded, call: `await this.loadPlugins()`
+    - return this.plugins
+  - loadPlugins: If the current project contains a plugins folder, load the project-local file, otherwise load the globally available set of plugins.
+    ```python pseudo
+      path = os.path.join(folderService.pluginsOutput, 'plugins.json')
+      if not fs.existsSync(path):
+        userDataPath = await window.electron.getPath('userData')
+        path = os.path.join(userDataPath, 'plugins', 'plugins.json')
+      if fs.existsSync(path):
+        plugins = fs.readSync(path)
+        this.plugins = json.parse(plugins)
+      else:
+        this.plugins = []
+    ```
+  - loadPlugin(definition):
+    - create a script tag, do: `script.src = definition`
+    - when the script tag is loaded, return the object that was exported from the script.
   - load: create the transformers and register them with the cybertron-service. 
     - This function is called during construction of the application
     - to register, use: `cybertronService.register(transformer, false)`, to register as entry point, use: `cybertronService.register(transformer, true)`
     - register every transformer after construction so that it can be found in the list by other transformers.
     - transformers to create:
       - constant-extractor service
-      - compress service
-      - double-compress service
-      - triple-compress service
-      - component-lister service (entry point)
+      - plugin-renderer service (entry point)
+      - plugin-list renderer service (entry point)
+      - for every transformer definition in this.getPlugins():
+        - pluginObj = this.loadPlugin(transformerDef)
+        - create a new plugin-transformer service, with constructor param 'pluginObj'
+        - register plugin-transformer, to determine if it's an entry-point, use 'pluginTransformer.isEntryPoint'
 
 
 ### transformer-base service
@@ -1187,26 +1300,6 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - buildMessage(textFragment): builds the message from the text fragment. throws a not-implemented error since inheritors need to supply this function.
 
 ### transformers
-
-#### compress service
-- The compress service takes a text fragment and makes it shorter.
-- Useful to check if the system understands the fragment and can be used as input for other processes.
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'compress'
-  - dependencies: ['constants']
-  - isJson: false
-- set during construction: `this.constantsService = this.dependencies[0]`
-- function build-message(text-fragment):
-  - result (json array):
-    - role: system, content:
-      
-     > Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
-     > Any text between markdown code blocks (``` or \""" signs) are declarations of constant values, do not change them, but replace with the name of the constant. Remove the markdown, but use bullet points where appropriate.
-     > compress the following text:
-
-    - role: user, content: `await this.constantsService.getResult(text-fragment)`.
-  - return result, [ text-fragment.key ]
-
 
 #### constant-extractor service
 - The constant-extractor service makes certain all constant definitions (between quotes) are extracted from the source code, rendered to a json file and replaced with references to the json-entries in the source texts.
@@ -1284,91 +1377,175 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         return new_lines.join('\n')
     ```
 
-
-#### double-compress service
-- The double-compress-service takes the result of compress-service and makes it even shorter.
-- Useful to check if the system understands the fragment and can be used as input for other processes.
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'double compress'
-  - dependencies: ['compress']
+#### plugin-transformer service
+- the plugin-transformer service forms a wrapper round a javascript object that was provided by a plugin. 
+  - The plugin provides the configuration info of the transformer
+  - The transformer asks the plugin to build the transformer's result and it allows the plugin the overwrite the default behaviour at various points.  
+- inherits from transformer-base service.
+- constructor:
+  - parameters:
+    - plugin: object created by the plugin code that provides access to the functions that should be used
+  - if the plugin does not have a function `getDescription`, raise an error to indicate that the provided plugin is invalid and can't be used as a transformer
+  - do:
+  ```python
+  this.plugin = plugin
+  description = plugin.getDescription()
+  if not description:
+    raise Exception('Invalid plugin: no description provided')
+  super(description.name, description.dependencies, description.isJson)
+  this.description = description
+  for const dep in this.dependencies:
+    this.plugin.deps[dep.name] = dep
+  plugin.services = {
+    projectService: projectService,
+    folderService: folderService,
+    gptService: gptService,
+    cybertronService: cybertronService,
+    cache: this.cache,
+  }
+  ```
+- calculateMaxTokens(inputTokens)
+  ```python
+    if this.plugin.calculateMaxTokens:
+      return this.plugin.calculateMaxTokens(inputTokens)
+    return super.calculateMaxTokens(inputTokens)
+  ```
+- buildMessage(fragment): if not this.plugin.buildMessage: raise error else return this.plugin.buildMessage(fragment)
+- renderResult(fragment)
+  ```python
+    if this.plugin.renderResult:
+      return this.plugin.renderResult(fragment)
+    return super.renderResult(fragment)
+  ```
+  
+#### plugin-renderer service
+- The plugin-renderer service is responsible for translating a plugin definition into a javascript module.
+- Used to build plugin transformers that can be loaded and used by the application
+- inherits from transformer-base service. Constructor parameters for transformer-base:
+  - name: 'plugin renderer'
+  - dependencies: ['constants']
   - isJson: false
-- set during construction: `this.compressService = this.dependencies[0]`
-- function build-message(text-fragment):
-  - result (json array):
-    - role: system, content:
-      
-     > condense the following text as much as possible, without loosing any meaning:
-
-    - role: user, content: `await this.compressService.getResult(text-fragment)`.
-  - return result, [ text-fragment.key ]
-
-
-#### triple-compress service
-- The triple-compress-service takes the result of double-compress-service and shortens it to 1 line.
-- Used as a description for each fragment when searching for linked components and services.
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'triple compress'
-  - dependencies: ['double compress']
-  - isJson: false
-- set during construction: `this.doubleCompressService = this.dependencies[0]`
-- function build-message(text-fragment):
-  - result (json array):
-    - role: system, content:
-      
-     > condense the following text to 1 sentence:
-
-    - role: user, content: `await this.doubleCompressService.getResult(text-fragment)`.
-  - return result, [ text-fragment.key ]
-
-#### component-lister service
-- the component-lister services is responsible for extracting all the component names it can find in a text.
-- part of finding out which components need to be rendered
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'components'
-  - dependencies: []
-  - isJson: true
-- function build-message(textFragment):
-  - if projectService.textFragments.indexOf(textFragment) < 2: return null
-  - result (json array):
-    - role: system, content:
-      
-      > Act as an ai software analyst.
-      > It is your task to list all the components that you can find in the text, keeping in mind that the following development stack is used:
-      > {{dev_stack_title}}
-      > {{dev_stack_content}}
-      >
-      > Do not include UI components that are provided by the UI framework. So don't include: buttons, dropdowns, inputs, sliders, toggle buttons, but only list the components that need to be custom built.
-      > Don't include any non visual services.
-      > Don't include any explanation, just write the list of component names as a json array and nothing else.
-      > If no components can be found, return an empty json array.
-      >
-      > good response:
-      > ["SomethingX", "SomethingY"]
-      > 
-      > bad response:
-      > ["something-x", "something y"]
-
-      replace:
-      - dev_stack_title: `projectService.textFragments[1]?.title`
-      - dev_stack_title: `projectService.textFragments[1]?.lines.join('\n')`
-
-    - role: user, content:
-
-      > {{title}}
-      > {{content}}
-      
-      replace:
-      - title: `textFragment.title`
-      - content: `textFragment.lines.join('\n')`
-
-    - role: assistant, content:
-
-      > Remember: only components and use CamelCasing for the component names.
-
-  - return:
+- set during construction: `this.constantsService = this.dependencies[0]`
+- functions:
+  - saveFile(key, content):
     ```python
-    if len(projectService.textFragments) >= 1:
-      return result, [ textFragment.key, projectService.textFragments[1].key ]
-    else:
-      result, [ textFragment.key ]
+      rootFolder = folderService.output
+      if not fs.existsSync(rootFolder):
+        fs.mkdirSync(rootFolder)
+      fileName = key.replace(" > ", "_").replace(" ", "_")
+      file_path = os.path.join(rootPath, fileName + ".js")
+      with open(file_path, "w") as writer:
+        writer.write(content)
+      return file_path
+    ```
+  - cleanResult(content):
+    ```python
+      if content:
+        # remove the code block markdown
+        content = content.strip() # need to remove the newline at the end
+        if content.startswith("```javascript"):
+          content = content[len("```javascript"):]
+        if content.endswith("```"):
+          content = content[:-len("```")]
+        return content
+    ```
+  - renderResult(fragment):
+    ```python
+      message, keys = await this.buildMessage(fragment)
+      if not message:
+        return None
+      result = await GPTService.sendRequest(this, fragment.key, message)
+      result = this.cleanResult(result)
+      filename = this.saveFile(fragment.key, result)
+      key = keys.join(' | ')
+      this.cache.setResult(key, filename)
+      return filename
+    ```
+  - buildMessage(fragment):
+    - result (json array):
+      - role: system, content:
+        
+        > Act as a full-stack ai software developer.
+        > It is your task to write a javascript module according to the specifications.
+        > 
+        > The module should export an object containing the following fields:
+        > - getDescription(): (required) a function that returns a json object containing the fields:
+        >   - name: (required) name of the transformer
+        >   - dependencies: (required)list of names of other transformers
+        >   - isJson: (required)boolean, true if the transformer produces json data.
+        >   description: (optional) a string that describes what the transformer does
+        > - buildMessage(fragment): (required) a function that builds and returns the prompt that should be used for the transformer and text-fragment.
+        > - renderResult(fragment): (optional) a function that builds the message, asks the gpt service to solve it and stores the result. It returns the result
+        > - calculateMaxTokens(inputTokenCount): (optional) a function that calculates and returns the expected maximum token count used for the transformer's prompt
+        > 
+        > use the following development stack:
+        > - developed in javascript (ES6)
+        > - it uses electron as it's runtime
+        > - The UI is built using react and antd
+        > 
+        > example response:
+        > 
+        > ```javascript
+        > export const deps = {}; // this must always be exported
+        > export const services = {}; // this must always be exported
+        > export function getDescription() {
+        >   return {name: 'test', dependencies: ['a', 'b'], isJson: true};
+        > }
+        > export function buildMessage(fragment) {
+        >   const result = [
+        >       {
+        >         role: 'system',
+        >         content: resources.MarkdownCode_services_transformers_compress_service_0,
+        >       },
+        >       {
+        >         role: 'user',
+        >         content: await deps.constantsService.getResult(fragment),
+        >       },
+        >     ];
+        > 
+        >     return [result, [fragment.key]];
+        > }
+        > export function calculateMaxTokens(inputTokenCount) {
+        >   return inputTokenCount + 1;
+        > }
+        > ```
+        > Do not include an introduction or any explanation, only generate the code. Only include function that are required or the user included, do not write any optional functions from the example when not provided in the following text. Include a description field when possible.
+
+      - role: user, content:
+
+        > {{title}}
+        > {{content}}
+      
+        replace:
+        - {{title}}: `textFragment.title`
+        - {{content}}: `await this.constantsService.getResult(fragment)`
+    - return result, [ fragment.key ]
+
+
+#### plugin-list renderer service
+- the plugin-list renderer service is responsible for generating a file containing all the plugins that need to be loaded.
+- Used to let the application know which files to load from where for the transformer-plugins.
+- inherits from transformer-base service. Constructor parameters for transformer-base:
+  - name: 'plugin-list renderer'
+  - dependencies: ['plugin renderer']
+  - isJson: true
+- set during construction: `this.pluginRendererService = this.dependencies[0]`
+- functions:
+  - saveFile(items): saves the array to file
+    ```python
+      rootFolder = folderService.output
+      if not fs.existsSync(rootFolder):
+        fs.mkdirSync(rootFolder)
+      file_path = os.path.join(rootPath, "plugins.json")
+      with open(file_path, "w") as writer:
+        writer.write(content)
+    ```
+  - renderResults(fragments): builds the array of files, (a file for each fragment), provided by the plugin-renderer and saves it to the output folder.
+    ```python
+      items = []
+      for fragment in fragments:
+        item = await this.pluginRendererService.getResult(fragment)
+        if item:
+          items.append(item)
+      saveFile(items)
     ```

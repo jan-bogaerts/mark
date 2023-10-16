@@ -1,10 +1,11 @@
-
 import CybertronService from '../cybertron_service/CybertronService';
-import CompressService from '../transformers/compress_service/CompressService';
+import folderService from '../folder_service/FolderService';
 import ConstantExtractorService from '../constant-extractor_service/ConstantExtractorService';
-import DoubleCompressService from '../double-compress_service/DoubleCompressService';
-import TripleCompressService from '../transformers/triple-compress_service/TripleCompressService';
-import ComponentListerService from '../transformers/component-lister_service/component-lister_service';
+import PluginRendererService from '../transformers/plugin-renderer_service/PluginRendererService';
+import PluginListRendererService from '../transformers/plugin-list_renderer_service/PluginListRendererService';
+import PluginTransformerService from '../transformers/plugin-transformer_service/PluginTransformerService';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * AllSparkService class
@@ -12,29 +13,73 @@ import ComponentListerService from '../transformers/component-lister_service/com
  */
 class AllSparkService {
   constructor() {
+    this.plugins = null;
     this.load();
+  }
+
+  /**
+   * GetPlugins function
+   * This function returns a list of plugin definitions.
+   */
+  async getPlugins() {
+    if (!this.plugins) {
+      await this.loadPlugins();
+    }
+    return this.plugins;
+  }
+
+  /**
+   * LoadPlugins function
+   * This function loads the plugins from the project-local file or the globally available set of plugins.
+   */
+  async loadPlugins() {
+    let pluginsPath = path.join(folderService.pluginsOutput, 'plugins.json');
+    if (!fs.existsSync(pluginsPath)) {
+      const userDataPath = await window.electron.getPath('userData');
+      pluginsPath = path.join(userDataPath, 'plugins', 'plugins.json');
+    }
+    if (fs.existsSync(pluginsPath)) {
+      const plugins = fs.readFileSync(pluginsPath);
+      this.plugins = JSON.parse(plugins);
+    } else  {
+      this.plugins = [];
+    }
+  }
+
+  /**
+   * LoadPlugin function
+   * This function loads a plugin from a script tag.
+   * @param {string} definition - The path to the plugin script.
+   */
+  loadPlugin(definition) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = definition;
+      script.onload = () => {
+        resolve(window[definition]);
+      };
+      script.onerror = (error) => {
+        reject(error);
+      };
+      document.body.appendChild(script);
+    });
   }
 
   /**
    * Load function
    * This function creates the transformers and register them with the cybertron-service.
    */
-  load() {
-    this.registerTransformer(new ConstantExtractorService(), false);
-    this.registerTransformer(new CompressService(), false);
-    this.registerTransformer(new DoubleCompressService(), false);
-    this.registerTransformer(new TripleCompressService(), false);
-    this.registerTransformer(new ComponentListerService(), true);
-  }
+  async load() {
+    CybertronService.register(new ConstantExtractorService(), false);
+    CybertronService.register(new PluginRendererService(), true);
+    CybertronService.register(new PluginListRendererService(), true);
 
-  /**
-   * RegisterTransformer function
-   * This function registers a transformer with the cybertron-service.
-   * @param {Object} transformer - The transformer to register.
-   * @param {boolean} isEntryPoint - Whether the transformer is an entry point.
-   */
-  registerTransformer(transformer, isEntryPoint) {
-    CybertronService.register(transformer, isEntryPoint);
+    const pluginDefs = await this.getPlugins();
+    for (const pluginDef of pluginDefs) {
+      const pluginObj = await this.loadPlugin(pluginDef);
+      const pluginTransformer = new PluginTransformerService(pluginObj);
+      CybertronService.register(pluginTransformer, pluginTransformer.isEntryPoint);
+    }
   }
 }
 

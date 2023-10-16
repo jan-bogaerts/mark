@@ -433,7 +433,7 @@ The component-lister service extracts component names from text and is used to d
 - The clear method sets the active fragment and current line to null.
 - The setActiveFragment method checks if the provided fragment is different from the currently active fragment. If it is, it retrieves the start line of the fragment and triggers a 'moveTo' event with the start line as the event data.
 - The setActiveTransformer method checks if the provided transformer is different from the currently active transformer. If it is, it sets the provided transformer as the active transformer and triggers a 'change' event with the transformer as the event data.
-# MarkdownCode > components > toolbar > home > build section
+# MarkdownCode > components > toolbar > transformers > build section
 - The build-section component contains actions for the build-service.
 - Buttons have icons instead of text.
 - Buttons have tooltips with detailed descriptions.
@@ -494,3 +494,84 @@ The component-lister service extracts component names from text and is used to d
   - "render-result(pseudo)" is used to render a result for a given text fragment.
   - "get-result(key)" retrieves an up-to-date result value for a specified key, utilizing the cache when possible.
   - "calculateMaxTokens(inputTokens)" calculates the maximum tokens for the llm to optimize speed and cost.
+# MarkdownCode > components > body > fragment-status icon
+- The fragment-status icon component displays the current status of a text-fragment object.
+- Consumers of the component need to provide the following properties:
+  - fragment: a reference to the text-fragment object
+- The icon shown depends on the value of `fragment?.level`:
+  - 1: LuHeading1
+  - 2: LuHeading2
+  - ...
+  - 6 or more: LuHeading6
+- The component includes a tooltip from the antd library that shows the status.
+- The color of the icon is determined by:
+  - green if `!fragment?.isOutOfDate` (fragment is up to date)
+  - orange if `fragment?.isOutOfDate && fragment?.outOfDateTransformers?.length > 0` (fragment is not up to date for some transformers)
+    - The tooltip displays the `name` of each transformer.
+  - red if `fragment?.isOutOfDate && !(fragment?.outOfDateTransformers?.length > 0)` (fragment is not up to date for all transformers)
+- The component registers an event handler with the project-service (prop: eventTarget) upon construction to handle the following events (unregisters when unloading):
+  - `fragment-out-of-date`:
+    - If `e.detail === fragment?.key`, the icon color and tooltip content are refreshed when the event is triggered.
+  - `key-changed`:
+    - If `e.detail?.key === fragment?.key`, the icon is refreshed based on the new value of `fragment?.level`.
+# MarkdownCode > services > project service > project configuration service
+- The project configuration service manages project configurations.
+- It includes the following fields:
+  - eventTarget: used to register/unregister event handlers for configuration changes.
+  - config: a JSON object that grants full access to the entire configuration set.
+# MarkdownCode > services > transformers > plugin-transformer service
+- The plugin-transformer service wraps a JavaScript object provided by a plugin.
+  - The plugin provides configuration information for the transformer.
+  - The transformer requests the plugin to build the transformer's result and allows the plugin to override default behavior at various points.
+- It inherits from the transformer-base service.
+- The constructor takes a plugin object as a parameter, created by the plugin code that provides access to the necessary functions.
+  - If the plugin does not have a `getDescription` function, an error is raised to indicate that the provided plugin is invalid and cannot be used as a transformer.
+  - The plugin object is assigned to `this.plugin`.
+  - The plugin's description is obtained using `plugin.getDescription()`.
+    - If no description is provided, an exception is raised.
+  - The transformer's description, dependencies, and JSON status are set based on the plugin's description.
+  - If the plugin has a `setDependencies` function, it is called with the transformer's dependencies.
+  - The plugin's services are assigned to `plugin.services`.
+- The `calculateMaxTokens` function checks if the plugin has a `calculateMaxTokens` function.
+  - If it does, the plugin's `calculateMaxTokens` function is called with the input tokens.
+  - If not, the transformer's `calculateMaxTokens` function is called.
+- The `buildMessage` function checks if the plugin has a `buildMessage` function.
+  - If it does, the plugin's `buildMessage` function is called with the fragment.
+  - If not, an error is raised.
+- The `renderResult` function checks if the plugin has a `renderResult` function.
+  - If it does, the plugin's `renderResult` function is called with the fragment.
+  - If not, the transformer's `renderResult` function is called.
+# MarkdownCode > components > toolbar > transformers
+- The transformers-tab component arranges its children in a horizontal row.
+- It includes the configuration section and the build section as child components.
+# MarkdownCode > components > toolbar > transformers > transformers-configuration section
+- The transformers-configuration section contains actions related to the available transformers in the application.
+- All buttons have tooltips (from the antd library) with action descriptions.
+- Actions in the section include:
+  - Edit transformers: Opens a new window of the markdownCode editor in plugin-mode, using the specified project path. Calls the function `window.electron.openPluginEditor(folderService.plugins)`.
+    - Disabled when `window.electron.isPluginMode == true`.
+  - Active entry point: A dropdown list populated with the names of transformers found in `cybertronService.entryPoints`. The selected item in the dropdown list is from `cyberTronService.activeEntryPoint`. This field is updated whenever the selection changes in the dropdown list.
+# MarkdownCode > services > transformers > plugin-renderer service
+- The plugin-renderer service translates a plugin definition into a javascript module.
+- It is used to build plugin transformers that can be loaded and used by the application.
+- The plugin-renderer service inherits from the transformer-base service and has the following constructor parameters:
+  - name: 'plugin renderer'
+  - dependencies: ['constants']
+  - isJson: false
+- During construction, the plugin-renderer service sets `this.constantsService` to `this.dependencies[0]`.
+- The plugin-renderer service has the following functions:
+  - `saveFile(key, content)`: saves the content to a file with a specific file name and returns the file path.
+  - `cleanResult(content)`: removes code block markdown from the content and returns the cleaned content.
+  - `renderResult(fragment)`: builds a message using the fragment, sends a request to GPTService, cleans the result, saves it to a file, and returns the file path.
+  - `buildMessage(fragment)`: builds a message using the fragment and returns the result and a list containing the fragment key.
+# MarkdownCode > services > transformers > plugin-list renderer service
+- The plugin-list renderer service generates a file that contains all the plugins that need to be loaded.
+- It is used to inform the application about which files to load for the transformer-plugins.
+- The plugin-list renderer service inherits from the transformer-base service, with the following constructor parameters:
+  - Name: 'plugin-list renderer'
+  - Dependencies: ['plugin renderer']
+  - isJson: true
+- During construction, the pluginRendererService is set as the first dependency.
+- The plugin-list renderer service has two functions:
+  - saveFile(items): This function saves the array to a file. It creates the output folder if it doesn't exist and writes the content to the "plugins.json" file.
+  - renderResults(fragments): This function builds an array of files, one for each fragment, provided by the plugin-renderer service. It then saves the array to the output folder by calling the saveFile function.

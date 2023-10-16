@@ -91,7 +91,7 @@ class GPTService {
   async getModels() {
     if (!this.models) {
       if (!this.apiKey && !this.errorShown) {
-        DialogService.showDialog('Please provide a valid OpenAI API key');
+        DialogService.error('Please provide a valid OpenAI API key');
         this.errorShown = true;
         return [];
       }

@@ -7,35 +7,46 @@ require('@electron/remote/main').initialize(); // initialize remote module
 const mainRemote = require("@electron/remote/main");
 
 let mainWindow;
+let pluginsWindow;
+
+const windowConfig = {
+  width: 800,
+  height: 600,
+  autoHideMenuBar: true,
+  // for these to work, there also needs to be a div in the header with css style `-webkit-app-region: drag;` to make the window draggable
+  // titleBarStyle: 'hidden',
+  // titleBarOverlay: true,
+  webPreferences: {
+    nodeIntegration: true,
+    contextIsolation: false,
+    webSecurity: false,
+    enableRemoteModule: true,
+    nodeIntegrationInWorker: true,
+    backgroundThrottling: false,
+    preload: path.join(__dirname, 'preload.js')
+  }
+};
+
+// Load the index.html of the app.
+let url;
+if (isDev) {
+  url = 'http://localhost:3000';
+} else {
+  url = `file://${path.join(__dirname, '../build/index.html')}`;
+}
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    autoHideMenuBar: true,
-    // for these to work, there also needs to be a div in the header with css style `-webkit-app-region: drag;` to make the window draggable
-    // titleBarStyle: 'hidden',
-    // titleBarOverlay: true,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webSecurity: false,
-      enableRemoteModule: true,
-      nodeIntegrationInWorker: true,
-      backgroundThrottling: false,
-      preload: path.join(__dirname, 'preload.js')
-    }
-  });
-
-  // Load the index.html of the app.
-  let url;
-  if (isDev) {
-    url = 'http://localhost:3000';
-  } else {
-    url = `file://${path.join(__dirname, '../build/index.html')}`;
+  mainWindow = new BrowserWindow(windowConfig);
+  console.log(process.argv);
+  const fileIdx = app.isPackaged ? 2 : 5;
+  if (process.argv.length > fileIdx) {
+    const path = process.argv[fileIdx];
+    const urlWithParams = `${url}?file=${path}`;
+    mainWindow.loadURL(urlWithParams);
+  } else { 
+    mainWindow.loadURL(url);
   }
-  mainWindow.loadURL(url);
   // Automatically open Chrome's DevTools in development mode.
   if (!app.isPackaged) {
     mainWindow.webContents.openDevTools();
@@ -49,6 +60,31 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
+  });
+}
+
+function createPluginWindow (path) {
+  return new Promise((resolve, reject) => {
+    // Create the browser window.
+    if (pluginsWindow) { // not if already open
+      resolve();
+      return;
+    }
+    pluginsWindow = new BrowserWindow(windowConfig);
+    const urlWithParams = `${url}?plugin=${path}`;
+    pluginsWindow.loadURL(urlWithParams);
+    // Automatically open Chrome's DevTools in development mode.
+    if (!app.isPackaged) {
+      pluginsWindow.webContents.openDevTools();
+    }
+    mainRemote.enable(pluginsWindow.webContents);
+
+
+    // Emitted when the window is closed.
+    pluginsWindow.on('closed', function () {
+      pluginsWindow = null;
+      resolve();
+    });
   });
 }
 
@@ -82,5 +118,21 @@ ipcMain.handle('dialog', async (event, method, params) => {
   } else {
     const result = await dialog[method](params);
     return result;
+  }
+});
+
+ipcMain.handle('getPath', async (event, path) => {
+  return app.getPath(path);
+});
+
+
+ipcMain.handle('openPluginEditor', async (event, path) => {
+  try {
+    await createPluginWindow(path);
+    return true;
+  }
+  catch (error) {
+    dialog.showErrorDialog(error.message);
+    return false;
   }
 });

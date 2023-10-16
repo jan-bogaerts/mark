@@ -38,5 +38,11 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\editor\\Editor.js"]
 # MarkdownCode > components > body > results view
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\ResultsView.js"]
-# MarkdownCode > components > toolbar > home > build section
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\home\\build_section\\BuildSection.js"]
+# MarkdownCode > components > toolbar > transformers > build section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\transformers\\build_section\\BuildSection.js"]
+# MarkdownCode > components > body > fragment-status icon
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\fragment-status_icon\\FragmentStatusIcon.js"]
+# MarkdownCode > components > toolbar > transformers
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\transformers\\TransformersTab.js"]
+# MarkdownCode > components > toolbar > transformers > transformers-configuration section
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\transformers\\transformers-configuration_section\\ConfigurationSection.js"]

@@ -19,6 +19,6 @@
 {"ResultsView": {"transformer": "The transformer to be used for the results view. This is a required property.", "key": "The key for the current context. This is a required property."}}
 # MarkdownCode > components > toolbar
 {"Toolbar": {}}
-# MarkdownCode > components > toolbar > home > build section
+# MarkdownCode > components > toolbar > transformers > build section
 {"BuildSection": {}}
 
