@@ -6,6 +6,7 @@ import positionTrackingService from '../../../services/position-tracking_service
 import themeService from '../../../services/Theme_service/ThemeService';
 import dialogService from '../../../services/dialog_service/DialogService';
 import ResultsViewTab from '../results_view/results_view_tab/ResultsViewTab';
+import TransformerStatusIcon from './transformer-status_icon/TransformerStatusIcon';
 
 /**
  * ResultsView component
@@ -23,7 +24,7 @@ const ResultsView = () => {
       const transformers = cybertronService.transformers;
       const tabs = transformers.map(transformer => ({
         key: transformer.name,
-        label: transformer.name,
+        label: <div style={{display: 'flex'}} ><TransformerStatusIcon transformer={transformer} /> {transformer.name} </div> ,
         children: <ResultsViewTab transformer={transformer} />
       }));
       setTabs(tabs);

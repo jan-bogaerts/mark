@@ -3,14 +3,9 @@
  */
 class CybertronService {
   constructor() {
-    if (!CybertronService.instance) {
-      this.transformers = [];
-      this.entryPoints = [];
-      this.activeEntryPoint = null;
-      CybertronService.instance = this;
-    }
-
-    return CybertronService.instance;
+    this.transformers = [];
+    this.entryPoints = [];
+    this.activeEntryPoint = null;
   }
 
   /**
@@ -58,6 +53,5 @@ class CybertronService {
   }
 }
 
-const cybertronService = new CybertronService();
 
-export default cybertronService;
+export default new CybertronService();

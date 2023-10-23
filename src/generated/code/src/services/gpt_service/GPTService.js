@@ -8,6 +8,7 @@ class GPTService {
     this.modelsMap = {};
     this.apiKey = localStorage.getItem('apiKey');
     this.errorShown = false;
+    this.onMarkDirty = null;
     if (this.apiKey) {
       this.openai = new OpenAI({ apiKey: this.apiKey, dangerouslyAllowBrowser: true });
     }
@@ -27,6 +28,9 @@ class GPTService {
       this.modelsMap[transformer.name] = {};
     }
     this.modelsMap[transformer.name]['__default'] = model;
+    if (this.onMarkDirty) {
+      this.onMarkDirty();
+    }
   }
 
   getModelForTransformer(transformer) {
@@ -38,6 +42,9 @@ class GPTService {
       this.modelsMap[transformer.name] = {};
     }
     this.modelsMap[transformer.name][key] = model;
+    if (this.onMarkDirty) {
+      this.onMarkDirty();
+    }
   }
 
   getModelForFragment(transformer, key) {

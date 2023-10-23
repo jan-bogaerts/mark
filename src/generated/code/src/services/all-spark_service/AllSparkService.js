@@ -74,6 +74,7 @@ class AllSparkService {
     CybertronService.register(new PluginRendererService(), true);
     CybertronService.register(new PluginListRendererService(), true);
 
+
     const pluginDefs = await this.getPlugins();
     for (const pluginDef of pluginDefs) {
       const pluginObj = await this.loadPlugin(pluginDef);

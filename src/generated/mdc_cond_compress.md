@@ -575,3 +575,63 @@ The component-lister service extracts component names from text and is used to d
 - The plugin-list renderer service has two functions:
   - saveFile(items): This function saves the array to a file. It creates the output folder if it doesn't exist and writes the content to the "plugins.json" file.
   - renderResults(fragments): This function builds an array of files, one for each fragment, provided by the plugin-renderer service. It then saves the array to the output folder by calling the saveFile function.
+# MarkdownCode > components > body > transformer-status icon
+- The transformer-status icon component indicates the status of the selected text-fragment object in relation to the assigned transformer.
+- The component requires the following properties from consumers:
+  - transformer: reference to the transformer object for which status info is displayed.
+- Upon construction, register event handlers with the position-tracking-service and project-service to handle specific events.
+- The component displays different states:
+  - building: shows a spin component when the active fragment is building.
+  - overwritten: uses the LuType icon when the active fragment is overwritten or out of date.
+  - rendered: uses the MdAutoFixNormal icon when the active fragment is rendered and not out of date.
+  - not yet rendered: uses the LuArrowDownToDot icon when the active fragment has no result.
+- The component includes a tooltip to display the status.
+# MarkdownCode > components > body > transformer-status icon > results view tab
+- The results-view-tab component displays the results of a transformer for a specific text fragment identified by its key.
+- The monaco editor npm package is used to display the results in markdown, JSON data, JavaScript, HTML, or CSS.
+- The monaco editor fills the available width and height of the component.
+- When the results-view-tab is loaded:
+  - The text for the monaco editor is retrieved from the result-cache of the assigned transformer using the current key.
+  - The theme (light or dark), font, and font-size are retrieved from the theme-service and applied to the monaco editor.
+- The results-cache of the transformer is monitored for changes in the result with the current key.
+  - If the result is marked as 'out-of-date' or 'deleted', the text is shown as grayed-out.
+  - If the result is marked as 'overwritten', the text is shown in red.
+- When the user changes the text in the monaco editor, the new text is saved to the result-cache of the transformer as overwritten.
+- The following events are monitored on the monaco editor:
+  - editorDidMount: store a reference to the editor and register other event handlers.
+  - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service and set the active transformer in the position-tracking service.
+  - onDidBlurEditorWidget: remove the reference to the monaco editor in the selection service.
+  - onDidChangeCursorSelection: inform subscribers of the selection-service that the selection has changed.
+- A results-view-context-menu component is placed below the monaco editor.
+- The component monitors changes in the currently selected text-fragment using the position-tracking service.
+- When the component is loaded or when the transformer property changes, register an event handler on the transformer's cache.
+- Always include the following options for the monaco editor: automaticLayout, selectOnLineNumbers, roundedSelection, and readOnly.
+# MarkdownCode > components > body > transformer-status icon > results view context menu
+- The results-view-context-menu is a component that wraps the Dropdown antd component.
+- It requires the properties 'transformer' and 'key' to be provided.
+- The dropdown's content includes a 'more' button icon and is triggered by a click.
+- The 'more' button is positioned as a floating button in the top-right corner of the parent element.
+- The menu includes the following items:
+  - "Model for all": Allows selection of the GPT model to be used by the transformer.
+    - The submenu items are provided by the gpt-service's list of available models.
+    - The currently selected model is highlighted.
+      - The value for the current model, registered for the current transformer, is obtained from the gpt-service.
+    - When a different model is selected, the gpt-service is asked to update the model-name used for the transformer.
+  - "Model for fragment": Allows selection of the GPT model to be used by the transformer for the current key.
+    - The submenu items are provided by the gpt-service's list of available models.
+    - The currently selected model is highlighted.
+      - The value for the current model, registered under the name of the current transformer and current key, is obtained from the gpt-service.
+    - When a different model is selected, the gpt-service is asked to update the model-name of the transformer and the current title.
+  - A splitter
+  - "Refresh": When pressed, the transformer associated with the current tab recalculates the result.
+# MarkdownCode > components > body > results view > transformer-status icon
+- The transformer-status icon component indicates the status of the selected text-fragment object in relation to the assigned transformer.
+- The component requires the following properties from consumers:
+  - transformer: reference to the transformer object for which status info is displayed.
+- Upon construction, register event handlers with the position-tracking-service and project-service to handle specific events.
+- The component displays different states:
+  - building: shows a spin component when the active fragment is building.
+  - overwritten: uses the LuType icon when the active fragment is overwritten or out of date.
+  - rendered: uses the MdAutoFixNormal icon when the active fragment is rendered and not out of date.
+  - not yet rendered: uses the LuArrowDownToDot icon when the active fragment has no result.
+- The component includes a tooltip to display the status.

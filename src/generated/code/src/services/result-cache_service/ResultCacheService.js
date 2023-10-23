@@ -1,8 +1,8 @@
-
 import fs from 'fs';
 import path from 'path';
 import FolderService from '../folder_service/FolderService';
 import ProjectService from '../project_service/ProjectService';
+import StorageService from '../project_service/storage_service/StorageService';
 
 /**
  * ResultCacheService class
@@ -28,8 +28,8 @@ class ResultCacheService {
     });
   }
 
-  loadCache() {
-    const cachePath = path.join(FolderService.cache, `${this.transformer.name}.json`);
+  loadCache = () => {
+    const cachePath = path.join(FolderService.cache, `${FolderService.projectName}_${this.transformer.name}.json`);
     if (fs.existsSync(cachePath)) {
       const data = JSON.parse(fs.readFileSync(cachePath));
       this.cache = data.cache;
@@ -43,7 +43,7 @@ class ResultCacheService {
 
   saveCache() {
     if (!this.isDirty) return;
-    const cachePath = path.join(FolderService.cache, `${this.transformer.name}.json`);
+    const cachePath = path.join(FolderService.cache, `${FolderService.projectName}_${this.transformer.name}.json`);
     const data = {
       cache: this.cache,
       secondaryCache: this.secondaryCache,
@@ -121,6 +121,7 @@ class ResultCacheService {
     if (isModified) {
       this.isDirty = true;
       this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }));
+      StorageService.markDirty();
     }
   }
 
@@ -172,6 +173,22 @@ class ResultCacheService {
       }
     }
     return result;
+  }
+
+  overwriteResult(key, value) {
+    if (value) {
+      if (this.overwrites[key] === value) return;
+      this.overwrites[key] = value;
+    } else {
+      delete this.overwrites[key];
+    }
+    this.isDirty = true;
+    this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }));
+    StorageService.markDirty();
+  }
+
+  isOverwritten(key) {
+    return key in this.overwrites;
   }
 }
 

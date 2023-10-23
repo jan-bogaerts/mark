@@ -1,4 +1,3 @@
-
 import CybertronService from '../cybertron_service/CybertronService';
 import DialogService from '../dialog_service/DialogService';
 
@@ -14,21 +13,13 @@ class ProjectService {
   }
 
   /**
-   * Retrieves the current project data.
-   * @returns {Array} The list of text fragments.
-   */
-  getProjectData() {
-    return this.textFragments;
-  }
-
-  /**
    * Returns the current state of the auto-save feature.
    * @returns {boolean} The state of the auto-save feature.
    */
   getAutoSaveState() {
     return localStorage.getItem('autoSave') === 'true';
   }
-
+  
   /**
    * Sets the state of the auto-save feature.
    * @param {boolean} state The new state of the auto-save feature.
@@ -72,44 +63,32 @@ class ProjectService {
     }
   }
 
-  /**
-   * Marks a fragment as out of date.
-   * @param {Object} fragment The fragment to mark as out of date.
-   */
   markOutOfDate(fragment) {
     fragment.isOutOfDate = true;
     this.dispatchEvent('fragment-out-of-date', fragment.key);
   }
 
-  /**
-   * Dispatches events.
-   * @param {string} event The name of the event to dispatch.
-   * @param {any} value The value to pass with the event.
-   */
-  dispatchEvent(event, value) {
-    if (!this.blockEvents) {
-      const eventObject = value ? new CustomEvent(event, { detail: value }) : new Event(event);
-      this.eventTarget.dispatchEvent(eventObject);
+  markUpToDate(fragment, transformer) {
+    fragment.isBuilding = false;
+    if (!fragment.outOfDateTransformers?.length > 0) {
+      fragment.outOfDateTransformers = [...CybertronService.transformers];
     }
+    fragment.outOfDateTransformers = fragment.outOfDateTransformers.filter(t => t !== transformer);
+    if (fragment.outOfDateTransformers.length === 0) {
+      fragment.isOutOfDate = false;
+    }
+    this.dispatchEvent('fragment-up-to-date', fragment.key);
   }
 
-  /**
-   * Checks if any fragment is out of date.
-   * @returns {Boolean} True if any fragment is out of date, false otherwise.
-   */
-  isAnyFragmentOutOfDate() {
-    return this.textFragments.some(fragment => fragment.isOutOfDate);
+  markIsBuilding(fragment, transformer) {
+    fragment.isBuilding = true;
+    this.dispatchEvent('fragment-building', { fragment: fragment, transformer: transformer });
   }
 
   getFragment(key) {
     return this.textFragments.find(t => t.key == key);
   }
 
-  /**
-   * Tries to add a transformer to the out of date transformers of a fragment.
-   * @param {string} key The key of the fragment.
-   * @param {Object} transformer The transformer to add.
-   */
   tryAddToOutOfDate(key, transformer) {
     const fragment = this.getFragment(key);
     if (!fragment) {
@@ -125,6 +104,17 @@ class ProjectService {
         fragment.outOfDateTransformers = [];
       }
       this.dispatchEvent('fragment-out-of-date', key);
+    }
+  }
+
+  isAnyFragmentOutOfDate() {
+    return this.textFragments.some(fragment => fragment.isOutOfDate);
+  }
+
+  dispatchEvent(event, value) {
+    if (!this.blockEvents) {
+      const eventObject = value ? new CustomEvent(event, { detail: value }) : new Event(event);
+      this.eventTarget.dispatchEvent(eventObject);
     }
   }
 

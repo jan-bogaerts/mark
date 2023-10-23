@@ -46,3 +46,5 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\transformers\\TransformersTab.js"]
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\toolbar\\transformers\\transformers-configuration_section\\ConfigurationSection.js"]
+# MarkdownCode > components > body > results view > transformer-status icon
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\transformer-status_icon\\TransformerStatusIcon.js"]

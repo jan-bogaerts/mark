@@ -123,7 +123,7 @@ class FolderService {
 
   setLocation(location) {
     this.folder = path.dirname(location);
-    this.projectName = path.basename(location);
+    this.projectName = path.basename(location, '.md');
     this.cache = path.join(this.folder, 'cache');
     this.plugins = path.join(this.folder, 'plugins');
     this.output = path.join(this.folder, 'output');

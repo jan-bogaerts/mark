@@ -38,3 +38,5 @@
 {"TransformersTab": {}, "ConfigurationSection": {}}
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 {"ConfigurationSection": {}}
+# MarkdownCode > components > body > results view > transformer-status icon
+{"TransformerStatusIcon": {"transformer": "A reference to the transformer object for which status info is displayed"}}

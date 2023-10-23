@@ -10,6 +10,7 @@ import projectConfigurationService from '../project_configuration_service/Projec
 class StorageService {
   constructor() {
     this.saveTimer = null;
+    gptService.onMarkDirty = this.markDirty.bind(this);
   }
 
   clear() {
@@ -46,16 +47,18 @@ class StorageService {
       projectService.content = content;
       projectService.filename = filePath;
       content.split('\n').forEach((line, index) => lineParser.parse(line, index));
-      cybertronService.transformers.forEach(transformer => transformer.cache.loadCache());
+      for (const transformer of cybertronService.transformers) {
+        transformer.cache.loadCache();
+      }
       this.loadModelsMap(filePath);
       this.loadProjectConfig(filePath);
+      this.updateOutOfDate();
     } finally {
       projectService.blockEvents = false;
       projectService.dispatchEvent('content-changed');
       this.loading = false;
       projectService.setIsDirty(false);
     }
-    this.updateOutOfDate();
   }
 
   loadModelsMap(filePath) {

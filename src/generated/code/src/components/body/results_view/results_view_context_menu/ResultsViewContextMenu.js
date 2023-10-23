@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dropdown, Menu, Button, Divider } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import gptService from '../../../../services/gpt_service/GPTService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
 import DialogService from '../../../../services/dialog_service/DialogService';
-
+import ProjectService from '../../../../services/project_service/ProjectService';
 
 /**
  * ResultsViewContextMenu component
@@ -21,6 +20,10 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
 
   useEffect(() => {
     fetchModels();
+    ProjectService.eventTarget.addEventListener('content-changed', fetchModels);
+    return () => {
+      ProjectService.eventTarget.removeEventListener('content-changed', fetchModels);
+    };
   }, []);
 
   const fetchModels = async () => {
@@ -42,7 +45,7 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
         await gptService.setModelForFragment(model, transformer, key);
         setCurrentFragmentModel(model);
       } else {
-        await gptService.setModelForFragment(model, transformer);
+        await gptService.setModelForTransformer(model, transformer);
         setCurrentModel(model);
       }
     } catch (error) {

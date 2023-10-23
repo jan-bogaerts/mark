@@ -46,3 +46,5 @@
 ["TransformersTab", "ConfigurationSection", "BuildSection"]
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 ["ConfigurationSection"]
+# MarkdownCode > components > body > results view > transformer-status icon
+["TransformerStatusIcon"]

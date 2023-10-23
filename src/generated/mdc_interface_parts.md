@@ -84,3 +84,5 @@
 {"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > gpt service": {"GPTService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
 # MarkdownCode > services > transformers > plugin-list renderer service
 {"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
+# MarkdownCode > components > body > results view > transformer-status icon
+{"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > position-tracking service": {"PositionTrackingService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Tooltip } from 'antd';
+import { Tooltip, Spin } from 'antd';
 import { LuHeading1, LuHeading2, LuHeading3, LuHeading4, LuHeading5, LuHeading6 } from 'react-icons/lu';
 import ProjectService from '../../../services/project_service/ProjectService';
 
@@ -39,8 +39,12 @@ const FragmentStatusIcon = ({ fragment }) => {
 
   // Set icon based on fragment depth-level
   useEffect(() => {
-    const depth = fragment?.depth;
-    selectIconToUse(depth);
+    if (fragment?.isBuilding) {
+      setIcon(null);
+    } else {
+      const depth = fragment?.depth;
+      selectIconToUse(depth);
+    }
   }, [fragment]);
 
   // Set color and tooltip based on fragment status
@@ -72,19 +76,37 @@ const FragmentStatusIcon = ({ fragment }) => {
       }
     };
 
+    const handleFragmentBuilding = (e) => {
+      if (e.detail?.fragment?.key === fragment?.key) {
+        setIcon(null);
+      }
+    };
+
+    const handleFragmentUpToDate = (e) => {
+      if (e.detail === fragment?.key) {
+        setColor('green');
+        setTooltip('Fragment is up to date');
+        selectIconToUse(fragment?.depth);
+      }
+    };
+
     ProjectService.eventTarget.addEventListener('fragment-out-of-date', handleFragmentOutOfDate);
     ProjectService.eventTarget.addEventListener('key-changed', handleKeyChanged);
+    ProjectService.eventTarget.addEventListener('fragment-building', handleFragmentBuilding);
+    ProjectService.eventTarget.addEventListener('fragment-up-to-date', handleFragmentUpToDate);
 
     // Unregister event handlers
     return () => {
       ProjectService.eventTarget.removeEventListener('fragment-out-of-date', handleFragmentOutOfDate);
       ProjectService.eventTarget.removeEventListener('key-changed', handleKeyChanged);
+      ProjectService.eventTarget.removeEventListener('fragment-building', handleFragmentBuilding);
+      ProjectService.eventTarget.removeEventListener('fragment-up-to-date', handleFragmentUpToDate);
     };
   }, [fragment]);
 
   return (
     <Tooltip title={tooltip}>
-      {icon && React.cloneElement(icon, { style: { color } })}
+      {icon ? React.cloneElement(icon, { style: { color } }) : <Spin />}
     </Tooltip>
   );
 };

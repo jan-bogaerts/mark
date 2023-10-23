@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
 import { Button, Tooltip } from 'antd';
-import { PlusOutlined, FolderOpenOutlined, SaveOutlined, SaveFilled, SyncOutlined } from '@ant-design/icons';
+import { FileOutlined, FolderOpenOutlined, SaveOutlined, SaveFilled, SyncOutlined } from '@ant-design/icons';
 import dialogService from '../../../../services/dialog_service/DialogService';
 import storageService from '../../../../services/project_service/storage_service/StorageService';
 import projectService from '../../../../services/project_service/ProjectService';
@@ -90,7 +90,7 @@ class FileSection extends Component {
     return (
       <div className={`file-section ${theme}`}>
         <Tooltip title="New Project">
-          <Button icon={<PlusOutlined />} onClick={this.newProject} disabled={window.electron.isPluginMode} />
+          <Button icon={<FileOutlined />} onClick={this.newProject} disabled={window.electron.isPluginMode} />
         </Tooltip>
         <Tooltip title="Open Project">
           <Button icon={<FolderOpenOutlined />} onClick={this.openProject} disabled={window.electron.isPluginMode} />

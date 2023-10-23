@@ -1,5 +1,6 @@
 import CybertronService from '../cybertron_service/CybertronService';
 import ProjectService from '../project_service/ProjectService';
+import BuildStackService from '../build-stack_service/BuildStackService';
 
 /**
  * BuildService class
@@ -8,6 +9,7 @@ class BuildService {
   constructor() {
     this._debug = localStorage.getItem('debug') === 'true';
     this._isBuilding = false;
+    this.eventTarget = new EventTarget();
   }
 
   /**
@@ -25,6 +27,11 @@ class BuildService {
   /**
    * Indicates if the build service is currently building
    */
+  set isBuilding(value) {
+    this._isBuilding = value;
+    this.eventTarget.dispatchEvent(new Event('is-building'));
+  }
+
   get isBuilding() {
     return this._isBuilding;
   }
@@ -33,17 +40,27 @@ class BuildService {
    * Builds all fragments
    */
   async buildAll() {
-    this._isBuilding = true;
+    this.isBuilding = true;
     try {
       if (CybertronService.activeEntryPoint.renderResults) {
-        await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
+        try {
+           BuildStackService.tryRegister(CybertronService.activeEntryPoint);
+           await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
+        } finally {
+          BuildStackService.unRegister(CybertronService.activeEntryPoint);
+		    }
       } else {
         for (let fragment of ProjectService.textFragments) {
-          await CybertronService.activeEntryPoint.renderResult(fragment);
+          BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment);
+          try {
+            await CybertronService.activeEntryPoint.renderResult(fragment);
+          } finally {
+            BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment);
+          }
         }
       }
     } finally {
-      this._isBuilding = false;
+      this.isBuilding = false;
     }
   }
 
@@ -52,11 +69,13 @@ class BuildService {
    * @param {Object} fragment - The fragment to build
    */
   async buildFragment(fragment) {
-    this._isBuilding = true;
+    this.isBuilding = true;
     try {
+      BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment);
       await CybertronService.activeEntryPoint.renderResult(fragment);
     } finally {
-      this._isBuilding = false;
+      BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment);
+      this.isBuilding = false;
     }
   }
 
@@ -66,11 +85,13 @@ class BuildService {
    * @param {Object} transformer - The transformer to use
    */
   async runTransformer(fragment, transformer) {
-    this._isBuilding = true;
+    this.isBuilding = true;
     try {
+      BuildStackService.tryRegister(transformer, fragment);
       await transformer.renderResult(fragment);
     } finally {
-      this._isBuilding = false;
+      BuildStackService.unRegister(transformer, fragment);
+      this.isBuilding = false;
     }
   }
 }

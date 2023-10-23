@@ -63,5 +63,4 @@ class ProjectConfigurationService {
   }
 }
 
-const projectConfigurationService = new ProjectConfigurationService();
-export default projectConfigurationService;
+export default new ProjectConfigurationService();

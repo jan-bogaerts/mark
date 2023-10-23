@@ -1,4 +1,3 @@
-
 import React, { Component } from 'react';
 import { Tooltip, Button, Divider } from 'antd';
 import { BuildOutlined, PlayCircleOutlined, CodeOutlined, BugOutlined, StepForwardOutlined } from '@ant-design/icons';
@@ -27,19 +26,21 @@ class BuildSection extends Component {
     this.updateButtonStates();
     projectService.eventTarget.addEventListener('fragment-out-of-date', this.updateButtonStates);
     positionTrackingService.eventTarget.addEventListener('change', this.updateButtonStates);
+    buildService.eventTarget.addEventListener('is-building', this.updateButtonStates);
   }
 
   componentWillUnmount() {
     projectService.eventTarget.removeEventListener('fragment-out-of-date', this.updateButtonStates);
     positionTrackingService.eventTarget.removeEventListener('change', this.updateButtonStates);
+    buildService.eventTarget.removeEventListener('is-building', this.updateButtonStates);
   }
 
   updateButtonStates = () => {
     this.setState({
-      allDisabled: !projectService.isAnyFragmentOutOfDate(),
-      fragmentDisabled: !positionTrackingService.activeFragment?.isOutOfDate,
-      transformerDisabled: !positionTrackingService.activeFragment || !positionTrackingService.activeTransformer,
-      nextDisabled: !buildService.debug,
+      allDisabled: !projectService.isAnyFragmentOutOfDate() || buildService.isBuilding,
+      fragmentDisabled: !positionTrackingService.activeFragment?.isOutOfDate || buildService.isBuilding,
+      transformerDisabled: !positionTrackingService.activeFragment || !positionTrackingService.activeTransformer || buildService.isBuilding,
+      nextDisabled: !buildService.debug && !buildService.isBuilding,
     });
   }
 
@@ -69,7 +70,7 @@ class BuildSection extends Component {
 
   handleDebugClick = () => {
     buildService.debug = !buildService.debug;
-    this.setState({ nextDisabled: !buildService.debug });
+    this.setState({ nextDisabled: !buildService.debug && !buildService.isBuilding });
   }
 
   handleNextClick = () => {
@@ -84,20 +85,20 @@ class BuildSection extends Component {
     const theme = themeService.getCurrentTheme();
     return (
       <div className={`build-section ${theme}`}>
-        <Tooltip title="Build all fragments">
+        <Tooltip title="Start rendering all the code for the entire project">
           <Button icon={<BuildOutlined />} onClick={this.handleAllClick} disabled={this.state.allDisabled} />
         </Tooltip>
-        <Tooltip title="Build active fragment">
+        <Tooltip title="Start rendering all the code files for the currently active fragment">
           <Button icon={<CodeOutlined />} onClick={this.handleFragmentClick} disabled={this.state.fragmentDisabled} />
         </Tooltip>
-        <Tooltip title="Run active transformer">
+        <Tooltip title="Start rendering the result for the currently active fragment and transformer">
           <Button icon={<PlayCircleOutlined />} onClick={this.handleTransformerClick} disabled={this.state.transformerDisabled} />
         </Tooltip>
         <Divider type="vertical" style={{ height: '24px' }} />
         <Tooltip title="Toggle debug mode">
           <Button icon={<BugOutlined />} onClick={this.handleDebugClick} disabled={this.state.debugDisabled} />
         </Tooltip>
-        <Tooltip title="Run next transformer">
+        <Tooltip title="Continue rendering to the next transformer">
           <Button icon={<StepForwardOutlined />} onClick={this.handleNextClick} disabled={this.state.nextDisabled} />
         </Tooltip>
       </div>

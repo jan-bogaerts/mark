@@ -21,7 +21,7 @@ class LineParser {
       title,
       depth,
       key,
-      outOfDate: true,
+      isOutOfDate: true,
       lines: [],
       outOfDateTransformers: [],
     };
@@ -95,5 +95,5 @@ class LineParser {
     this.parse(line, index);
   }
 }
-const lineParser = new LineParser();
-export default lineParser;
+
+export default new LineParser();
