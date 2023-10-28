@@ -32,11 +32,11 @@
 {"Body": {}}
 # MarkdownCode > components > body > editor
 {"Editor": {}}
-# MarkdownCode > components > body > fragment-status icon
-{"FragmentStatusIcon": {"fragment": "A reference to the text-fragment object."}}
 # MarkdownCode > components > toolbar > transformers
 {"TransformersTab": {}, "ConfigurationSection": {}}
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 {"ConfigurationSection": {}}
 # MarkdownCode > components > body > results view > transformer-status icon
 {"TransformerStatusIcon": {"transformer": "A reference to the transformer object for which status info is displayed"}}
+# MarkdownCode > components > body > fragment-status icon
+{"FragmentStatusIcon": {"fragment": "A reference to the text-fragment object"}}

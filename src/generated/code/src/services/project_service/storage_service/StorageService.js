@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import folderService from '../../folder_service/FolderService';
 import cybertronService from '../../cybertron_service/CybertronService';
 import lineParser from '../../line_parser/LineParser';
@@ -24,11 +25,18 @@ class StorageService {
     projectConfigurationService.loadConfig({});
   }
 
-  new() {
+  async new() {
     projectService.blockEvents = true;
     this.loading = true;
     try {
       this.clear();
+      const userDataPath = await window.electron.getPath('userData');
+      const templatePath = path.join(userDataPath, 'templates', 'default.md');
+      if (fs.existsSync(templatePath)) {
+        const content = fs.readFileSync(templatePath, 'utf8')
+        projectService.content = content;
+        content.split('\n').forEach((line, index) => lineParser.parse(line, index));
+      }
     } finally {
       projectService.blockEvents = false;
       projectService.dispatchEvent('content-changed');
@@ -85,7 +93,9 @@ class StorageService {
       } else if (outOfDateTransformers.length > 0) {
         fragment.outOfDateTransformers = outOfDateTransformers;
         projectService.markOutOfDate(fragment);
-      }
+      } else {
+        fragment.isOutOfDate = false;
+    }
     });
   }
 

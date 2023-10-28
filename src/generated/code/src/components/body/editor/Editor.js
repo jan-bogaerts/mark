@@ -48,7 +48,9 @@ class Editor extends Component {
   }
 
   handleMoveTo = (e) => {
-    this.editorRef.current.revealLineNearTop(e.detail);
+    const editor = this.editorRef.current;
+    if (!editor) return;
+    editor.revealLineNearTop(e.detail);
   }
 
   editorDidMount = (editor) => {

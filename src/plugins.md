@@ -11,7 +11,6 @@
     - role: system, content:
       
      > Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
-     > Any text between markdown code blocks (``` or \""" signs) are declarations of constant values, do not change them, but replace with the name of the constant. Remove the markdown, but use bullet points where appropriate.
      > compress the following text:
 
     - role: user, content: `await this.constantsService.getResult(text-fragment)`.

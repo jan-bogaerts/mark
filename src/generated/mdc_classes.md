@@ -22,10 +22,6 @@
 [
   "BuildStackService"
 ]
-# MarkdownCode > services > transformers > constant-extractor service
-[
-  "ConstantExtractorService"
-]
 # MarkdownCode > services > result-cache service
 [
   "ResultCacheService"
@@ -98,11 +94,23 @@
 [
   "PluginTransformerService"
 ]
+# MarkdownCode > services > transformers > plugin-list renderer service
+[
+  "PluginListRendererService"
+]
+# MarkdownCode > services > transformers > constant-extractor service
+[
+  "ConstantExtractorService"
+]
 # MarkdownCode > services > transformers > plugin-renderer service
 [
   "PluginRendererService"
 ]
-# MarkdownCode > services > transformers > plugin-list renderer service
+# MarkdownCode > services > transformers > parser validator service
 [
-  "PluginListRendererService"
+  "ParserValidatorService"
+]
+# MarkdownCode > services > transformers > constants-resource renderer
+[
+  "ConstantsResourceRenderer"
 ]

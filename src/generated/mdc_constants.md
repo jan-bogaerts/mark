@@ -14,6 +14,10 @@
 []
 # MarkdownCode > components > toolbar > home > undo section
 []
+# MarkdownCode > components > toolbar > transformers
+[]
+# MarkdownCode > components > toolbar > transformers > transformers-configuration section
+[]
 # MarkdownCode > components > toolbar > transformers > build section
 []
 # MarkdownCode > components > toolbar > format
@@ -34,21 +38,31 @@
 []
 # MarkdownCode > components > body
 []
-# MarkdownCode > components > body > horizontal splitter
-[]
-# MarkdownCode > components > body > vertical splitter
-[]
 # MarkdownCode > components > body > editor
 []
 # MarkdownCode > components > body > outline
 []
+# MarkdownCode > components > body > fragment-status icon
+[]
 # MarkdownCode > components > body > results view
+[]
+# MarkdownCode > components > body > results view > transformer-status icon
 []
 # MarkdownCode > components > body > results view > results view tab
 []
 # MarkdownCode > components > body > results view > results view context menu
 []
+# MarkdownCode > services > dialog service
+[]
 # MarkdownCode > services > Theme service
+[]
+# MarkdownCode > services > project service
+[]
+# MarkdownCode > services > project service > project configuration service
+[]
+# MarkdownCode > services > project service > storage service
+[]
+# MarkdownCode > services > project service > change-processor service
 []
 # MarkdownCode > services > folder service
 []
@@ -56,55 +70,35 @@
 []
 # MarkdownCode > services > Undo service
 []
-# MarkdownCode > services > cybertron service
-[]
-# MarkdownCode > services > build-stack service
-[]
-# MarkdownCode > services > transformers > constant-extractor service
-[]
-# MarkdownCode > services > result-cache service
-[]
-# MarkdownCode > services > dialog service
-[]
 # MarkdownCode > services > line parser
-[]
-# MarkdownCode > services > project service > change-processor service
-[]
-# MarkdownCode > services > gpt service
-[]
-# MarkdownCode > services > transformers > double-compress service
-[{"start": 10, "end": 12, "name": "MarkdownCode_services_double-compress_service_0"}]
-# MarkdownCode > services > all-spark service
-[]
-# MarkdownCode > services > project service > storage service
 []
 # MarkdownCode > services > line parser > line parser helpers
 []
-# MarkdownCode > services > transformers > triple-compress service
-[{"start": 10, "end": 12, "name": "MarkdownCode_services_transformers_triple_compress_service_0"}]
-# MarkdownCode > services > project service
-[]
-# MarkdownCode > services > transformers > component-lister service
-[{"start": 10, "end": 26, "name": "MarkdownCode_services_transformers_component_lister_service_0"}, {"start": 32, "end": 35, "name": "MarkdownCode_services_transformers_component_lister_service_1"}, {"start": 41, "end": 43, "name": "MarkdownCode_services_transformers_component_lister_service_2"}]
 # MarkdownCode > services > position-tracking service
+[]
+# MarkdownCode > services > gpt service
+[]
+# MarkdownCode > services > result-cache service
 []
 # MarkdownCode > services > build service
 []
-# MarkdownCode > services > transformers > compress service
-[{"start": 10, "end": 14, "name": "MarkdownCode_services_transformers_compress_service_0"}]
+# MarkdownCode > services > build-stack service
+[]
+# MarkdownCode > services > cybertron service
+[]
+# MarkdownCode > services > all-spark service
+[]
 # MarkdownCode > services > transformer-base service
 []
-# MarkdownCode > components > body > fragment-status icon
-[]
-# MarkdownCode > services > project service > project configuration service
+# MarkdownCode > services > transformers > constant-extractor service
 []
 # MarkdownCode > services > transformers > plugin-transformer service
 []
-# MarkdownCode > components > toolbar > transformers
-[]
-# MarkdownCode > components > toolbar > transformers > transformers-configuration section
-[]
 # MarkdownCode > services > transformers > plugin-renderer service
-[{"start": 45, "end": 91, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 93, "end": 96, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}]
+[{"start": 45, "end": 92, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 94, "end": 97, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}]
 # MarkdownCode > services > transformers > plugin-list renderer service
+[]
+# MarkdownCode > services > transformers > constants-resource renderer
+[]
+# MarkdownCode > services > transformers > parser validator service
 []

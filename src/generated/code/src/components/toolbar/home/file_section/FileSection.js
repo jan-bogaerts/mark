@@ -38,7 +38,7 @@ class FileSection extends Component {
       await this.saveProject();
     }
     if (!window.electron.isPluginMode) {
-      storageService.new();
+      await storageService.new();
     }
   }
 

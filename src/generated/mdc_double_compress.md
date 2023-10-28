@@ -67,8 +67,6 @@ The folder service is a global singleton that manages the location of the active
 - The JSON structure should be assigned to the items property.
 # MarkdownCode > services > build-stack service
 The build-stack service prevents circular references. It uses a "running" dictionary to track running textframe - transformer pairs. The "tryRegister" function checks if a pair is already running and returns false if it is, otherwise it adds the pair to the "running" dictionary and returns true. The "unRegister" function removes a pair from the "running" dictionary.
-# MarkdownCode > services > transformers > constant-extractor service
-The constant-extractor service extracts constant definitions from source code and stores them in a json file. It replaces constants in the source texts with json references. It inherits from the transformer-base service and has a constructor with the parameters 'constants' and an empty array. To use the service, create a global instance and register it with the cybertron-service. The service has functions to extract quotes, render results, and retrieve up-to-date values.
 # MarkdownCode > services > result-cache service
 - This service manages cached results for transformers, storing and tracking results for text fragments.
 - The cache monitors changes in project and result fragments.
@@ -171,8 +169,6 @@ The build service processes text fragments using transformers. It builds the pro
 The compress service shortens a given text fragment and can be used for testing and input for other processes. It is based on the transformer-base service with constructor parameters: name, dependencies, and isJson. The build-message function takes a text fragment as input and returns a JSON array with two elements: one for the system role and one for the user role. The function also returns the text-fragment key as a separate array.
 # MarkdownCode > services > transformer-base service
 The transformer-base service is a base class for transformers, providing a common interface and functionality. Its constructor has parameters for the transformer's name, dependencies, JSON treatment, language, and temperature. It utilizes a result-cache-service to store results and track the build's status. The service includes functions for rendering results, retrieving values, and calculating maximum tokens.
-# MarkdownCode > components > body > fragment-status icon
-The fragment-status icon component displays the status of a text-fragment object. Consumers need to provide the fragment property. The icon shown depends on the fragment's level. The component includes a tooltip that shows the status. The icon color is determined by the fragment's out-of-date status. The component registers event handlers to refresh the icon and tooltip when certain events occur.
 # MarkdownCode > services > project service > project configuration service
 The project configuration service manages project configurations, including eventTarget for registering/unregistering event handlers and config for full access to the configuration set.
 # MarkdownCode > services > transformers > plugin-transformer service
@@ -181,9 +177,31 @@ The plugin-transformer service wraps a JavaScript object provided by a plugin, w
 The transformers-tab arranges children horizontally, including the configuration and build sections.
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 The transformers-configuration section contains actions for available transformers. Buttons have tooltips with action descriptions. Actions include editing transformers and selecting active entry points from a dropdown list.
-# MarkdownCode > services > transformers > plugin-renderer service
-The plugin-renderer service translates a plugin definition into a javascript module. It is used to build plugin transformers for the application. It inherits from the transformer-base service and has a constructor with specific parameters. During construction, it sets `this.constantsService` to `this.dependencies[0]`. The service has functions to save a file, clean content, render a result, and build a message.
 # MarkdownCode > services > transformers > plugin-list renderer service
 The plugin-list renderer service generates a file with all the plugins to be loaded. It informs the application about which files to load for the transformer-plugins. It inherits from the transformer-base service with the constructor parameters: Name, Dependencies, and isJson. The pluginRendererService is set as the first dependency during construction. The plugin-list renderer service has two functions: saveFile(items) and renderResults(fragments). The saveFile function saves the array to a file, creating the output folder if needed. The renderResults function builds an array of files for each fragment and calls the saveFile function to save it to the output folder.
 # MarkdownCode > components > body > results view > transformer-status icon
 The transformer-status icon component shows the status of the selected text-fragment object in relation to the assigned transformer. It requires the "transformer" property from consumers. It registers event handlers with the position-tracking-service and project-service upon construction. The component displays different states: building, overwritten, rendered, and not yet rendered. It includes a tooltip to display the status.
+# MarkdownCode > components > body > transformer-status icon
+The transformer-status icon component shows the status of the selected text-fragment object in relation to the assigned transformer. It requires the "transformer" property from consumers. It registers event handlers with the position-tracking-service and project-service upon construction. The component displays different states: building, overwritten, rendered, and not yet rendered. It includes a tooltip to display the status.
+# MarkdownCode > components > body > transformer-status icon > results view tab
+The results-view-tab component displays transformer results for a specific text fragment. It uses the monaco editor npm package to display results in various formats. The editor fills the available space and retrieves text from the result-cache. The theme and font settings are retrieved from the theme-service. The cache is monitored for changes, and text is displayed accordingly. User changes are saved to the cache. The editor's events are monitored, and a context menu is placed below it. The component also monitors selected text and registers event handlers. The monaco editor always includes certain options.
+# MarkdownCode > components > body > transformer-status icon > results view context menu
+The results-view-context-menu is a component that wraps the Dropdown antd component. It requires the properties 'transformer' and 'key' to be provided. The dropdown's content includes a 'more' button icon and is triggered by a click. The 'more' button is positioned as a floating button in the top-right corner. The menu includes options for selecting the GPT model to be used by the transformer. The submenu items are provided by the gpt-service's list of available models. The currently selected model is highlighted. When a different model is selected, the gpt-service is asked to update the model-name used for the transformer. There is also an option for selecting the GPT model to be used by the transformer for the current key. The submenu items and functionality are similar to the previous option. There is a splitter and a "Refresh" option that recalculates the result for the current tab.
+# MarkdownCode > services > transformers > constant-extractor service
+The constant-extractor service extracts constant definitions from source code and replaces them with references to a json file. It inherits from the transformer-base service and has a constructor with the parameters 'constants' and an empty dependency array. The service has functions for extracting quotes, collecting responses, rendering results, and retrieving up-to-date results using caching.
+# MarkdownCode > services > transformers > plugin-renderer service
+The plugin-renderer service translates a plugin definition into a javascript module. It is used to build plugin transformers for the application. It inherits from the transformer-base service and has a constructor with specific parameters. During construction, it sets `this.constantsService` to `this.dependencies[0]`. It has functions to save a file, clean content, render a result, and build a message.
+# MarkdownCode > components > body > fragment-status icon
+The fragment-status icon component displays the status of a text-fragment object. It requires the properties fragment and displays different icons based on the fragment's depth. If the fragment is currently being built, a spinner is shown instead of an icon. The component uses the LuHeading icons from the 'react-icons/lu' library. The icon's color is determined by the fragment's status. The component also includes a tooltip from the antd library. Upon construction, the component registers event handlers with the project-service for various events related to the fragment's status.
+# MarkdownCode > services > transformers > parser validator service
+- The parser-validator service checks the state of the specified text-fragment for the internal markdown parser.
+- No llm is used.
+- It is used for debugging.
+- The parser-validator service inherits from the transformer-base service.
+- The constructor parameters for the transformer-base service are: Name: 'parser validator', Dependencies: [], isJson: false.
+- The parser-validator service has a renderResult function that takes a fragment as input.
+- Inside renderResult, the lines of the fragment are joined and stored in a variable called result.
+- The cache's setResult method is called with the key and result.
+- The result is then returned.
+# MarkdownCode > services > transformers > constants-resource renderer
+The constants-resource renderer service creates a resource file with all constants from fragments. Plugins depend on this service. It inherits from transformer-base service with constructor parameters: name, dependencies, and isJson. constantsService is a dependency. The service has two functions: saveFile and renderResults.

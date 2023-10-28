@@ -10,8 +10,6 @@
 {"CybertronService": []}
 # MarkdownCode > services > build-stack service
 {"BuildStackService": []}
-# MarkdownCode > services > transformers > constant-extractor service
-{"ConstantExtractorService": [{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
 # MarkdownCode > services > result-cache service
 {"ResultCacheService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}]}
 # MarkdownCode > services > dialog service
@@ -48,7 +46,13 @@
 {"ProjectConfigurationService": []}
 # MarkdownCode > services > transformers > plugin-transformer service
 {"PluginTransformerService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "CybertronService", "path": "src\\services\\cybertron_service\\CybertronService", "service_loc": "# MarkdownCode > services > cybertron service"}, {"service": "GPTService", "path": "src\\services\\gpt_service\\GPTService", "service_loc": "# MarkdownCode > services > gpt service"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"PluginRendererService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "GPTService", "path": "src\\services\\gpt_service\\GPTService", "service_loc": "# MarkdownCode > services > gpt service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
 # MarkdownCode > services > transformers > plugin-list renderer service
 {"PluginListRendererService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"},{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
+# MarkdownCode > services > transformers > constant-extractor service
+{"ConstantExtractorService": [{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"PluginRendererService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "GPTService", "path": "src\\services\\gpt_service\\GPTService", "service_loc": "# MarkdownCode > services > gpt service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
+# MarkdownCode > services > transformers > constants-resource renderer
+{"ConstantsResourceRenderer": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
+# MarkdownCode > services > transformers > parser validator service
+{"ParserValidatorService": [{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}

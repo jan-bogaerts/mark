@@ -66,12 +66,15 @@ class LineParser {
    * @param {number} index - The current line number
    */
   parse(line, index) {
-    line = line.trim();
-    if (line === '') {
+    const trimmedLine = line.trim();
+    if (trimmedLine === '') {
       LineParserHelpers.handleEmptyLine(this, index);
     } else if (line.startsWith('#')) {
-      LineParserHelpers.handleTitleLine(this, line, index);
+      LineParserHelpers.handleTitleLine(this, trimmedLine, index);
     } else {
+      if (line.endsWith('\r')) {
+        line = line.slice(0, -1);
+      }
       LineParserHelpers.handleRegularLine(this, line, index);
     }
   }

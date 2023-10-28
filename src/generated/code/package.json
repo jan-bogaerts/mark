@@ -71,6 +71,7 @@
     "directories": {
       "buildResources": "public"
     },
+    "extraResources": ["./resources/**"],
     "mac": {
       "target": "dmg"
     },

@@ -27,13 +27,11 @@ class PluginTransformerService extends TransformerBaseService {
     for (const dep of this.dependencies) {
       this.plugin.deps[dep.name] = dep;
     }
-    plugin.services = {
-      projectService,
-      folderService,
-      gptService,
-      cybertronService,
-      cache: this.cache,
-    };
+    plugin.services.projectService = projectService;
+    plugin.services.folderService = folderService;
+    plugin.services.gptService  = gptService;
+    plugin.services.cybertronService = cybertronService;
+    plugin.services.cache = this.cache;
   }
 
   /**

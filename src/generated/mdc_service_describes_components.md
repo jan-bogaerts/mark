@@ -10,8 +10,6 @@
 {}
 # MarkdownCode > services > build-stack service
 {}
-# MarkdownCode > services > transformers > constant-extractor service
-{}
 # MarkdownCode > services > result-cache service
 {}
 # MarkdownCode > services > dialog service
@@ -48,7 +46,9 @@
 {}
 # MarkdownCode > services > transformers > plugin-transformer service
 {}
-# MarkdownCode > services > transformers > plugin-renderer service
-{}
 # MarkdownCode > services > transformers > plugin-list renderer service
+{}
+# MarkdownCode > services > transformers > constant-extractor service
+{}
+# MarkdownCode > services > transformers > plugin-renderer service
 {}

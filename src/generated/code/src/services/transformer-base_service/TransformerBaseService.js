@@ -56,14 +56,14 @@ class TransformerBaseService {
     if (!this.cache.isOutOfDate(fragment.key)) {
       return this.cache.getFragmentResults(fragment.key);
     }
-    if (!BuildStackService.tryRegister(this.name, fragment.key)) {
+    if (!BuildStackService.tryRegister(this, fragment)) {
       return;
     }
     try {
       const result = await this.renderResult(fragment);
       return result;
     } finally {
-      BuildStackService.unRegister(this, fragment.key);
+      BuildStackService.unRegister(this, fragment);
     }
   }
 

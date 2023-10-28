@@ -85,10 +85,10 @@ class BuildSection extends Component {
     const theme = themeService.getCurrentTheme();
     return (
       <div className={`build-section ${theme}`}>
-        <Tooltip title="Start rendering all the code for the entire project">
+        <Tooltip title="Start rendering the currently selected entry point for the entire project">
           <Button icon={<BuildOutlined />} onClick={this.handleAllClick} disabled={this.state.allDisabled} />
         </Tooltip>
-        <Tooltip title="Start rendering all the code files for the currently active fragment">
+        <Tooltip title="Start rendering the currently selected entry point for the currently active fragment">
           <Button icon={<CodeOutlined />} onClick={this.handleFragmentClick} disabled={this.state.fragmentDisabled} />
         </Tooltip>
         <Tooltip title="Start rendering the result for the currently active fragment and transformer">

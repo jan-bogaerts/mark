@@ -10,8 +10,6 @@ FolderService
 CybertronService
 # MarkdownCode > services > build-stack service
 BuildStackService
-# MarkdownCode > services > transformers > constant-extractor service
-ConstantExtractorService
 # MarkdownCode > services > result-cache service
 ResultCacheService
 # MarkdownCode > services > dialog service
@@ -48,7 +46,13 @@ TransformerBaseService
 ProjectConfigurationService
 # MarkdownCode > services > transformers > plugin-transformer service
 PluginTransformerService
-# MarkdownCode > services > transformers > plugin-renderer service
-PluginRendererService
 # MarkdownCode > services > transformers > plugin-list renderer service
 PluginListRendererService
+# MarkdownCode > services > transformers > constant-extractor service
+ConstantExtractorService
+# MarkdownCode > services > transformers > plugin-renderer service
+PluginRendererService
+# MarkdownCode > services > transformers > parser validator service
+ParserValidatorService
+# MarkdownCode > services > transformers > constants-resource renderer
+ConstantsResourceRenderer

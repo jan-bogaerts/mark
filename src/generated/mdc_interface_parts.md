@@ -24,8 +24,6 @@
 {"# MarkdownCode > services > project service": {"ProjectService": {"getProjectData": "A function that retrieves the current project data. Returns the list of text-fragments"}}, "# MarkdownCode > services > position-tracking service": {"PositionTrackingService": {"setActiveFragment": "Sets the active fragment in the position tracking service using the provided key"}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {}}}
 # MarkdownCode > components > toolbar
 {"# MarkdownCode > services > dialog service": {"DialogService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {}}, "# MarkdownCode > components > toolbar > home": {"HomeTab": {}}, "# MarkdownCode > components > toolbar > format": {"FormatTab": {}}, "# MarkdownCode > components > toolbar > preferences": {"PreferencesTab": {}}}
-# MarkdownCode > services > transformers > constant-extractor service
-{"# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
 # MarkdownCode > services > result-cache service
 {"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > project service": {"ProjectService": {}}}
 # MarkdownCode > components > body > results view > results view tab
@@ -72,17 +70,23 @@
 {"# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
 # MarkdownCode > services > transformer-base service
 {"# MarkdownCode > services > cybertron service": {"CybertronService": {}}, "# MarkdownCode > services > build-stack service": {"BuildStackService": {"tryRegister": "A method that attempts to register a transformer with a given name and key. Returns a boolean indicating whether the registration was successful.", "unregister": "A method that removes the registration of a transformer with a given name and key. Does not return a value."}}, "# MarkdownCode > services > result-cache service": {"ResultCacheService": {"setResult": "A method that takes a key and a result as parameters. It is used to store the result in the cache with the given key.", "isOutOfDate": "A method that takes a key as a parameter. It checks if the cached result for the given key is out of date or not.", "getFragmentResults": "A method that takes a key as a parameter. It retrieves the cached results for the given key."}}, "# MarkdownCode > services > gpt service": {"GPTService": {}}}
-# MarkdownCode > components > body > fragment-status icon
-{"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}}
 # MarkdownCode > services > transformers > plugin-transformer service
 {"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > cybertron service": {"CybertronService": {}}, "# MarkdownCode > services > gpt service": {"GPTService": {}}, "# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
 # MarkdownCode > components > toolbar > transformers
 {"# MarkdownCode > services > Theme service": {"ThemeService": {}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}, "# MarkdownCode > components > toolbar > transformers > transformers-configuration section": {"ConfigurationSection": {"errorHandler": "A function passed as a prop to handle errors. It is used to execute a function and catch any errors that occur during its execution, displaying an error dialog with the error message."}}, "# MarkdownCode > components > toolbar > transformers > build section": {"BuildSection": {"errorHandler": "A function passed as a prop to handle errors. It executes a function and if an error is thrown, it shows an error dialog with the error message."}}}
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 {"# MarkdownCode > services > cybertron service": {"CybertronService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > gpt service": {"GPTService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
 # MarkdownCode > services > transformers > plugin-list renderer service
 {"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
 # MarkdownCode > components > body > results view > transformer-status icon
 {"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > position-tracking service": {"PositionTrackingService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}}
+# MarkdownCode > services > transformers > constant-extractor service
+{"# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > gpt service": {"GPTService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {"constructor": "Initializes the PluginRendererService. It takes no parameters.", "dependencies": "An array of dependencies required by the PluginRendererService. In this case, it includes 'constants'.", "cache": "An object used to store results of operations. It is used in the 'renderResult' method to cache the result of a file rendering operation."}}}
+# MarkdownCode > components > body > fragment-status icon
+{"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}}
+# MarkdownCode > services > transformers > constants-resource renderer
+{"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {"saveFile": "A method that takes an object as an argument and saves it as a JSON file in a specified directory.", "renderResults": "An asynchronous method that takes an array of fragments as an argument, builds a JSON dictionary of constants from these fragments, and saves it using the 'saveFile' method."}}}
+# MarkdownCode > services > transformers > parser validator service
+{"# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}}

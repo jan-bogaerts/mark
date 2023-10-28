@@ -40,11 +40,11 @@ Editor
 ResultsView
 # MarkdownCode > components > toolbar > transformers > build section
 BuildSection
-# MarkdownCode > components > body > fragment-status icon
-FragmentStatusIcon
 # MarkdownCode > components > toolbar > transformers
 TransformersTab
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 ConfigurationSection
 # MarkdownCode > components > body > results view > transformer-status icon
 TransformerStatusIcon
+# MarkdownCode > components > body > fragment-status icon
+FragmentStatusIcon

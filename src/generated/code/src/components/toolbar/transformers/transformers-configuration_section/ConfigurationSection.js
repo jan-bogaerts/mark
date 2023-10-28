@@ -6,6 +6,7 @@ import cybertronService from '../../../../services/cybertron_service/CybertronSe
 import themeService from '../../../../services/Theme_service/ThemeService';
 import folderService from '../../../../services/folder_service/FolderService';
 import dialogService from '../../../../services/dialog_service/DialogService';
+import AllSparkService from '../../../../services/all-spark_service/AllSparkService';
 
 /**
  * ConfigurationSection component
@@ -20,10 +21,13 @@ const ConfigurationSection = () => {
     setActiveEntryPoint(cybertronService.activeEntryPoint?.name);
   }, []);
 
-  const handleEditTransformers = () => {
+  const handleEditTransformers = async () => {
     try {
       if (!window.electron.isPluginMode) {
-        window.electron.openPluginEditor(folderService.plugins);
+        const result = await window.electron.openPluginEditor(folderService.plugins);
+        if (result) {
+          await AllSparkService.refreshPlugins();
+        }
       }
     }
     catch (error) {

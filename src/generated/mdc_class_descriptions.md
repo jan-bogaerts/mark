@@ -10,8 +10,6 @@
 {"CybertronService": "The 'CybertronService' is a service class that globally manages transformers. It maintains a sub-list of entry-points for building text-fragments. Transformers can register and be added as entry-points, and they can also unregister and be removed from the available transformers and entry-points list."}
 # MarkdownCode > services > build-stack service
 {"BuildStackService": "The BuildStackService is a service class that prevents circular references by tracking running textframe - transformer pairs and providing functions to register and unregister these pairs."}
-# MarkdownCode > services > transformers > constant-extractor service
-{"ConstantExtractorService": "The ConstantExtractorService is a service that extracts constant definitions from source code and stores them in a json file. It replaces constants in the source texts with json references."}
 # MarkdownCode > services > result-cache service
 {"ResultCacheService": "The ResultCacheService is a service class that manages cached results for transformers. It stores and tracks results for text fragments, allowing transformers to store their results in a JSON file. The cache is updated when a transformer calculates a result, and it contains dictionaries, overwritten values, and the last save date. The cache also handles fragment deletion and key changes, and provides functions to overwrite, retrieve, and check if a text fragment is out of date. Additionally, the cache can be cleared using the clearCache() function."}
 # MarkdownCode > services > dialog service
@@ -48,7 +46,13 @@
 {"ProjectConfigurationService": "The ProjectConfigurationService is responsible for managing project configurations, allowing for the registration and unregistration of event handlers and providing full access to the configuration set."}
 # MarkdownCode > services > transformers > plugin-transformer service
 {"PluginTransformerService": "The PluginTransformerService is a service class that wraps a JavaScript object provided by a plugin. It inherits from the transformer-base service and performs various operations such as obtaining the plugin's description, setting the transformer's description, dependencies, and JSON status based on the plugin's information. It also handles functions like calculating the maximum tokens, building messages, and rendering results based on the plugin's availability."}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"PluginRendererService": "The PluginRendererService is a service that translates a plugin definition into a javascript module. It is used to build plugin transformers for the application. It inherits from the transformer-base service and has a constructor with specific parameters. It provides functions to save a file, clean content, render a result, and build a message."}
 # MarkdownCode > services > transformers > plugin-list renderer service
 {"PluginListRendererService": "The PluginListRendererService generates a file with all the plugins to be loaded and informs the application about which files to load for the transformer-plugins. It has functions to save an array to a file and render results by building an array of files for each fragment."}
+# MarkdownCode > services > transformers > constant-extractor service
+{"ConstantExtractorService": "The ConstantExtractorService is a service that extracts constant definitions from source code and replaces them with references to a json file. It inherits from the transformer-base service and has functions for extracting quotes, collecting responses, rendering results, and retrieving up-to-date results using caching."}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"PluginRendererService": "The PluginRendererService is a service that translates a plugin definition into a javascript module. It is used to build plugin transformers for the application. It inherits from the transformer-base service and has a constructor with specific parameters. It provides functions to save a file, clean content, render a result, and build a message."}
+# MarkdownCode > services > transformers > parser validator service
+{"ParserValidatorService": "The ParserValidatorService is a service class that checks the state of a specified text-fragment using an internal markdown parser. It is used for debugging and inherits from the transformer-base service. It has a renderResult function that joins the lines of the fragment, stores the result, and returns it."}
+# MarkdownCode > services > transformers > constants-resource renderer
+{"ConstantsResourceRenderer": "The ConstantsResourceRenderer service creates a resource file with constants from fragments and provides functions to save the file and render the results."}

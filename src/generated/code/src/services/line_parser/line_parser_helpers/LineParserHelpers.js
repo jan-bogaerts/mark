@@ -184,8 +184,8 @@ class LineParserHelpers {
       }
       fragment.lines.push(line);
       service.fragmentsIndex[index] = fragment;
-      ProjectService.markOutOfDate(fragment);
     }
+    ProjectService.markOutOfDate(fragment);
   }
 
   /**

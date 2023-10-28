@@ -96,6 +96,12 @@ class Outline extends Component {
     }
   };
 
+  onExpand = (expandedKeys) => {
+    this.setState({ selectedKeys: expandedKeys });
+  }
+
+
+
   render() {
     const theme = themeService.getCurrentTheme();
     return (
@@ -106,6 +112,7 @@ class Outline extends Component {
           selectedKeys={this.state.selectedKeys}
           autoExpandParent
           expandedKeys={this.state.selectedKeys}
+          onExpand={this.onExpand}
           onSelect={this.onSelect}
           showLine
         />

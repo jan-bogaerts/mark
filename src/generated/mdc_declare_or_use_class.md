@@ -10,8 +10,6 @@
 {"CybertronService": "declare"}
 # MarkdownCode > services > build-stack service
 {"BuildStackService": "declare"}
-# MarkdownCode > services > transformers > constant-extractor service
-{"ConstantExtractorService": "declare"}
 # MarkdownCode > services > result-cache service
 {"ResultCacheService": "declare"}
 # MarkdownCode > services > dialog service
@@ -48,7 +46,13 @@
 {"ProjectConfigurationService": "declare"}
 # MarkdownCode > services > transformers > plugin-transformer service
 {"PluginTransformerService": "declare"}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"PluginRendererService": "declare"}
 # MarkdownCode > services > transformers > plugin-list renderer service
 {"PluginListRendererService": "declare"}
+# MarkdownCode > services > transformers > constant-extractor service
+{"ConstantExtractorService": "declare"}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"PluginRendererService": "declare"}
+# MarkdownCode > services > transformers > constants-resource renderer
+{"ConstantsResourceRenderer": "declare"}
+# MarkdownCode > services > transformers > parser validator service
+{"ParserValidatorService": "declare"}

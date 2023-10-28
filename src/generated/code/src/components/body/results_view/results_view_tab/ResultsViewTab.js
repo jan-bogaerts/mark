@@ -6,6 +6,7 @@ import SelectionService from '../../../../services/Selection_service/SelectionSe
 import PositionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
 import DialogService from '../../../../services/dialog_service/DialogService';
 import StorageService from '../../../../services/project_service/storage_service/StorageService';
+import ProjectService from '../../../../services/project_service/ProjectService';
 
 class ResultsViewTab extends Component {
   constructor(props) {
@@ -31,6 +32,7 @@ class ResultsViewTab extends Component {
   componentDidMount() {
     this.updateEditorValue();
     PositionTrackingService.eventTarget.addEventListener('change', this.updateEditorValue);
+    ProjectService.eventTarget.addEventListener('content-changed', this.updateEditorValue);
     if (this.props.transformer) {
       this.props.transformer.cache.eventTarget.addEventListener('result-changed', this.updateEditorValue);
     }
@@ -47,6 +49,7 @@ class ResultsViewTab extends Component {
 
   componentWillUnmount() {
     PositionTrackingService.eventTarget.removeEventListener('change', this.updateEditorValue);
+    ProjectService.eventTarget.removeEventListener('content-changed', this.updateEditorValue);
     if (this.props.transformer) {
       this.props.transformer.cache.eventTarget.removeEventListener('result-changed', this.updateEditorValue);
     }
@@ -60,10 +63,11 @@ class ResultsViewTab extends Component {
         editorValue = JSON.stringify(editorValue, null, 2);
       }
       const isOutdated = this.props.transformer.cache.isOutOfDate(editorKey);
-      // to fix
-      const isDeleted = false;// this.props.transformer.cache.isDeleted(editorKey); 
-      const isOverwritten = false; //this.props.transformer.cache.isOverwritten(editorKey);
+      const isDeleted = false;//this.props.transformer.cache.isDeleted(editorKey); 
+      const isOverwritten = this.props.transformer.cache.isOverwritten(editorKey);
       this.setState({ editorKey, editorValue, isOutdated, isDeleted, isOverwritten });
+    } else {
+      this.setState({ editorKey: null, editorValue: '', isOutdated: false, isDeleted: false, isOverwritten: false });
     }
   }
 

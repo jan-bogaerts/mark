@@ -43,19 +43,21 @@ class BuildService {
     this.isBuilding = true;
     try {
       if (CybertronService.activeEntryPoint.renderResults) {
+        BuildStackService.tryRegister(CybertronService.activeEntryPoint);
         try {
-           BuildStackService.tryRegister(CybertronService.activeEntryPoint);
-           await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
+          await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
         } finally {
           BuildStackService.unRegister(CybertronService.activeEntryPoint);
-		    }
+        }
       } else {
         for (let fragment of ProjectService.textFragments) {
-          BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment);
-          try {
-            await CybertronService.activeEntryPoint.renderResult(fragment);
-          } finally {
-            BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment);
+          if (CybertronService.activeEntryPoint.cache.isOutOfDate(fragment.key)) {
+            BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment);
+            try {
+              await CybertronService.activeEntryPoint.renderResult(fragment);
+            } finally {
+              BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment);
+            }
           }
         }
       }
@@ -72,7 +74,11 @@ class BuildService {
     this.isBuilding = true;
     try {
       BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment);
-      await CybertronService.activeEntryPoint.renderResult(fragment);
+      if (CybertronService.activeEntryPoint.renderResults) {
+        await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
+      } else if (CybertronService.activeEntryPoint.cache.isOutOfDate(fragment.key)) {
+        await CybertronService.activeEntryPoint.renderResult(fragment);
+      }
     } finally {
       BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment);
       this.isBuilding = false;
@@ -88,7 +94,11 @@ class BuildService {
     this.isBuilding = true;
     try {
       BuildStackService.tryRegister(transformer, fragment);
-      await transformer.renderResult(fragment);
+      if (transformer.renderResults) {
+        await transformer.renderResults(ProjectService.textFragments);
+      } else {
+        await transformer.renderResult(fragment);
+      }
     } finally {
       BuildStackService.unRegister(transformer, fragment);
       this.isBuilding = false;

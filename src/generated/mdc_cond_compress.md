@@ -147,15 +147,6 @@
 - It uses a dictionary called "running" to keep track of the currently running textframe - transformer pairs.
 - The "tryRegister" function checks if a pair is already running and returns false if it is, otherwise it adds the pair to the "running" dictionary and returns true.
 - The "unRegister" function removes a pair from the "running" dictionary.
-# MarkdownCode > services > transformers > constant-extractor service
-- The constant-extractor service extracts constant definitions from source code and stores them in a json file. It replaces the constants in the source texts with references to the json entries.
-- It inherits from the transformer-base service and has a constructor with the parameters 'constants' (name) and an empty array (dependencies). The isJson parameter is set to true.
-- To use the service, create a global instance of it.
-- Register the global instance of the service as a transformer with the cybertron-service using the code `cybertronService.register(this, false)`.
-- The service has the following functions:
-  - extract-quotes: This function extracts all the locations in the text that contain quotes.
-  - render-result: This function renders the result by extracting quotes from the text fragment, caching the result, and returning it.
-  - get-result: This function retrieves an up-to-date result value for the specified key. It uses the cache if possible. If the result is not available in the cache, it renders the result and returns it.
 # MarkdownCode > services > result-cache service
 - This service manages cached results for transformers.
 - Transformers can store results for text fragments and track if the results are out of date.
@@ -494,26 +485,6 @@ The component-lister service extracts component names from text and is used to d
   - "render-result(pseudo)" is used to render a result for a given text fragment.
   - "get-result(key)" retrieves an up-to-date result value for a specified key, utilizing the cache when possible.
   - "calculateMaxTokens(inputTokens)" calculates the maximum tokens for the llm to optimize speed and cost.
-# MarkdownCode > components > body > fragment-status icon
-- The fragment-status icon component displays the current status of a text-fragment object.
-- Consumers of the component need to provide the following properties:
-  - fragment: a reference to the text-fragment object
-- The icon shown depends on the value of `fragment?.level`:
-  - 1: LuHeading1
-  - 2: LuHeading2
-  - ...
-  - 6 or more: LuHeading6
-- The component includes a tooltip from the antd library that shows the status.
-- The color of the icon is determined by:
-  - green if `!fragment?.isOutOfDate` (fragment is up to date)
-  - orange if `fragment?.isOutOfDate && fragment?.outOfDateTransformers?.length > 0` (fragment is not up to date for some transformers)
-    - The tooltip displays the `name` of each transformer.
-  - red if `fragment?.isOutOfDate && !(fragment?.outOfDateTransformers?.length > 0)` (fragment is not up to date for all transformers)
-- The component registers an event handler with the project-service (prop: eventTarget) upon construction to handle the following events (unregisters when unloading):
-  - `fragment-out-of-date`:
-    - If `e.detail === fragment?.key`, the icon color and tooltip content are refreshed when the event is triggered.
-  - `key-changed`:
-    - If `e.detail?.key === fragment?.key`, the icon is refreshed based on the new value of `fragment?.level`.
 # MarkdownCode > services > project service > project configuration service
 - The project configuration service manages project configurations.
 - It includes the following fields:
@@ -551,19 +522,6 @@ The component-lister service extracts component names from text and is used to d
   - Edit transformers: Opens a new window of the markdownCode editor in plugin-mode, using the specified project path. Calls the function `window.electron.openPluginEditor(folderService.plugins)`.
     - Disabled when `window.electron.isPluginMode == true`.
   - Active entry point: A dropdown list populated with the names of transformers found in `cybertronService.entryPoints`. The selected item in the dropdown list is from `cyberTronService.activeEntryPoint`. This field is updated whenever the selection changes in the dropdown list.
-# MarkdownCode > services > transformers > plugin-renderer service
-- The plugin-renderer service translates a plugin definition into a javascript module.
-- It is used to build plugin transformers that can be loaded and used by the application.
-- The plugin-renderer service inherits from the transformer-base service and has the following constructor parameters:
-  - name: 'plugin renderer'
-  - dependencies: ['constants']
-  - isJson: false
-- During construction, the plugin-renderer service sets `this.constantsService` to `this.dependencies[0]`.
-- The plugin-renderer service has the following functions:
-  - `saveFile(key, content)`: saves the content to a file with a specific file name and returns the file path.
-  - `cleanResult(content)`: removes code block markdown from the content and returns the cleaned content.
-  - `renderResult(fragment)`: builds a message using the fragment, sends a request to GPTService, cleans the result, saves it to a file, and returns the file path.
-  - `buildMessage(fragment)`: builds a message using the fragment and returns the result and a list containing the fragment key.
 # MarkdownCode > services > transformers > plugin-list renderer service
 - The plugin-list renderer service generates a file that contains all the plugins that need to be loaded.
 - It is used to inform the application about which files to load for the transformer-plugins.
@@ -635,3 +593,70 @@ The component-lister service extracts component names from text and is used to d
   - rendered: uses the MdAutoFixNormal icon when the active fragment is rendered and not out of date.
   - not yet rendered: uses the LuArrowDownToDot icon when the active fragment has no result.
 - The component includes a tooltip to display the status.
+# MarkdownCode > services > transformers > constant-extractor service
+- The constant-extractor service extracts constant definitions from source code and replaces them with references to a json file.
+- It inherits from the transformer-base service and has a constructor with the parameters 'constants' and an empty dependency array.
+- The service has the following functions:
+  - extract-quotes: This function extracts all the locations in the text that contain quotes.
+  - collect-response: This function adds a quote to the list of quotes.
+  - render-result: This function renders the result by extracting quotes from a text fragment and caching the result.
+  - get-result: This function retrieves an up-to-date result value for a specified key, using the cache when possible.
+# MarkdownCode > services > transformers > plugin-renderer service
+- The plugin-renderer service translates a plugin definition into a javascript module.
+- It is used to build plugin transformers that can be loaded and used by the application.
+- The plugin-renderer service inherits from the transformer-base service and has the following constructor parameters:
+  - name: 'plugin renderer'
+  - dependencies: ['constants']
+  - isJson: false
+- During construction, the plugin-renderer service sets `this.constantsService` to `this.dependencies[0]`.
+- The plugin-renderer service has the following functions:
+  - `saveFile(key, content)`: saves the content to a file with a specific file name and returns the file path.
+  - `cleanResult(content)`: removes code block markdown from the content and returns the cleaned content.
+  - `renderResult(fragment)`: builds a message using the fragment, sends a request to GPTService, cleans the result, saves it to a file, and returns the file path.
+  - `buildMessage(fragment)`: builds a message using the fragment and returns the result and a list containing the fragment key.
+# MarkdownCode > components > body > fragment-status icon
+- The fragment-status icon component displays the status of a text-fragment object.
+- It requires the following properties:
+  - fragment: a reference to the text-fragment object
+- The icon displayed depends on the value of `fragment?.depth`:
+  - 1: LuHeading1
+  - 2: LuHeading2
+  - ...
+  - 6 or more: LuHeading6
+- If `fragment?.isBuilding` is true, a spin component is shown instead of an icon.
+- The icons LuHeading1, LuHeading2, LuHeading3, LuHeading4, LuHeading5, LuHeading6 are imported from the 'react-icons/lu' library.
+- The render function selects the icon based on the state 'depth'.
+- The component includes a tooltip from the antd library to show the status.
+- The color of the icon depends on the following conditions:
+  - green if `!fragment?.isOutOfDate`
+  - orange if `fragment?.isOutOfDate && fragment?.outOfDateTransformers?.length > 0`
+  - red if `fragment?.isOutOfDate && !(fragment?.outOfDateTransformers?.length > 0)`
+- Upon construction, the component registers event handlers with the project-service (prop: eventTarget) for the following events:
+  - `fragment-out-of-date`: refreshes the icon color and tooltip content if `e.detail === fragment?.key`
+  - `key-changed`: refreshes the icon based on the new value of `fragment?.depth` if `e.detail?.key === fragment?.key`
+  - `fragment-building`: sets the icon to null to show the spinner if `e.detail?.fragment?.key === fragment?.key`
+  - `fragment-up-to-date`: refreshes the icon, tooltip, and color if `e.detail === fragment?.key`
+# MarkdownCode > services > transformers > parser validator service
+- The parser-validator service verifies the internal markdown parser by checking the current state of the specified text-fragment.
+- It does not use any llm.
+- It is used for debugging the application.
+- The parser-validator service inherits from the transformer-base service.
+- The constructor parameters for the transformer-base service are:
+  - Name: 'parser validator'
+  - Dependencies: []
+  - isJson: false
+- The parser-validator service has a function called renderResult, which takes a fragment as input.
+- Inside the renderResult function, the lines of the fragment are joined together and stored in a variable called result.
+- The cache's setResult method is called with the key and result as arguments.
+- The result is then returned.
+# MarkdownCode > services > transformers > constants-resource renderer
+- The constants-resource renderer service creates a resource file that contains all the constants found in the fragments.
+- Most plugins rely on this service to render the resource file.
+- The service inherits from the transformer-base service, with the following constructor parameters:
+  - Name: 'constants resource renderer'
+  - Dependencies: ['constants']
+  - isJson: true
+- The constantsService is set as a dependency during construction.
+- The service has two functions:
+  - saveFile(items): saves the array to a file.
+  - renderResults(fragments): builds a JSON dictionary of constants and saves it.

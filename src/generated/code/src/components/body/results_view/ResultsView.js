@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Tabs } from 'antd';
 import cybertronService from '../../../services/cybertron_service/CybertronService';
@@ -7,6 +6,7 @@ import themeService from '../../../services/Theme_service/ThemeService';
 import dialogService from '../../../services/dialog_service/DialogService';
 import ResultsViewTab from '../results_view/results_view_tab/ResultsViewTab';
 import TransformerStatusIcon from './transformer-status_icon/TransformerStatusIcon';
+import allSparkService from '../../../services/all-spark_service/AllSparkService';
 
 /**
  * ResultsView component
@@ -20,19 +20,28 @@ const ResultsView = () => {
    * Initialize the component
    */
   useEffect(() => {
-    try {
-      const transformers = cybertronService.transformers;
-      const tabs = transformers.map(transformer => ({
-        key: transformer.name,
-        label: <div style={{display: 'flex'}} ><TransformerStatusIcon transformer={transformer} /> {transformer.name} </div> ,
-        children: <ResultsViewTab transformer={transformer} />
-      }));
-      setTabs(tabs);
-      setActiveKey(transformers[0].name);
-      positionTrackingService.setActiveTransformer(transformers[0]);
-    } catch (error) {
-      dialogService.showErrorDialog(error.message);
-    }
+    const loadTransformers = () => {
+      try {
+        const transformers = cybertronService.transformers;
+        const tabs = transformers.map(transformer => ({
+          key: transformer.name,
+          label: <div style={{display: 'flex'}} ><TransformerStatusIcon transformer={transformer} /> {transformer.name} </div> ,
+          children: <ResultsViewTab transformer={transformer} />
+        }));
+        setTabs(tabs);
+        setActiveKey(transformers[0].name);
+        positionTrackingService.setActiveTransformer(transformers[0]);
+      } catch (error) {
+        dialogService.showErrorDialog(error.message);
+      }
+    };
+
+    loadTransformers();
+    allSparkService.eventTarget.addEventListener('transformers-loaded', loadTransformers);
+
+    return () => {
+      allSparkService.eventTarget.removeEventListener('transformers-loaded', loadTransformers);
+    };
   }, []);
 
   /**

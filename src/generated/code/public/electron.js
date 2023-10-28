@@ -125,6 +125,10 @@ ipcMain.handle('getPath', async (event, path) => {
   return app.getPath(path);
 });
 
+ipcMain.handle('getAppPath', async (event) => {
+  return app.getAppPath();
+});
+
 
 ipcMain.handle('openPluginEditor', async (event, path) => {
   try {

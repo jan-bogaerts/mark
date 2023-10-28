@@ -115,6 +115,8 @@ class ResultCacheService {
     } else if (this.cache[key].result !== result) {
       this.cache[key].result = result;
       this.cache[key].state = 'still-valid';
+    } else if (this.cache[key].state !== 'still-valid') {
+      this.cache[key].state = 'still-valid';
     } else {
       isModified = false;
     }

@@ -40,11 +40,11 @@
 {"ResultsView": "declare", "ResultsViewTab": "MarkdownCode > components > body > results view > results view tab"}
 # MarkdownCode > components > toolbar > transformers > build section
 {"BuildSection": "declare"}
-# MarkdownCode > components > body > fragment-status icon
-{"FragmentStatusIcon": "declare"}
 # MarkdownCode > components > toolbar > transformers
 {"TransformersTab": "declare", "ConfigurationSection": "MarkdownCode > components > toolbar > transformers > transformers-configuration section", "BuildSection": "MarkdownCode > components > toolbar > transformers > build section"}
 # MarkdownCode > components > toolbar > transformers > transformers-configuration section
 {"ConfigurationSection": "declare"}
 # MarkdownCode > components > body > results view > transformer-status icon
 {"TransformerStatusIcon": "declare"}
+# MarkdownCode > components > body > fragment-status icon
+{"FragmentStatusIcon": "declare"}

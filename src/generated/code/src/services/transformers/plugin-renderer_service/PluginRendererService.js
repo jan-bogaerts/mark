@@ -78,7 +78,9 @@ class PluginRendererService extends TransformerBaseService {
   async buildMessage(fragment) {
     const result = [
       { role: 'system', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_0 },
-      { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_1.replace('{{title}}', fragment.title).replace('{{content}}', await this.constantsService.getResult(fragment)) }
+      { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_1
+		.replace('{{title}}', fragment.title)
+		.replace('{{content}}', await this.constantsService.getResult(fragment)) }
     ];
     return [result, [fragment.key]];
   }

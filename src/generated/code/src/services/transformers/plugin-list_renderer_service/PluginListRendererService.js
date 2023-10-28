@@ -38,11 +38,14 @@ class PluginListRendererService extends TransformerBaseService {
    */
   async renderResults(fragments) {
     const items = [];
+    const output = folderService.output;
     for (const fragment of fragments) {
-      const item = await this.pluginRendererService.getResult(fragment);
+      let item = await this.pluginRendererService.getResult(fragment);
       if (item) {
+        item = path.relative(output, item);
         items.push(item);
       }
+      this.cache.setResult(fragment.key, item);
     }
     this.saveFile(items);
   }

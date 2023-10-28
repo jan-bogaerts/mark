@@ -9,6 +9,7 @@ const dataFile = params.get("file");
 window.electron = {
     openDialog: (method, config) => { return (ipcRenderer.invoke('dialog', method, config)) },
     getPath: (path) => { return (ipcRenderer.invoke('getPath', path)) },
+    getAppPath: () => { return (ipcRenderer.invoke('getAppPath')) },
     openPluginEditor: (path) => { return (ipcRenderer.invoke('openPluginEditor', path)) },
     isPluginMode: pluginFile !== null,
     fileToOpen: dataFile || pluginFile,
