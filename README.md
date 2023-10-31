@@ -18,14 +18,23 @@ MarkdownCode is currently tested on JavaScript, but it should work with most oth
 
 ## Prerequisites
 
-The bootstrap version of MarkdownCode is running on Python 3. The specific package dependencies can be found in the `requirements.txt` file. You will also need an API key from OpenAI to run MarkdownCode. The application that it produces for its own code is a stand-alone Electron application that doesn't have any further requirements.
+For windows, the application can be installed from the installer in the release section.
+To run from code (javascript/electron/react):
+ - go to the folder 'src\generated\code'. There should be a file `package.json`
+ - run `npm install` to install all the required packages
+ - to start the app, use the npm script `electron:start`
 
 ## Markdown File Syntax
+There isn't that much structural requirements. The main idea is that the parser will split the text on titles. So a text fragment contains 1 title and all the text below it until another title is found.
+That said, in general it is presumed:
 
 - The top title in the markdown file is presumed to be the name of the application.
-- The second paragraph is expected to be about the development stack. We recommend using this as the title for the paragraph. 
-- A title and its text forms a single block. Each block is processed individually. 
-- Titles (with subsections) 'services' and 'components' are expected.
+- The second paragraph is expected to be about the development stack. It is recommended to use this as the title for the paragraph. This is not a requirement of the parser, but is instead used by some transformers. This can be changed in your custom transformers.
+- The current set of transformers expects the titles (with subsections) 'services' and 'components' for building applications
+- Plugin definitions rely on the constant-extractor transformer, which uses the > sign at the beginning of the line to find constants, ex:
+
+    > this is a constant
+
 
 ## Code Conversion Customization
 
@@ -33,9 +42,12 @@ You can overwrite results to influence the build process if certain features are
 
 ## Installation and Usage
 
-For the bootstrap version, use pip to install everything in `requirements.txt`. There is a `launch.json` file to run each step using Visual Studio Code.
-
-The Electron version of MarkdownCode can be installed using the provided installer.
+- run the installer
+- go to the tab `preferences` and click on the button with a key icon (first one)
+- enter your open-ai key
+- type some text
+- select one of the transformer tabs at the bottom
+- go to the transformers menu section and click on the `play` button, which will start the selected transformer for the currently selected text fragment
 
 ## Known Limitations or Issues
 
