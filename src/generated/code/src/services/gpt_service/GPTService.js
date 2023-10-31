@@ -91,6 +91,13 @@ class GPTService {
     let response = await this.openai.chat.completions.create(inputData, config);
     if (response) {
       let reply = response.choices[0]?.message?.content;
+      if (transformer.isJson) {
+        try {
+          reply = JSON.parse(reply);
+        } catch (e) {
+          DialogService.error('Invalid JSON response from OpenAI API', e.message);
+        }
+      }
       return reply;
     }
   }

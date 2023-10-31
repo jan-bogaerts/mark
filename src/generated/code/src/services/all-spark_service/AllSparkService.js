@@ -12,23 +12,23 @@ import path from 'path';
 
 class AllSparkService {
   constructor() {
-    this.plugins = null;
     this.eventTarget = new EventTarget();
-    this.load();
+    this.transformers = {};
+	  this.plugins = null;
   }
 
-  async getPlugins() {
+  getPlugins() {
     if (!this.plugins) {
-      await this.getPluginsList();
+      this.getPluginsList();
     }
     return this.plugins;
   }
 
-  async getPluginsList() {
+  getPluginsList() {
     let pluginFolder = folderService.pluginsOutput;
     let pluginsPath = path.join(pluginFolder, 'plugins.json');
     if (!fs.existsSync(pluginsPath)) {
-      const userDataPath = await window.electron.getPath('userData');
+      const userDataPath = window.electron.resourcesPath;
       pluginFolder = path.join(userDataPath, 'plugins');
       pluginsPath = path.join(pluginFolder, 'plugins.json');
     }
@@ -47,7 +47,8 @@ class AllSparkService {
     for (const plugin of this.plugins) {
       await this.unloadPlugin(plugin);
     }
-    await this.getPluginsList();
+    this.getPluginsList();
+    await this.loadPlugins();
   }
 
   async loadPlugin(definition) {
@@ -62,8 +63,9 @@ class AllSparkService {
 
   async unloadPlugin(definition) {
     try {
-      const name = require.resolve(definition);
-      delete require.cache[name];
+      CybertronService.unregister(this.transformers[definition]);
+      delete require.cache[definition];
+      delete this.transformers[definition];
     }
     catch(error){
       DialogService.showErrorDialog(`Error unloading plugin ${definition}`, error);
@@ -81,10 +83,12 @@ class AllSparkService {
   }
 
   async loadPlugins() {
-    const pluginDefs = await this.getPlugins();
+    if (window.electron.isPluginMode === true) return;
+    const pluginDefs = this.getPlugins();
     for (const pluginDef of pluginDefs) {
       const pluginObj = await this.loadPlugin(pluginDef);
       const pluginTransformer = new PluginTransformerService(pluginObj);
+      this.transformers[pluginDef] = pluginTransformer;
       CybertronService.register(pluginTransformer, pluginTransformer.isEntryPoint);
     }
     this.eventTarget.dispatchEvent(new Event('transformers-loaded'));

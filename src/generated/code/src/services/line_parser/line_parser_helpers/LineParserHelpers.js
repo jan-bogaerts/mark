@@ -41,14 +41,14 @@ class LineParserHelpers {
       if (index === fragmentStart) {
         this.removeFragmentTitle(service, fragment, null, index);
       } else {
-        let fragmentLineIndex = index - fragmentStart + 1;
-        while (fragment.lines.length < fragmentLineIndex) {
-          fragment.lines.push('');
-          service.fragmentsIndex[fragmentStart + fragment.lines.length] = fragment;
-        }
-        if (fragment.lines.length > fragmentLineIndex) {
-          fragment.lines.splice(fragmentLineIndex, 0, '');
-          service.fragmentsIndex[index] = fragment;
+        let fragmentLineIndex = index - fragmentStart - 1;
+        if (fragmentLineIndex < fragment.lines.length) {
+          fragment.lines[fragmentLineIndex] = '';
+        } else {
+          while (fragment.lines.length <= fragmentLineIndex) {
+            fragment.lines.push('');
+            service.fragmentsIndex[fragmentStart + fragment.lines.length] = fragment;
+          }
         }
       }
     }
@@ -68,7 +68,7 @@ class LineParserHelpers {
     fragment.title = line.replace(/#/g, '').trim();
     fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
     const eventParams = { fragment, oldKey };
-    ProjectService.dispatchEvent(new CustomEvent('key-changed', { detail: eventParams }));
+    ProjectService.dispatchEvent('key-changed', eventParams);
   }
 
   /**

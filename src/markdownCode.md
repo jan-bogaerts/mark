@@ -42,8 +42,8 @@ the following tabs are available:
 - all buttons use an appropriate icon as content, no text.
 - it supports the following actions
   - New Project: a button to create a new project
-    - if there is a project loaded with changes `projectService.isDirty == true`, call this.saveProject().
-    - call `storageService.new()`
+    - if `await trySave() == true` (if the action is canceled, dont create a new project)
+      - call `storageService.new()`
     - disabled when `window.electron.isPluginMode == true`
     - icon: FileOutlined
   - open: a button to open an existing project.
@@ -68,6 +68,23 @@ the following tabs are available:
   - auto-save: a toggle button, when pressed, asks the project service to update the auto-save state (setAutoSaveState).
     - the toggle button's state follows that of the project service's auto-save state (getAutoSaveState).
 - The project-service needs to be monitored for changes so that the state of the buttons can be updated (field: eventTarget, event: 'is-dirty-changed').
+- When the component is mounted, call `window.electron.onCanClose(this.tryCanClose)` so we can save the project if need be and also cancel the action. Call `window.electron.removeOnCanClose(this.tryCanClose)` when unmounting to remove the event handler
+- functions:
+  - trySave():
+    ```python
+      if this.state.isDirty:
+        confirm = await dialogService.confirm('Do you want to save the changes first?')
+        if confirm == undefined:
+          return False
+        elif confirm:
+          await this.saveProject()
+      return True
+    ```
+  - tryCanClose():
+    ```python
+      res = await this.trySave()
+      window.electron.canCloseProcessed(res)
+    ```
   
 ##### edit section
 - the edit-section component contains actions related to the clipboard and the currently selected data.
@@ -265,9 +282,9 @@ Remember that each button needs it's own appropriate icon.
 - When the editor is loaded:
   - the text for the monaco editor is retrieved from the project service (`projectService.content`).
   - theme (convert light to vs-light or dark to vs-dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
-- Whenever the project service triggers the 'content-changed' event, the editor will reload the text
+- Whenever the project service triggers the 'content-changed' event, the editor will reload the text. Before reloading the text in the editor, set the flag `settingValue` to true and after the load is done, set it back to false. This is used to prevent parsing the text after loading the project (the editor triggers handleDidChangeModelContent when loading)
   - note: register using `projectService.eventTarget.addEventListener('content-changed', handleContentChanged)`, unregister when component unloads 
-- Whenever the position-tracking service raises the event 'moveTo', do: `this.editorRef.current.revealLineNearTop(e.detail)`, unregister when component unloads
+- Whenever the position-tracking service raises the event 'moveTo', do: `if (this.editorRef.current) this.editorRef.current.revealLineNearTop(e.detail)`, unregister when component unloads
 - subscribe to the theme-service for changes `themeService.subscribe(this.handleThemeChanged)` upon construction and unsubscribe upon destruction `themeService.unsubscribe(this.handleThemeChanged)`
   - return if no this.editorRef.current
   - update the options of the editor, call `this.editorRef.current.updateOptions(newOptions)`
@@ -278,6 +295,8 @@ Remember that each button needs it's own appropriate icon.
     def handleDidChangeModelContent(ev):
         try:
           if not editor: # ref to the editor needs to be loaded, should be the case cause event is triggered
+            return
+          if this.settingValue:
             return
           changeProcessorService.process(ev.changes, editor)
         catch (e):
@@ -301,19 +320,30 @@ Remember that each button needs it's own appropriate icon.
   - note: register using `projectService.eventTarget.addEventListener('content-changed', handleContentChanged)`
 - Whenever the project service raises an event that a data item was removed (event: fragment-deleted), call the 'removeNode' function
 - Whenever the project service raises an event that a data item was added (fragment-inserted) or (multiple) item(s) were changed (the event 'key-changed'), rebuild the tree structure.
-- when the user selects a tree item, the key of the first selected item is assigned to the position-tracking service's activeFragment
+- whenever the user expands a tree item (callback: onExpand), the key of the expanded item is added to the list of expanded items, when the user collapses an item, the key is removed from the list of expanded items.
 - this component monitors the position-tracking service for changes to the currently selected text-fragment.
   - use `positionTrackingService.eventTarget.addEventListener('change', eventHandler)` to attach the event handler
-  - when the position changes, set the tree's selectedKeys and defaultExpandedKeys properties to the key (if any) of the text-fragment so that the corresponding tree node becomes selected. `key = e.detail?.key`
+  - when the position changes and `this.isMoving == false`, set the tree's selectedKeys and defaultExpandedKeys properties to the key (if any) of the text-fragment so that the corresponding tree node becomes selected. `key = e.detail?.key`
 - show the tree with lines
 - when the user clicks on a tree-item (onSelect):
   ```python
     if len(selectedKeys) > 0:
+      if selectedKeys.length == 0:
+        return
       fragment = projectService.getFragment(selectedKeys[0])
       if fragment:
-        positionTrackingService.setActiveFragment(fragment)
+        try:
+          this.isMoving = True
+          positionTrackingService.setActiveFragment(fragment)
+          if this.state.expandedKeys.indexOf(selectedKeys[0]) == -1:
+            this.setState({ expandedKeys: [...this.state.expandedKeys, selectedKeys[0]] })
+          this.setState({ selectedKeys })
+        finally:
+          this.isMoving = False
   ```
-
+- when the user expands a tree-item (onExpand):
+  ```python
+  ```
 - the function 'convertToTreeData' is described as:
   set parent to null
   for every data item:
@@ -386,7 +416,7 @@ Remember that each button needs it's own appropriate icon.
   - Put a transformer-status-icon component in front of the transformer name, set property 'transformer'
   - the tab content shows a results-view-tab component
   - when a tab gets selected, do: `positionTrackingService.setActiveTransformer(transformer)`
-- when first initialized, set the selected tab to the first item in the list and make certain that `positionTrackingService.setActiveTransformer(transformer)` is called for the correct transformer (first in the list)
+- when first initialized and the list is not empty, set the selected tab to the first item in the list and make certain that `positionTrackingService.setActiveTransformer(transformer)` is called for the correct transformer (first in the list)
 - create a json structure for all the tabs (fields: key, label, children).
 - assign the json structure to the items property.
 - Monitors for events dispatched from the all-spark service (field: eventTarget, event: transformers-loaded): whenever this event comes in, rebuild the list of entry points.
@@ -482,14 +512,14 @@ Remember that each button needs it's own appropriate icon.
   - model for all: select the gpt model to be used by the transformer.
     - the sub menu items are provided by the gpt-service's list of available models. `await gptService.getModels()`
     - the menu item that contains the name of the currently selected model, is shown as selected.
-      - Get the value for the current model, registered for the current transformer, from the gpt-service. `gptService.getModelForFragment(transformer)`
+      - Get the value for the current model, registered for the current transformer, from the gpt-service. `gptService.getModelForTransformer(transformer)`
     - when an other model is selected, ask the gpt-service to update the model-name used for the transformer. `gptService.setModelForTransformer(model, transformer)`
   - model for fragment: select the gpt model to be used by the transformer, for the current key.
     - the sub menu items are provided by the gpt-service's list of available models.
     - the menu item that contains the name of the currently selected model, is shown as selected.
-      - Get the value for the current model, registered under the name of the current transformer and current key, from the gpt-service `gptService.setModelForFragment(transformer, key)`
+      - Get the value for the current model, registered under the name of the current transformer and current key, from the gpt-service `gptService.getModelForFragment(transformer, key)`
     - when an other model is selected, ask the gpt-service to update the model-name of the transformer and the current title. `gptService.setModelForFragment(model, transformer, key)`
-  - a splitter
+  - a splitter (Menu.Divider)
   - refresh: when pressed, the transformer associated with the current tab recalculates the result
   - upon construction register an event handler with the project-service (field: eventTarget) to handle the event 'content-changed' (Unregister when unloading). Refresh the current model for all and the current model for the fragment.
 
@@ -515,6 +545,13 @@ Remember that each button needs it's own appropriate icon.
     ```python (pseudo)
       config = { filters: [{ name: 'markdown', extensions: ['md']}, { name: 'any', extensions: ['*']}] }
       return electron.openDialog('showOpenDialog', config)
+    ```
+  - confirm(message):
+    ```python
+      config = { type: 'question', buttons: ['Yes', 'No', 'Cancel'], message }
+      res = await window.electron.openDialog('showMessageBox', config)
+      if (res.response === 2) return null
+      return res.response === 0
     ```
 
 ### Theme service
@@ -607,8 +644,8 @@ Remember that each button needs it's own appropriate icon.
       this.loading = True # to prevent marking it dirty while loading
       try:
         this.clear()
-        userDataPath = await window.electron.getPath('userData')
-        templatePath = path.join(userDataPath, 'templates', 'default.md')
+        resourcesPath = window.electron.resourcesPath
+        templatePath = path.join(resourcesPath, 'templates', 'default.md')
         if fs.existsSync(templatePath):
           content = fs.readFileSync(templatePath, 'utf8')
           projectService.content = content
@@ -885,7 +922,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           if index == fragmentStart:
             this.removeFragmentTitle(service, fragment, null, index)
           else:
-            fragmentLineIndex = index - fragmentStart + 1
+            fragmentLineIndex = index - fragmentStart - 1
             while fragment.lines.length < fragmentLineIndex:
               fragment.lines.push('')
               service.fragmentsIndex[fragmentStart + fragment.lines.length] = fragment
@@ -901,7 +938,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         fragment.title = line.replace(/#/g, '').trim();
         fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
         eventParams = { fragment, oldKey }
-        projectService.dispatchEvent(new CustomEvent('key-changed', { detail: eventParams } ))
+        projectService.dispatchEvent('key-changed', eventParams)
 
 
       def removeFragmentTitle(service, fragment, line, index):
@@ -1093,6 +1130,11 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     response = await this.openai.chat.completions.create(inputData, config)
     if response:
       reply = response.choices[0]?.message?.content
+      if transformer.isJson:
+        try:
+          reply = JSON.parse(reply)
+        except(err):
+          dialogService.showError('Failed to convert result to json', err)
       return reply
   ```
 - getModelForRequest: search for the model to use in the modelsMap dictionary:
@@ -1164,7 +1206,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         - mark as out-of-date
         - set the 'is-dirty' flag
         - if there are any other cache services that monitor this cache-service (instead of the project service directly), then let them know that the specified text-fragment (from the result) has gone out-of-date.
-    - call projectService.tryAddToOutOfDate(fragmentKey, this.transformer)
+    - after all items in the list have been processed, call projectService.tryAddToOutOfDate(fragmentKey, this.transformer)
 - the result-cache has a function to overwrite the result for a key. this overwritten text value is stored in the 'overwrites' dictionary, under the supplied key. When called, set the 'is-dirty' flag.
 - the result-cache has a function to retrieve the result for a particular key: the key is first searched in the 'overwrites' dictionary. if this has a result, return this value, otherwise try to return the value found in the results dictionary.
 - the result-cache has a function to retrieve if a text fragment is out-of-date or not (from the key): if the result is marked as out-of-date, returns true
@@ -1172,9 +1214,21 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - handleFragmentDeleted: an event handler called when a fragment is deleted. in pseudo:
   ```python (pseudo)
   def handleFragmentDeleted(e):
-    fragment = e.detail
-    fragment.state = 'deleted'
-    this.isDirty = True
+    fragmentKey = e.detail
+    if fragmentKey in this.cache:
+      this.cache[fragmentKey].state = 'deleted'
+      this.isDirty = True
+    else:
+      cacheKeys = this.secondaryCache[fragmentKey]
+      if cacheKeys:
+        isModified = False
+        for key in cacheKeys: 
+          if this.cache[key].state != 'out-of-date':
+            this.cache[key].state = 'out-of-date'
+            isModified = true
+            this.isDirty = True
+        if isModified:
+          ProjectService.tryAddToOutOfDate(fragmentKey, this.transformer)
   ```
 - getFragmentResults: a function to retrieve all the results related to a particular fragment. Definition in pseudo:
 
@@ -1337,17 +1391,18 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - the all-spark service is a global singleton that is responsible for creating all the transformers and registering them into the cybertron service. 
 - fields:
   - eventTarget: to register/unregister event handlers that monitor changes in the loaded transformers
+  - transformers: a dictionary that stores a reference to all the transformer objects that get created. The url from where the transformer is loaded from is used as the key. This is used to unregister transformers again.
 - functions:
   - getPlugins: returns a list of plugin definitions
-    - if the list has not yet been loaded, call: `await this.getPluginsList()`
+    - if the list has not yet been loaded, call: `this.getPluginsList()`
     - return this.plugins
   - getPluginsList: If the current project contains a plugins folder, load the project-local file, otherwise load the globally available set of plugins.
     ```python pseudo
       pluginFolder = folderService.pluginsOutput
       path = os.path.join(pluginFolder, 'plugins.json')
       if not fs.existsSync(path):
-        userDataPath = await window.electron.getPath('userData')
-        pluginFolder = path.join(userDataPath, 'plugins')
+        resourcesPath = window.electron.resourcesPath
+        pluginFolder = path.join(resourcesPath, 'plugins')
         path = os.path.join(pluginFolder, 'plugins.json')
       if fs.existsSync(path):
         plugins = fs.readSync(path)
@@ -1362,15 +1417,21 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       for plugin in this.plugins:
         await this.unloadPlugin(plugin)
       await this.getPluginsList() # forces a reload of the list
+      await this.loadPlugins()
     ```
   - loadPlugin(definition):
     - do: `return global.require(definition)`
     - wrap round try-catch. On error, show an error dialog.
   - unloadPlugin(definition):
-    - do: `var name = require.resolve('moduleName'); delete require.cache[name];`
+    - do: 
+      ```python
+        cybertronService.unregister(this.transformers[definition])
+        delete require.cache[definition]
+        delete this.transformers[definition]
+      ```
     - wrap round try-catch. On error, show an error dialog.
   - load: create the transformers and register them with the cybertron-service. 
-    - This function is called during construction of the application
+    - This function is called after the application has loaded.
     - to register, use: `cybertronService.register(transformer, false)`, to register as entry point, use: `cybertronService.register(transformer, true)`
     - register every transformer after construction so that it can be found in the list by other transformers.
     - transformers to create:
@@ -1380,10 +1441,12 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       - constants-resource renderer (entry point)
       - parser validator service
     - call `await this.loadPlugins()`
-  - loadPlugins: loads all the plugins and creates a transformer for each
-      - for every transformer definition in this.getPlugins():
-        - pluginObj = this.loadPlugin(transformerDef)
+  - loadPlugins: when not in pluginMode (cause when in that mode, we are editing the plugins and can only use the built in ones), loads all the plugins and creates a transformer for each
+    - when `window.electron.isPluginMode == false`:
+      - for every transformer url in this.getPlugins():
+        - pluginObj = this.loadPlugin(ul)
         - create a new plugin-transformer service, with constructor param 'pluginObj'
+        - store a reference of the new plugin-transformer object in the 'transformers' dictionary, key: url so that we can unload it again if required.
         - register plugin-transformer, to determine if it's an entry-point, use 'pluginTransformer.isEntryPoint'
       - after all transformers are loaded, dispatch the event 'transformers-loaded'
 
@@ -1403,9 +1466,10 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - render-result(pseudo):
     ```python (pseudo)
     def renderResult(textFragment):
-      message, keys = await this.buildMessage(textFragment)
-      if not message: 
+      keyedMessage = await this.buildMessage(textFragment)
+      if not keyedMessage: 
         return None
+      message, keys = keyedMessage
       result = await GPT-service.sendRequest(this, textFragment.key, message) # need name and key so the gpt service can select the correct model
       key = ' | '.join(keys)
       this.cache.setResult(key, result)
@@ -1477,7 +1541,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - collect-response: add a quote to the list of quotes
   ```python
     def collectResponse(toAdd, end, lines, title, count, quotes):
-      key = title.replace(' > ', '_').replace(' ', '_').strip()
+      key = title.replace(' > ', '_').replace(' ', '_').replace('-', '_').strip()
       toAdd['end'] = line_nr
       toAdd['lines'] = lines
       toAdd['name'] = '{0}_{1}'.format(key, count)

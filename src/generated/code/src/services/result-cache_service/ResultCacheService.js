@@ -64,9 +64,26 @@ class ResultCacheService {
   }
 
   handleFragmentDeleted(e) {
-    const fragment = e.detail;
-    fragment.state = 'deleted';
-    this.isDirty = true;
+    const fragmentKey = e.detail;
+    if (this.cache[fragmentKey]) {
+      this.cache[fragmentKey].state = 'deleted';
+      this.isDirty = true;
+    } else {
+      const cacheKeys = this.secondaryCache[fragmentKey];
+      if (cacheKeys) {
+        let isModified = false;
+        for (const key of cacheKeys) {
+          if (this.cache[key].state !== 'out-of-date') {
+            this.cache[key].state = 'out-of-date';
+            this.isDirty = true;
+            isModified = true;
+          }
+        }
+        if (isModified) {
+          ProjectService.tryAddToOutOfDate(fragmentKey, this.transformer);
+        }
+      }
+    }
   }
 
   handleKeyChanged(e) {
@@ -89,13 +106,17 @@ class ResultCacheService {
   handleTextFragmentChanged(e) {
     const fragmentKey = e.detail;
     const cacheKeys = this.secondaryCache[fragmentKey];
+    let isModified = false;
     if (cacheKeys) {
       for (const key of cacheKeys) {
         if (this.cache[key].state !== 'out-of-date') {
           this.cache[key].state = 'out-of-date';
           this.isDirty = true;
-          ProjectService.tryAddToOutOfDate(fragmentKey, this.transformer);
+          isModified = true;
         }
+      }
+      if (isModified) {
+        ProjectService.tryAddToOutOfDate(fragmentKey, this.transformer);
       }
     }
   }

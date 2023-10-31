@@ -30,7 +30,7 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
     try {
       const models = await gptService.getModels();
       setModels(models);
-      const model = gptService.getModelForFragment(transformer);
+      const model = gptService.getModelForTransformer(transformer);
       setCurrentModel(model);
       const fragmentModel = gptService.getModelForFragment(transformer, key);
       setCurrentFragmentModel(fragmentModel);
@@ -77,7 +77,7 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
           </Menu.Item>
         ))}
       </Menu.SubMenu>
-      <Divider />
+      <Menu.Divider />
       <Menu.Item onClick={() => transformer.refresh()}>
         Refresh
       </Menu.Item>

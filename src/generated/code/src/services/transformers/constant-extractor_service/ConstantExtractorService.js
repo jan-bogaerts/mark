@@ -63,7 +63,7 @@ class ConstantExtractorService extends TransformerBaseService {
    */
   collectResponse(toAdd, end, lines, key, count, quotes) {
     // key = title.split('# ')[-1].replace(' > ', '_').replace(' ', '_').strip()
-    key = key.replace(' > ', '_').replace(' ', '_').trim();
+    key = key.replace(' > ', '_').replace(' ', '_').replace('-', '_').trim();
     toAdd['end'] = end;
     toAdd['lines'] = lines;
     toAdd['name'] = `${key}_${count}`;

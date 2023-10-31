@@ -37,10 +37,11 @@ class TransformerBaseService {
    * @returns {Promise<Object>} The result
    */
   async renderResult(textFragment) {
-    const [message, keys] = await this.buildMessage(textFragment);
-    if (!message) {
+    const keyedMessage = await this.buildMessage(textFragment);
+    if (!keyedMessage) {
       return null;
     }
+    const [message, keys] = keyedMessage;
     const result = await GPTService.sendRequest(this, textFragment.key, message);
     const key = keys.join(' | ');
     this.cache.setResult(key, result);

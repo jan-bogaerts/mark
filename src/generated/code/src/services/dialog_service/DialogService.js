@@ -37,9 +37,11 @@ class DialogService {
    * @param {string} message - The message to display in the confirmation dialog.
    * @returns {Promise<boolean>} - The user's choice.
    */
-  confirm(message) {
-    const config = { type: 'question', buttons: ['Yes', 'No'], message };
-    return window.electron.openDialog('showMessageBox', config).then(result => result.response === 0);
+  async confirm(message) {
+    const config = { type: 'question', buttons: ['Yes', 'No', 'Cancel'], message };
+    const res = await window.electron.openDialog('showMessageBox', config);
+    if (res.response === 2) return null;
+    return res.response === 0;
   }
 
   /**

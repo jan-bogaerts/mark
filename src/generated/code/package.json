@@ -1,6 +1,6 @@
 {
   "name": "markdowncode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "author": "Jan Bogaerts",
   "description": "An ideation and code generation tool that uses markdown syntax and transformers to generate code.",

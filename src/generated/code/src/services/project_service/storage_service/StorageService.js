@@ -30,7 +30,7 @@ class StorageService {
     this.loading = true;
     try {
       this.clear();
-      const userDataPath = await window.electron.getPath('userData');
+      const userDataPath = window.electron.resourcesPath;
       const templatePath = path.join(userDataPath, 'templates', 'default.md');
       if (fs.existsSync(templatePath)) {
         const content = fs.readFileSync(templatePath, 'utf8')

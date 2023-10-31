@@ -71,7 +71,11 @@ class SelectionService {
 
   getCurrentStyle() {
     if (this.editor) {
-      return this.editor.getModel().getModeId();
+      const model = this.editor.getModel();
+      if (model) {
+        return model.getModeId();
+      }
+      return model.getModeId();
     }
   }
 

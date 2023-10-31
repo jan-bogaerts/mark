@@ -12,6 +12,7 @@ class Editor extends Component {
   constructor(props) {
     super(props);
     this.editorRef = React.createRef();
+    this.settingValue = false;
     this.handleThemeChanged = this.handleThemeChanged.bind(this);
     ThemeService.subscribe(this.handleThemeChanged);
     ProjectService.eventTarget.addEventListener('content-changed', this.handleContentChanged);
@@ -43,7 +44,9 @@ class Editor extends Component {
   handleContentChanged = () => {
     const editor = this.editorRef.current;
     if (editor) {
+      this.settingValue = true;
       editor.setValue(ProjectService.content);
+      this.settingValue = false;
     }
   }
 
@@ -65,6 +68,7 @@ class Editor extends Component {
   handleDidChangeModelContent = (ev) => {
     try {
       if (!this.editorRef.current) return;
+      if (this.settingValue) return;
       ChangeProcessorService.process(ev.changes, this.editorRef.current);
     } catch (e) {
       DialogService.showErrorDialog(e);

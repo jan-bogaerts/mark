@@ -11,9 +11,11 @@ import FragmentStatusIcon from '../fragment-status_icon/FragmentStatusIcon';
 class Outline extends Component {
   constructor(props) {
     super(props);
+    this.isMoving = false;
     this.state = {
       treeData: [],
       selectedKeys: [],
+      expandedKeys: [],
     };
   }
 
@@ -39,7 +41,8 @@ class Outline extends Component {
   handlePositionChanged = (e) => {
     const key = e.detail?.key;
     if (!key) return;
-    this.setState({ selectedKeys: [key] });
+    if (this.isMoving) return;
+    this.setState({ selectedKeys: [key], expandedKeys: [...this.state.expandedKeys, key] });
   };
 
   convertToTreeData = (data) => {
@@ -78,7 +81,9 @@ class Outline extends Component {
 
   removeNode = (key) => {
     const treeData = this.removeNodeByKey(this.state.treeData, key);
-    this.setState({ treeData });
+    const selected = this.state.selectedKeys.filter(k => k !== key);
+    const expanded = this.state.expandedKeys.filter(k => k !== key);
+    this.setState({ treeData, selectedKeys: selected, expandedKeys: expanded });
   };
 
   removeNodeByKey = (nodes, key) => {
@@ -92,15 +97,22 @@ class Outline extends Component {
     if (selectedKeys.length === 0) return;
     const fragment = projectService.getFragment(selectedKeys[0]);
     if (fragment) {
-      positionTrackingService.setActiveFragment(fragment);
+      try {
+        this.isMoving = true;
+        positionTrackingService.setActiveFragment(fragment);
+        if (this.state.expandedKeys.indexOf(selectedKeys[0]) === -1) {
+          this.setState({ expandedKeys: [...this.state.expandedKeys, selectedKeys[0]] });
+        }
+        this.setState({ selectedKeys });
+      } finally {
+        this.isMoving = false;
+      }
     }
   };
 
   onExpand = (expandedKeys) => {
-    this.setState({ selectedKeys: expandedKeys });
+    this.setState({ expandedKeys });
   }
-
-
 
   render() {
     const theme = themeService.getCurrentTheme();
@@ -111,7 +123,7 @@ class Outline extends Component {
           treeData={this.state.treeData}
           selectedKeys={this.state.selectedKeys}
           autoExpandParent
-          expandedKeys={this.state.selectedKeys}
+          expandedKeys={this.state.expandedKeys}
           onExpand={this.onExpand}
           onSelect={this.onSelect}
           showLine

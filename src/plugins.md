@@ -13,54 +13,48 @@
      > Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
      > compress the following text:
 
-    - role: user, content: `await this.constantsService.getResult(text-fragment)`.
+    - role: user, content: `await deps.constants.getResult(text-fragment)`.
   - return result, [ text-fragment.key ]
   
   
-#### double-compress service
+# double-compress service
 - The double-compress-service takes the result of compress-service and makes it even shorter.
 - Useful to check if the system understands the fragment and can be used as input for other processes.
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'double compress'
-  - dependencies: ['compress']
-  - isJson: false
-- set during construction: `this.compressService = this.dependencies[0]`
-- function build-message(text-fragment):
+- name: 'double compress'
+- dependencies: ['compress']
+- isJson: false
+- build-message(text-fragment):
   - result (json array):
     - role: system, content:
       
      > condense the following text as much as possible, without loosing any meaning:
 
-    - role: user, content: `await this.compressService.getResult(text-fragment)`.
+    - role: user, content: `await deps.compress.getResult(text-fragment)`.
   - return result, [ text-fragment.key ]
 
-
-#### triple-compress service
+  # triple-compress service
 - The triple-compress-service takes the result of double-compress-service and shortens it to 1 line.
 - Used as a description for each fragment when searching for linked components and services.
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'triple compress'
-  - dependencies: ['double compress']
-  - isJson: false
-- set during construction: `this.doubleCompressService = this.dependencies[0]`
+- name: 'triple compress'
+- dependencies: ['double compress']
+- isJson: false
 - function build-message(text-fragment):
   - result (json array):
     - role: system, content:
       
      > condense the following text to 1 sentence:
 
-    - role: user, content: `await this.doubleCompressService.getResult(text-fragment)`.
+    - role: user, content: `await deps['double compress'].getResult(text-fragment)`.
   - return result, [ text-fragment.key ]
 
-#### component-lister service
+# component-lister service
 - the component-lister service is responsible for extracting all the component names it can find in a text-fragment.
 - part of finding out which components need to be rendered
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'components'
-  - dependencies: []
-  - isJson: true
+- name: 'components'
+- dependencies: []
+- isJson: true
 - function build-message(textFragment):
-  - if projectService.textFragments.indexOf(textFragment) < 2: return null
+  - if refs.projectService.textFragments.indexOf(textFragment) < 2: return null
   - result (json array):
     - role: system, content:
       
@@ -81,8 +75,8 @@
       > ["something-x", "something y"]
 
       replace:
-      - {{dev_stack_title}}: `projectService.textFragments[1]?.title`
-      - {{dev_stack_title}}: `projectService.textFragments[1]?.lines.join('\n')`
+      - {{dev_stack_title}}: `services.projectService.textFragments[1]?.title`
+      - {{dev_stack_content}}: `services.projectService.textFragments[1]?.lines.join('\n')`
 
     - role: user, content:
 
@@ -99,23 +93,20 @@
 
   - return:
     ```python
-    if len(projectService.textFragments) >= 1:
-      return result, [ textFragment.key, projectService.textFragments[1].key ]
+    if len(refs.projectService.textFragments) >= 1:
+      return result, [ textFragment.key, refs.projectService.textFragments[1].key ]
     else:
       result, [ textFragment.key ]
     ```
 
-
 #### class-lister service
 - the class-lister service is responsible for extracting all the names of the classes that are declared in a text fragment.
 - determines which classes need to be rendered
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'classes'
-  - dependencies: ['constants']
-  - isJson: true
-- set during construction: `this.constantRemover = this.dependencies[0]`
+- name: 'classes'
+- dependencies: ['constants']
+- isJson: true
 - function build-message(textFragment):
-  - if projectService.textFragments.indexOf(textFragment) < 2: return null
+  - if services.projectService.textFragments.indexOf(textFragment) < 2: return null
   - result (json array):
     - role: system, content:
       
@@ -125,8 +116,8 @@
       > {{dev_stack_content}}
       
       replace:
-      - {{dev_stack_title}}: `projectService.textFragments[1]?.title`
-      - {{dev_stack_title}}: `projectService.textFragments[1]?.lines.join('\n')`
+      - {{dev_stack_title}}: `services.projectService.textFragments[1]?.title`
+      - {{dev_stack_content}}: `services.projectService.textFragments[1]?.lines.join('\n')`
 
     - role: user, content:
 
@@ -136,7 +127,7 @@
       
       replace:
       - {{title}}: `textFragment.title`
-      - {{content}}: `await this.constantRemover.getResult(text-fragment)`
+      - {{content}}: `await deps.constants.getResult(textFragment)`
 
     - role: assistant, content:
 
@@ -169,8 +160,8 @@
        
           - return:
             ```python
-            if len(projectService.textFragments) >= 1:
-              return result, [ textFragment.key, projectService.textFragments[1].key ]
+            if len(services.projectService.textFragments) >= 1:
+              return result, [ textFragment.key, services.projectService.textFragments[1].key ]
             else:
               result, [ textFragment.key ]
            ```

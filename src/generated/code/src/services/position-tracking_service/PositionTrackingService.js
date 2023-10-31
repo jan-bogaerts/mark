@@ -52,6 +52,8 @@ class PositionTrackingService {
         this.eventTarget.dispatchEvent(moveToEvent);
       }
       this.activeFragment = fragment;
+      const changeEvent = new CustomEvent('change', { detail: fragment });
+        this.eventTarget.dispatchEvent(changeEvent);
     }
   }
 

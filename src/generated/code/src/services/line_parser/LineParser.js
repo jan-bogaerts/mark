@@ -69,7 +69,7 @@ class LineParser {
     const trimmedLine = line.trim();
     if (trimmedLine === '') {
       LineParserHelpers.handleEmptyLine(this, index);
-    } else if (line.startsWith('#')) {
+    } else if (trimmedLine.startsWith('#')) {
       LineParserHelpers.handleTitleLine(this, trimmedLine, index);
     } else {
       if (line.endsWith('\r')) {

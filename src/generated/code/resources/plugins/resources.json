@@ -1,0 +1,11 @@
+{
+  "compress_service_1": "Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.\ncompress the following text:",
+  "double_compress_service_1": "condense the following text as much as possible, without loosing any meaning:",
+  "triple_compress_service_1": "condense the following text to 1 sentence:",
+  "component_lister_service_1": "Act as an ai software analyst.\nIt is your task to list all the components that you can find in the text, keeping in mind that the following development stack is used:\n{{dev_stack_title}}\n{{dev_stack_content}}\n\nDo not include UI components that are provided by the UI framework. So don't include: buttons, dropdowns, inputs, sliders, toggle buttons, but only list the components that need to be custom built.\nDon't include any non visual services.\nDon't include any explanation, just write the list of component names as a json array and nothing else.\nIf no components can be found, return an empty json array.\n\ngood response:\n[\"SomethingX\", \"SomethingY\"]\n\nbad response:\n[\"something-x\", \"something y\"]",
+  "component_lister_service_2": "{{title}}\n{{content}}",
+  "component_lister_service_3": "Remember: only components and use CamelCasing for the component names.",
+  "class_lister_service_1": "Act as an ai software analyst.\nThe following development stack is used:\n{{dev_stack_title}}\n{{dev_stack_content}}",
+  "class_lister_service_2": "list all the classes declared in:\n{{title}}\n{{content}}",
+  "class_lister_service_3": "Do not include UI components, but only list the classes that need to be custom built.\nreturn an empty array if you can't detect any classes.\ndon't include any introduction. Don't include any explanation, just write the list of classes as a\njson array.\n\nbad:\n[\n  {\n    \"file\": \"x.js\",\n    \"items\": [\n      \"x\"\n    ]\n  },\n  {\n    \"file\": \"y.js\",\n    \"items\": [\n      \"y\"\n    ]\n  }\n]\n\ngood:\n[\n    \"x\",\n    \"y\"\n]"
+}

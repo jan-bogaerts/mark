@@ -29,8 +29,10 @@ const ResultsView = () => {
           children: <ResultsViewTab transformer={transformer} />
         }));
         setTabs(tabs);
-        setActiveKey(transformers[0].name);
-        positionTrackingService.setActiveTransformer(transformers[0]);
+        if (transformers.length > 0) {
+          setActiveKey(transformers[0].name);
+          positionTrackingService.setActiveTransformer(transformers[0]);
+        }
       } catch (error) {
         dialogService.showErrorDialog(error.message);
       }

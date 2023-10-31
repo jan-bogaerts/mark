@@ -1,4 +1,3 @@
-
 import React, { Component } from 'react';
 import { Button, Tooltip } from 'antd';
 import { FileOutlined, FolderOpenOutlined, SaveOutlined, SaveFilled, SyncOutlined } from '@ant-design/icons';
@@ -19,10 +18,12 @@ class FileSection extends Component {
 
   componentDidMount() {
     projectService.eventTarget.addEventListener('is-dirty-changed', this.updateState);
+    window.electron.onCanClose(this.tryCanClose);
   }
 
   componentWillUnmount() {
     projectService.eventTarget.removeEventListener('is-dirty-changed', this.updateState);
+    window.electron.removeOnCanClose(this.tryCanClose);
   }
 
   updateState = () => {
@@ -33,12 +34,28 @@ class FileSection extends Component {
     });
   }
 
-  newProject = async () => {
+  tryCanClose = async (e) => { 
+    const res = await this.trySave();
+    window.electron.canCloseProcessed(res);
+  }
+
+  trySave = async () => {
     if (this.state.isDirty) {
-      await this.saveProject();
+      const confirm = await dialogService.confirm('Do you want to save the changes first?');
+      if (confirm === null) {
+        return false;
+      } else if (confirm) {
+        await this.saveProject();
+      }
     }
-    if (!window.electron.isPluginMode) {
-      await storageService.new();
+    return true;
+  }
+
+  newProject = async () => {
+    if (await this.trySave() === true) {
+      if (!window.electron.isPluginMode) {
+        await storageService.new();
+      }
     }
   }
 

@@ -8,6 +8,7 @@ const mainRemote = require("@electron/remote/main");
 
 let mainWindow;
 let pluginsWindow;
+let canCloseResolver = null; // a callback to resolve the promise, that is set when the can-close event is sent and main is waiting for a response
 
 const windowConfig = {
   width: 800,
@@ -40,13 +41,14 @@ function createWindow () {
   mainWindow = new BrowserWindow(windowConfig);
   console.log(process.argv);
   const fileIdx = app.isPackaged ? 2 : 5;
+  let urlWithParams;
   if (process.argv.length > fileIdx) {
     const path = process.argv[fileIdx];
-    const urlWithParams = `${url}?file=${path}`;
-    mainWindow.loadURL(urlWithParams);
+    urlWithParams = `${url}?file=${path}&isPackaged=${app.isPackaged}`;
   } else { 
-    mainWindow.loadURL(url);
+    urlWithParams = `${url}?isPackaged=${app.isPackaged}`;
   }
+  mainWindow.loadURL(urlWithParams);
   // Automatically open Chrome's DevTools in development mode.
   if (!app.isPackaged) {
     mainWindow.webContents.openDevTools();
@@ -61,6 +63,20 @@ function createWindow () {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
+
+  mainWindow.on("close", async (event) => {
+    event.preventDefault();
+    const canCloseProcessed = new Promise((resolve) => { canCloseResolver = resolve });
+    mainWindow.webContents.send('can-close');
+    const canClose = await canCloseProcessed;
+    canCloseResolver = null;
+    if (canClose) {
+      if (pluginsWindow) {
+        pluginsWindow.close();
+      }
+      mainWindow.destroy();  // important: need to destroy otherwise we are stuck in a loop
+    }
+  });
 }
 
 function createPluginWindow (path) {
@@ -71,7 +87,7 @@ function createPluginWindow (path) {
       return;
     }
     pluginsWindow = new BrowserWindow(windowConfig);
-    const urlWithParams = `${url}?plugin=${path}`;
+    const urlWithParams = `${url}?plugin=${path}&isPackaged=${app.isPackaged}`;
     pluginsWindow.loadURL(urlWithParams);
     // Automatically open Chrome's DevTools in development mode.
     if (!app.isPackaged) {
@@ -138,5 +154,11 @@ ipcMain.handle('openPluginEditor', async (event, path) => {
   catch (error) {
     dialog.showErrorDialog(error.message);
     return false;
+  }
+});
+
+ipcMain.handle('can-close-processed', async (event, canClose) => {
+  if (canCloseResolver) {
+    canCloseResolver(canClose);
   }
 });
