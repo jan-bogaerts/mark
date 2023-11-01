@@ -170,11 +170,9 @@
 #### primary-component service
 - The primary-component service is responsible for identifying the component that is most of all described and stands out as the most important component in the text-fragment.
 - part of determining which components to render and which to import
-- inherits from transformer-base service. Constructor parameters:
-  - name: 'primary component'
-  - dependencies: ['components']
-  - isJson: false
-- set during construction: `this.componentLister = this.dependencies[0]`
+- name: 'primary component'
+- dependencies: ['components']
+- isJson: false
 - functions:
   - buildMessage(fragment):
     - result (json array):
@@ -196,7 +194,7 @@
       replace:
       - {{title}}: `fragment.title`
       - {{content}}: `fragment.lines.join('\n')`
-      - {{components}}: `await this.componentLister.getResult(fragment)`
+      - {{components}}: `await deps.components.getResult(fragment)`
 
     - role: assistant, content:
 

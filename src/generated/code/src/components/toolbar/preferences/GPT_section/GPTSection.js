@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button, Space } from 'antd';
 import { KeyOutlined } from '@ant-design/icons';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
+import GptService from '../../../../services/gpt_service/GPTService';
 import OpenAIConfigurationDialog from '../open-ai_configuration_dialog/OpenAiConfigurationDialog';
 import ModelComboBox from './ModelComboBox';
 
@@ -37,7 +38,7 @@ const GPTSection = () => {
         icon={<KeyOutlined />}
         onClick={handleKeyButtonClick}
       />
-      <ModelComboBox className="model-combo-box" />
+      <ModelComboBox className="model-combo-box" openApiKey={GptService.apiKey} />
       <OpenAIConfigurationDialog
         visible={isOpen}
         onClose={handleDialogClose}

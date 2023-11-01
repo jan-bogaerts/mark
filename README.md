@@ -45,6 +45,7 @@ You can overwrite results to influence the build process if certain features are
 - run the installer
 - go to the tab `preferences` and click on the button with a key icon (first one)
 - enter your open-ai key
+- select a global default model to use
 - type some text
 - select one of the transformer tabs at the bottom
 - go to the transformers menu section and click on the `play` button, which will start the selected transformer for the currently selected text fragment

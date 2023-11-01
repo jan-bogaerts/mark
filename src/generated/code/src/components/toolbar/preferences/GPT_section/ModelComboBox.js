@@ -9,14 +9,14 @@ import ThemeService from '../../../../services/Theme_service/ThemeService';
  * ModelComboBox component allows user to select default model for open-ai requests.
  * @component
  */
-const ModelComboBox = () => {
+const ModelComboBox = ({ openApiKey }) => {
   const [models, setModels] = useState([]);
   const [defaultModel, setDefaultModel] = useState('');
 
   useEffect(() => {
     fetchModels();
     fetchDefaultModel();
-  }, []);
+  }, [openApiKey]);
 
   /**
    * Fetch available models from gpt-service.

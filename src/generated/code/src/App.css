@@ -98,3 +98,9 @@ div {
     background-color: #001b35;
     color:white
 }
+
+
+.model-combo-box,
+.active-entry-point-dropdown {
+    min-width: 200px;
+}

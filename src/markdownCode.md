@@ -235,6 +235,7 @@ Remember that each button needs it's own appropriate icon.
     - the list of available models used to populate the combobox, comes from the gpt-service.
     - get the initial value for the combobox from the gpt-service (getDefaultModel function).
     - when the value is changed, save to the gpt-service (setDefaultModel function).
+    - Whenever the prop openApiKey is updated, refresh the list of available models
 
 ##### open-ai configuration dialog
 - The open-ai configuration dialog is a modal dialog (from the antd library) implementation that is used to edit the open-ai configuration settings.
