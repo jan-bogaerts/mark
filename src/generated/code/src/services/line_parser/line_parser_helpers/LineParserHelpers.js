@@ -44,6 +44,7 @@ class LineParserHelpers {
         let fragmentLineIndex = index - fragmentStart - 1;
         if (fragmentLineIndex < fragment.lines.length) {
           fragment.lines[fragmentLineIndex] = '';
+          service.fragmentsIndex[index] = fragment;
         } else {
           while (fragment.lines.length <= fragmentLineIndex) {
             fragment.lines.push('');
@@ -175,7 +176,9 @@ class LineParserHelpers {
    */
   static updateFragmentLines(service, fragment, line, index, fragmentStart) {
     const fragmentLineIndex = index - fragmentStart - 1;
+    let isChanged = true;
     if (fragmentLineIndex < fragment.lines.length) {
+      isChanged = fragment.lines[fragmentLineIndex] !== line;
       fragment.lines[fragmentLineIndex] = line;
     } else {
       while (fragment.lines.length < fragmentLineIndex) {
@@ -185,7 +188,9 @@ class LineParserHelpers {
       fragment.lines.push(line);
       service.fragmentsIndex[index] = fragment;
     }
-    ProjectService.markOutOfDate(fragment);
+    if (isChanged) {
+      ProjectService.markOutOfDate(fragment);
+    }
   }
 
   /**

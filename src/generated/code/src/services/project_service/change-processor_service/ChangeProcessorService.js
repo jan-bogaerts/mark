@@ -20,13 +20,14 @@ class ChangeProcessorService {
     const model = editor.getModel();
 
     changes.forEach(change => {
-      const lines = change.text.split('\n');
+      const cleanedText = change.text.replace(/\r/g, ''); // remove carriage returns
+      const lines = cleanedText.split('\n');
       let curLine = change.range.startLineNumber - 1;
       let lineEnd = change.range.endLineNumber - 1;
       let lineIdx = 0;
 
       // First replace lines that are overwritten. Change can contain only part of line so get full line
-      if (change.text.length > 0 || (change.rangeLength > 0 && curLine === lineEnd)) { // when rangeLength on same line with no text: chars removed
+      if (cleanedText.length > 0 || (change.rangeLength > 0 && curLine === lineEnd)) { // when rangeLength on same line with no text: chars removed
         while (lineIdx < lines.length && curLine <= lineEnd) {
           LineParser.parse(model.getLineContent(curLine + 1), curLine);
           lineIdx += 1;
@@ -40,10 +41,9 @@ class ChangeProcessorService {
         lineEnd -= 1;
       }
 
-      if (change.text.length > 0 && change.rangeLength > 0) {
-
+      if (cleanedText.length > 0) { // only insert if there is text (split of empty string gives array with 1 empty string)
         while (lineIdx < lines.length) {
-          LineParser.parse(model.getLineContent(curLine + 1), curLine);
+          LineParser.insertLine(model.getLineContent(curLine + 1), curLine);
           lineIdx += 1;
           curLine += 1;
         }

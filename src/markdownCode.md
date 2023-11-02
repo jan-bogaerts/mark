@@ -283,14 +283,14 @@ Remember that each button needs it's own appropriate icon.
 - When the editor is loaded:
   - the text for the monaco editor is retrieved from the project service (`projectService.content`).
   - theme (convert light to vs-light or dark to vs-dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
-- Whenever the project service triggers the 'content-changed' event, the editor will reload the text. Before reloading the text in the editor, set the flag `settingValue` to true and after the load is done, set it back to false. This is used to prevent parsing the text after loading the project (the editor triggers handleDidChangeModelContent when loading)
+- Whenever the project service triggers the 'content-changed' event, the editor will reload the text. Before reloading the text in the editor, set the flag `settingValue` to true. This is used to prevent parsing the text after loading the project (the editor triggers handleDidChangeModelContent when loading)
   - note: register using `projectService.eventTarget.addEventListener('content-changed', handleContentChanged)`, unregister when component unloads 
 - Whenever the position-tracking service raises the event 'moveTo', do: `if (this.editorRef.current) this.editorRef.current.revealLineNearTop(e.detail)`, unregister when component unloads
-- subscribe to the theme-service for changes `themeService.subscribe(this.handleThemeChanged)` upon construction and unsubscribe upon destruction `themeService.unsubscribe(this.handleThemeChanged)`
+- subscribe to the theme-service for changes `themeService.subscribe(this.handleThemeChanged)` when the component is loaded and unsubscribe upon unloading `themeService.unsubscribe(this.handleThemeChanged)`
   - return if no this.editorRef.current
   - update the options of the editor, call `this.editorRef.current.updateOptions(newOptions)`
 - monitor the following events on the monaco editor:
-  - editorDidMount: store a reference to the editor for further use and register the other event handlers (bound) with the mounted editor:
+  - editorDidMount: store a reference to the editor for further use, set `this.settingValue = true` so that during loading no content changes are processed and register the other event handlers (bound) with the mounted editor:
     - onDidChangeModelContent: ask the change-processor-service to process the changes. in pseudo:
     ```python (pseudo)
     def handleDidChangeModelContent(ev):
@@ -298,6 +298,7 @@ Remember that each button needs it's own appropriate icon.
           if not editor: # ref to the editor needs to be loaded, should be the case cause event is triggered
             return
           if this.settingValue:
+            this.settingValue = False
             return
           changeProcessorService.process(ev.changes, editor)
         catch (e):
@@ -750,12 +751,13 @@ Remember that each button needs it's own appropriate icon.
       projectService.content = editor.getValue()
       model = editor.getModel()
       for change in changes:
-        lines = change.text.split('\n')
+        cleanedText = change.text.replace(/\r/g, '') # remove carriage returns
+        lines = cleanedText.split('\n')
         curLine = change.range.startLineNumber - 1
         lineEnd = change.range.endLineNumber - 1
         lineIdx = 0
         # first replace lines that are overwritten. change can contain only part of line so get full line
-        if change.text.length > 0 or (change.rangeLength > 0 and curLine === lineEnd):
+        if cleanedText.length > 0 or (change.rangeLength > 0 and curLine === lineEnd):
           while lineIdx < len(lines) and curLine <= lineEnd:
             lineParser.parse(model.getLineContent(curLine + 1), curLine)
             lineIdx += 1
@@ -764,9 +766,9 @@ Remember that each button needs it's own appropriate icon.
         while curLine < lineEnd:
           lineParser.deleteLine(lineEnd) # need to do in reverse otherwise the wrong line is removed
           lineEnd -= 1
-        if change.text.length > 0 and change.rangeLength > 0:
+        if cleanedText.length > 0: # only insert if there is text (split of empty string gives array with 1 empty string)
           while lineIdx < len(lines):
-            LineParser.parse(model.getLineContent(curLine + 1), curLine)
+            LineParser.insertLine(model.getLineContent(curLine + 1), curLine)
             lineIdx += 1
             curLine += 1
         storageService.markDirty()
@@ -1004,7 +1006,9 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
       def updateFragmentLines(service, fragment, line, index, fragmentStart):
         fragmentLineIndex = index - fragmentStart - 1 # extra - 1 cause the text starts at the line below the title
+        isChanged = True
         if fragmentLineIndex < fragment.lines.length: # changing existing line
+          isChanged = fragment.lines[fragmentLineIndex] !== line
           fragment.lines[fragmentLineIndex] = line
         else:
           while fragment.lines.length < fragmentLineIndex:
@@ -1012,7 +1016,8 @@ The module 'LineParserHelpers' contains the following helper functions used by t
             fragment.lines.push('')
           fragment.lines.push(line)
           service.fragmentsIndex[index] = fragment
-        projectService.markOutOfDate(fragment)
+        if isChanged:
+          projectService.markOutOfDate(fragment)
 
 
       def handleRegularLine(service, line, index):

@@ -13,11 +13,15 @@ class Editor extends Component {
     super(props);
     this.editorRef = React.createRef();
     this.settingValue = false;
+  }
+
+  componentDidMount() {
     this.handleThemeChanged = this.handleThemeChanged.bind(this);
     ThemeService.subscribe(this.handleThemeChanged);
     ProjectService.eventTarget.addEventListener('content-changed', this.handleContentChanged);
     PositionTrackingService.eventTarget.addEventListener('moveTo', this.handleMoveTo);
   }
+
 
   componentWillUnmount() {
     ThemeService.unsubscribe(this.handleThemeChanged);
@@ -46,7 +50,6 @@ class Editor extends Component {
     if (editor) {
       this.settingValue = true;
       editor.setValue(ProjectService.content);
-      this.settingValue = false;
     }
   }
 
@@ -58,6 +61,7 @@ class Editor extends Component {
 
   editorDidMount = (editor) => {
     this.editorRef.current = editor;
+    this.settingValue = true; // when loading content, don't process changes
     editor.onDidChangeModelContent(this.handleDidChangeModelContent);
     editor.onDidFocusEditorWidget(this.handleDidFocusEditorWidget);
     editor.onDidBlurEditorWidget(this.handleDidBlurEditorWidget);
@@ -68,7 +72,10 @@ class Editor extends Component {
   handleDidChangeModelContent = (ev) => {
     try {
       if (!this.editorRef.current) return;
-      if (this.settingValue) return;
+      if (this.settingValue) { 
+        this.settingValue = false;
+        return;
+      }
       ChangeProcessorService.process(ev.changes, this.editorRef.current);
     } catch (e) {
       DialogService.showErrorDialog(e);
