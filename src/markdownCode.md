@@ -1679,6 +1679,8 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         if not message:
           return
         itemResult = await GPTService.sendRequest(transformer, fragment.key, message)
+        if this.plugin.cleanResponse:
+          itemResult = this.plugin.cleanResponse(itemResult)
         key = keys.join(' | ')
         this.cache.setResult(key, itemResult, message)
         result[item] = itemResult
@@ -1699,6 +1701,8 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         key = keys.join(' | ')
         if this.cache.isOutOfDate(key):
           itemResult = await GPTService.sendRequest(transformer, fragment.key, message)
+          if this.plugin.cleanResponse:
+            itemResult = this.plugin.cleanResponse(itemResult)
           this.cache.setResult(key, itemResult, message)
         else:
           itemResult = this.cache.getResult(key)
@@ -1792,6 +1796,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         > - renderResults(): (optional) a function that renders a result which requires all the fragments in the project.
         > - calculateMaxTokens(inputTokenCount): (optional) a function that calculates and returns the expected maximum token count used for the transformer's prompt
         > - iterator(fragment, callback, result) (optional): a function that iterates over 1 or more values and calls the callback function for each set of values that needs to be processed. the parameters of the callback function are passed on to the buildMessage function. 
+        > - cleanResponse(response) (optional): cleans or modifies the response that was produced by the llm before saving it.
         > 
         > use the following development stack:
         > - developed in javascript (ES5)

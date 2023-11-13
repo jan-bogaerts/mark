@@ -443,7 +443,7 @@
             key = keys.join(' | ')
             result[key] = 'declare'
           else:
-            callback(fragment, item)
+            callback(fragment, titles, item)
     ```
   - cleanResponse(response): if 'no' is returned, convert to 'declare'
     ```python
@@ -503,34 +503,14 @@
 - isJson: true
 - functions:
   - calculateMaxTokens(inputTokenCount): inputTokenCount + 4
-  - renderResult(fragment):
+  - iterator(fragment, callback, result):
     ```python
-    titles = getKeysWithClasses(fragment.key)
-    result = []
-
-    for toCheck in services.projectService.textFragments:
-      if toCheck.key -= fragment.key: continue
-      classes = deps['declare or use class'].cache.getResult(toCheck.key)
-      if len(classes) == 0: continue
-
-
-
-        primary = await deps['primary class'].getResult(fragment)
-        for item in classes:
-          if item == primary:
-            itemResult = 'declare'
-            keys = [fragment.key, item]
-          else:
-            message, keys = await buildMessage(fragment, titles, item)
-            if not message:
-              continue
-            itemResult = await services.GPTService.sendRequest(this, fragment.key, message)
-            if itemResult.lower() == 'no':
-              itemResult = 'declare'
-          key = keys.join(' | ')
-          services.cache.setResult(key, itemResult)
-          result[item] = itemResult
-    return result
+      for toCheck in services.projectService.textFragments:
+        if toCheck.key == fragment.key: continue
+          classes = deps['declare or use class'].cache.getResult(toCheck.key)
+          if len(classes) == 0: continue
+          for className in classes:
+            callback(fragment, toCheck, className)
     ```
     
   - buildMessage(fragment, checkAgainst, className):

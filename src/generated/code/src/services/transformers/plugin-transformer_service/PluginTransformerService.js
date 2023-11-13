@@ -60,7 +60,10 @@ class PluginTransformerService extends TransformerBaseService {
         if (!message) {
           return;
         }
-        const itemResult = await gptService.sendRequest(this.description.name, fragment.key, message);
+        let itemResult = await gptService.sendRequest(this.description.name, fragment.key, message);
+        if (this.plugin.cleanResponse){
+          itemResult = this.plugin.cleanResponse(itemResult)
+        }
         const key = keys.join(' | ');
         this.cache.setResult(key, itemResult, message);
         result[key] = itemResult;
@@ -87,6 +90,9 @@ class PluginTransformerService extends TransformerBaseService {
         let itemResult;
         if (this.cache.isOutOfDate(key)) {
           itemResult = await gptService.sendRequest(this.description.name, fragment.key, message);
+          if (this.plugin.cleanResponse){
+            itemResult = this.plugin.cleanResponse(itemResult)
+          }
           this.cache.setResult(key, itemResult, message);
         } else {
           itemResult = this.cache.getResult(key);
