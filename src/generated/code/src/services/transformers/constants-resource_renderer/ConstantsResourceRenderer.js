@@ -16,6 +16,7 @@ class ConstantsResourceRenderer extends TransformerBaseService {
   constructor() {
     super('constants resource renderer', ['constants'], true);
     this.constantsService = this.dependencies[0];
+    this.isFullRender = true;
   }
 
   /**
@@ -47,7 +48,7 @@ class ConstantsResourceRenderer extends TransformerBaseService {
           fragmentResults[constant.name] = text;
         }
       }
-      this.cache.setResult(fragment.key, fragmentResults);
+      this.cache.setResult(fragment.key, fragmentResults, fragmentResults);
     }
     this.saveFile(items);
   }

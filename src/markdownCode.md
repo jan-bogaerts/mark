@@ -153,10 +153,10 @@ the following tabs are available:
     - disabled when project-service.isAnyFragmentOutOfDate() == false or when buildService.isBuilding
     - calls `build-service.buildAll()`
   - code for active fragment: a button to start rendering the currently selected entry point for the currently active fragment.
-    - disabled when `!positionTrackingService.activeFragment?.isOutOfDate || buildService.isBuilding`
+    - disabled when `!positionTrackingService.activeFragment?.isOutOfDate || CybertronService.activeEntryPoint?.isFullRender || buildService.isBuilding`
     - calls `build-service.buildFragment(positionTrackingService.activeFragment)`
   - active fragment with active transformer: a button to start rendering the result for the currently active fragment and transformer.
-    - disabled when `!positionTrackingService.activeFragment || !positionTrackingService.activeTransformer || buildService.isBuilding`
+    - disabled when `!positionTrackingService.activeFragment || !positionTrackingService.activeTransformer || positionTrackingService.activeTransformer.isFullRender || buildService.isBuilding`
     - calls `build-service.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer)`
   - separator (type='vertical', height='24px')
   - debug: a toggle button, when pressed, asks the build-service to update the debug state.
@@ -1178,8 +1178,11 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
 ### result-cache service
 - this service manages previously retrieved results for transformers.
-- It allows transformers that transform text fragments into results, to store these results for each text fragment and keep track if the result has become out of date or not (any of the inputs of the transform operation has changed).
-- because some transformers work on text fragments that come from the project directly and others that come from the result of other transformers, the result cache must be able to monitor changes in a project fragment and result fragment.
+- for each transformation that the transformer creates, the cache stores: 
+  - the result of the transformation
+  - a state to keep track if the result has become out of date or not (any of the inputs of the transform operation has changed).
+  - the input that was used to generate the output. this is used to verify if the result has become out-of-date or not. This is an array of json objects.
+- because some transformers use data from the project directly and others use the results of other transformers, the result cache must be able to monitor changes in a project service and result-caches of other transformers.
 - A transformer that wants to cache it's results uses an instance of this class to perform these tasks on it's results.
 - internally, the cache uses a dictionary that maps the keys to their results.
 - whenever the transformer calculates a result, it asks the cache to update it's dictionary by calling 'setResult'.
@@ -1199,16 +1202,16 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - initializes the 'is-dirty' flag to false
   - initialize eventTarget `this.eventTarget = new EventTarget()`
   - registers the event handler 'handleKeyChanged' with the project service to monitor when the key of a fragment changes
-    - register using pseudo: `projectService.eventTarget.addEventListener('fragment-deleted', handleKeyChanged)`
+    - register using pseudo: `projectService.eventTarget.addEventListener('key-changed', handleKeyChanged)`
   - registers the event handler 'handleFragmentDeleted' with the project service to monitor when a fragment is deleted
-    - register using pseudo: `projectService.eventTarget.addEventListener('key-changed', handleFragmentDeleted)`
+    - register using pseudo: `projectService.eventTarget.addEventListener('fragment-deleted', handleFragmentDeleted)`
   - registers an event handler with the project service to monitor when text fragments have changed
     - register using pseudo: `projectService.eventTarget.addEventListener('fragment-out-of-date', handleTextFragmentChanged)`
   - and registers the same event handler for the `result-changed` event with each object that the parent transformer uses as input (provided in the constructor as a list of transformer services, each service has a field 'cache')
   - whenever the event handler is triggered (event.detail = fragment-key), the cache service checks in the secondary dictionary if there are any entries for that key. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
-    - for each entry in the list:
-      - search in the primary dictionary
-      - if not yet marked as out-of-date:
+    - for each key in the list:
+      - search in the primary dictionary, if this contains an item for the key, store a reference to the item
+      - if not yet marked as out-of-date and `this.transformer.hasPromptChanged(key, item.prompt)`:
         - mark as out-of-date
         - set the 'is-dirty' flag
         - if there are any other cache services that monitor this cache-service (instead of the project service directly), then let them know that the specified text-fragment (from the result) has gone out-of-date.
@@ -1284,10 +1287,10 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   ```
 - setResult: stores the result in the cache. in pseudo:
   ```python (pseudo)
-  def setResult(key, result):
+  def setResult(key, result, prompt):
     isModified = True
     if not key in this.cache:
-      this.cache[key] = { result, state: 'still-valid' }
+      this.cache[key] = { result, prompt, state: 'still-valid' }
       keyParts = key.split(' | ')
       for part in keyParts:
         if not part in this.secondaryCache:
@@ -1303,13 +1306,14 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       isModified = False
     if isModified:
       this.isDirty = True
-      this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }))
       storageService.markDirty()
   ```
 getResult(key): `if key in this.overwrites: return this.overwrites[key] else if key in this.cache: return this.cache[key] else return null`
 - isOutOfDate(keyPart): checks if the specified key is present and marked as still-valid
   ```python (pseudo)
   def isOutOfDate(keyPart):
+    if keyPart in this.cache:
+      return this.cache[keyPart].state != 'still-valid'
     if keyPart in this.secondaryCache:
       for key in this.secondaryCache[keyPart]:
         if this.cache[key].state != 'still-valid':
@@ -1335,24 +1339,14 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - the build service is a global singleton that processes all the text-fragments of the project-service. It uses a set of transformers to iteratively generate conversions on the different text-fragments.
 - eventTarget: a field used to dispatch events.
 - async buildAll: to build the project, do:
-  - if `CybertronService.activeEntryPoint.renderResults` exists
-    - call `BuildStackService.tryRegister(CybertronService.activeEntryPoint)` so that the transformer is present in the stack (can't be started again in the same process)
-    - call `await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments)`, wrapped in a try-finally clause, so that:
-    - always make certain to call `BuildStackService.unRegister(CybertronService.activeEntryPoint)` if it was previously registered.
+  - if `CybertronService.activeEntryPoint.isFullRender` exists
+    - call `await CybertronService.activeEntryPoint.getResults()`
   - otherwise: for each fragment in project-service.textFragments: 
-    -  if `CybertronService.activeEntryPoint.cache.isOutOfDate(fragment.key)`: 
-       -  call `BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment)` so that the transformer is present in the stack and the fragment is labeled as being built.
-       - `await CybertronService.activeEntryPoint.renderResult(fragment)`, wrapped in a try-finally clause, so that:
-       - always make certain to call `BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment)` if it was previously registered.
+     - `await CybertronService.activeEntryPoint.getResult(fragment)`
 - async buildFragment(fragment): 
-  - if `CybertronService.activeEntryPoint.cache.isOutOfDate(fragment.key)`
-    - `BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment)`
-    - ask `CybertronService.activeEntryPoint` to render it's result (`renderResults(ProjectService.textFragments)` if exists, otherwise `renderResult(fragment)`) (async), wrapped in a try-finally clause, so that:
-    - always make certain to call `BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment)` if it was previously registered.
+    - ask `CybertronService.activeEntryPoint` to get it's result (`getResult(fragment)`) (async)
 - async runTransformer(fragment, transformer):
-  - `BuildStackService.tryRegister(transformer, fragment)`
-  - ask the transformer to render it's result (`renderResults(ProjectService.textFragments)` if exists, otherwise `renderResult(fragment)`) (async), wrapped in a try-finally clause, so that:
-  - always make certain to call `BuildStackService.unRegister(transformer, fragment)` if it was previously registered.
+  - ask the transformer to get it's result (`getResult(fragment)`) (async)
 - debug: a property to indicate if the build service is currently in debug mode or not. Load the value from local storage upon creation. Save to local storage whenever the value is updated.
 - isBuilding: a property to indicate if one of the build functions (buildAll, runTransformer, buildFragment) is currently running or not. These functions set isBuilding to true at the start and use a try-finally to make certain that the isBuilding flag is also turned to false at the end.
   - set isBuilding: trigger the 'is-building' event through the 'eventTarget' field
@@ -1362,6 +1356,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - the build-stack service is used during the build process to make certain that there are no circular references in the process. This occurs when a transformer depends on the result of another transformer that (eventually) again relies on the result of the first transformer, which can't be rendered yet.
 - fields:
   - running = {} : a dictionary that keeps track of the textframe - transformer pairs that are currently running. Key calculation for the dict = transformer.name + textframe.key
+  - state = `normal`. A transformer can set this to `validating` when it wants to block calls to the llms when rebuilding the message to check if the input has changed (and the cached result has become out of date).
 - functions:
   - tryRegister(transformer, fragment):
     ```python
@@ -1464,12 +1459,14 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - isJson: when true, the result values should be treated as json structures, otherwise as regular text.
   - language: in which language the result data should be shown. if not provided, defaults to 'markdown'
   - temperature: temp to use for the llm requests. defaults to 0
+  - isFullRender: when true, a renderResults function is available that performs a task on all fragments at once. Default = false.
 - this service uses a result-cache-service (field: cache) to store all the results and keep track of when the build has gone out-of-date. 
   - constructor params:
     - transformer = this
     - dependencies = this.dependencies
 - functions:
-  - render-result(pseudo):
+  - renderResults(): for transformers that require the entire project as input. throws a not-implemented error since inheritors need to supply this function.
+  - renderResult(textFragment): do a full rerender for the fragment
     ```python (pseudo)
     def renderResult(textFragment):
       keyedMessage = await this.buildMessage(textFragment)
@@ -1478,21 +1475,63 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       message, keys = keyedMessage
       result = await GPT-service.sendRequest(this, textFragment.key, message) # need name and key so the gpt service can select the correct model
       key = ' | '.join(keys)
-      this.cache.setResult(key, result)
+      this.cache.setResult(key, result, message)
       return result
     ```
-  - get-result(key): get an up-to-date result value for the specified key. Use the cache when possible.
-    ```python (pseudo)
-    async def getResult(fragment):
+  - hasPromptChanged(key, prompt): rebuilds the prompt that the transformer should send to the llm to calculate the result. This is used to check if the current result is out of date or not (when the prompt remains the same, the result is still valid).
+  ```python
+    buildStackService.mode = 'validating' # make certain that only cache values are used, no calls to the llm 
+    try:
+      key = key.split(' | '))
+      args = this.keyToMessageParams(key) # some transformers require multiple parameters which need to be rebuild
+      keyedMessage = await this.buildMessage(*args)
+      if not keyedMessage: 
+        return None
+      message, keys = keyedMessage
+      return JSON.stringify(message) == JSON.stringify(prompt) # structure and everything must remain the same
+    finally:
+      buildStackService.mode = 'normal'
+  ```
+  - keyToMessageParams(key): converts the key to text fragments when possible. This is used while checking if a result has gone out of date, to recreate the llm-prompt based on the latest values. If a transformer uses custom data for the parameters of the buildMessage parameters, these should be supplied here as well.
+    ```python
+      result = []
+      for part in key:
+        fragment = projectService.getFragment(part)
+        if fragment:
+          result.push(fragment)
+        else:
+          result.push(part)
+      return result
+    ```
+  - updateResult(fragment): only do an update if (part of) the cache is not up to date. allows for partial updates by descendent. not for external consumption cause it does not register the call with the build-stack.
+    ```python
       if not this.cache.isOutOfDate(fragment.key):
         return this.cache.getFragmentResults(fragment.key)
+      return this.renderResult(fragment)
+    ```
+  - getResult(fragment): get an up-to-date result value for the specified key. Use the cache when possible. This function should be used instead of updateResult cause it registers the call with the buildStack service and makes certain that only the cache is used when in validation mode.
+    ```python (pseudo)
+    async def getResult(fragment):
+      if buildStackService.mode == 'validating':
+          result = this.cache.getFragmentResults(fragment.key)
       if not buildStackService.tryRegister(this, fragment):
         return # circular reference, not good, stop the process
       try:
-        result = await this.renderResult(fragment)
+        result = await this.updateResult(fragment)
         return result
       finally:
         buildStackService.unregister(this, fragment)
+    ```
+  - getResults(): get an up-to-date result value. This function should be used instead of updateResult cause it wraps
+    ```python (pseudo)
+    async def getResult():
+      if not buildStackService.tryRegister(this):
+        return # circular reference, not good, stop the process
+      try:
+        result = await this.renderResults()
+        return result
+      finally:
+        buildStackService.unregister(this)
     ```
   - calculateMaxTokens(inputTokens): calculate the maximum tokens for the llm to optimize speed and cost
     ```python (pseudo)
@@ -1557,7 +1596,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     ```python (pseudo)
     def renderResult(textFragment):
       result = this.extractQuotes(textFragment.key, textFragment.lines)
-      this.cache.setResult(textFragment.key, result)
+      this.cache.setResult(textFragment.key, result, [*textFragment.lines]) # duplicate lines so that the cache has a local copy that doesn't change if the lines in the text fragment change
       return result
     ```
   - get-result(key): get an up-to-date result value for the specified key. Use the cache when possible.
@@ -1606,7 +1645,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     description = plugin.getDescription()
     if not description:
       raise Exception('Invalid plugin: no description provided')
-    super(description.name, description.dependencies, description.isJson)
+    super(description.name, description.dependencies, description.isJson, description.language, description.temperature or 0, description.isFullRender)
     this.description = description
     for const dep in this.dependencies:
       this.plugin.deps[dep.name] = dep
@@ -1623,12 +1662,74 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     return super.calculateMaxTokens(inputTokens)
   ```
 - buildMessage(fragment): if not this.plugin.buildMessage: raise error else return this.plugin.buildMessage(fragment)
+- renderResults():
+  ```python
+    if this.plugin.renderResults:
+      return this.plugin.renderResults()
+    return super.renderResults(fragment)
+  ```
 - renderResult(fragment)
   ```python
     if this.plugin.renderResult:
       return this.plugin.renderResult(fragment)
-    return super.renderResult(fragment)
+    if this.plugin.iterator:
+      result = {}
+      def iteratorStepHandler(*args):
+        message, keys = await this.plugin.buildMessage(*args)
+        if not message:
+          return
+        itemResult = await GPTService.sendRequest(transformer, fragment.key, message)
+        key = keys.join(' | ')
+        this.cache.setResult(key, itemResult, message)
+        result[item] = itemResult
+      return this.plugin.iterator(fragment, result)
+    else:
+      return super.renderResult(fragment)
   ```
+- updateResult(fragment)
+  ```python
+    if this.plugin.updateResult:
+      return this.plugin.updateResult(fragment)
+    if this.plugin.iterator:
+      result = {}
+      def iteratorStepHandler(*args):
+        message, keys = await this.plugin.buildMessage(*args)
+        if not message:
+          return
+        key = keys.join(' | ')
+        if this.cache.isOutOfDate(key):
+          itemResult = await GPTService.sendRequest(transformer, fragment.key, message)
+          this.cache.setResult(key, itemResult, message)
+        else:
+          itemResult = this.cache.getResult(key)
+        result[item] = itemResult
+      return this.plugin.iterator(fragment, result)
+    else:
+      return super.updateResult(fragment)
+  ```
+- hasPromptChanged(key, prompt): rebuilds the prompt that the transformer should send to the llm to calculate the result. This is used to check if the current result is out of date or not (when the prompt remains the same, the result is still valid).
+  ```python
+    if this.plugin.hasPromptChanged:
+      return this.plugin.hasPromptChanged(fragment, prompt)
+    if this.plugin.iterator:
+      result = {}
+      def iteratorStepHandler(*args):
+        message, keys = await this.plugin.buildMessage(*args)
+        newKey = keys.join(' | ')
+        if newKey == key and not isChanged:
+          isChanged = JSON.stringify(message) == JSON.stringify(prompt)
+        else:
+          itemResult = this.cache.getResult(key)
+        result[item] = itemResult
+      buildStackService.mode = 'validating' # make certain that only cache values are used, no calls to the llm 
+      try:
+        this.plugin.iterator(fragment, result)
+        return isChanged
+      finally:
+        buildStackService.mode = 'normal'
+    else:
+      return super.updateResult(fragment)
+
   
 #### plugin-renderer service
 - The plugin-renderer service is responsible for translating a plugin definition into a javascript module.
@@ -1670,7 +1771,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       result = this.cleanResult(result)
       filename = this.saveFile(fragment.key, result)
       key = keys.join(' | ')
-      this.cache.setResult(fragment.key, filename)
+      this.cache.setResult(fragment.key, filename, message)
       return filename
     ```
   - buildMessage(fragment):
@@ -1686,9 +1787,11 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         >   - dependencies: (required)list of names of other transformers
         >   - isJson: (required)boolean, true if the transformer produces json data.
         >   description: (optional) a string that describes what the transformer does
-        > - buildMessage(fragment): (required) a function that builds and returns the prompt that should be used for the transformer and text-fragment.
-        > - renderResult(fragment): (optional) a function that builds the message, asks the gpt service to solve it and stores the result. It returns the result
+        > - buildMessage(fragment): (required) a function that builds and returns the prompt that should be used for the transformer and text-fragment. Note: if there is an iterator function, the argument list may be different and must match the argument list of the callback parameter of the iterator.
+        > - renderResult(fragment): (optional) a function that renders the result for the specified fragment.
+        > - renderResults(): (optional) a function that renders a result which requires all the fragments in the project.
         > - calculateMaxTokens(inputTokenCount): (optional) a function that calculates and returns the expected maximum token count used for the transformer's prompt
+        > - iterator(fragment, callback, result) (optional): a function that iterates over 1 or more values and calls the callback function for each set of values that needs to be processed. the parameters of the callback function are passed on to the buildMessage function. 
         > 
         > use the following development stack:
         > - developed in javascript (ES5)
@@ -1742,7 +1845,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - name: 'plugin-list renderer'
   - dependencies: ['plugin renderer']
   - isJson: true
-- set during construction: `this.pluginRendererService = this.dependencies[0]`
+- set during construction: `this.pluginRendererService = this.dependencies[0]; this.isFullRender = true;`
 - functions:
   - saveFile(items): saves the array to file
     ```python
@@ -1762,7 +1865,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         if item:
           item = path.relative(output, item)
           items.append(item)
-        this.cache.setResult(fragment.key, item) # set the cache so the rest of the system know this transformer is up to date for the fragment
+        this.cache.setResult(fragment.key, item, item) # set the cache so the rest of the system know this transformer is up to date for the fragment
       saveFile(items)
     ```
 
@@ -1773,7 +1876,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - name: 'constants resource renderer'
   - dependencies: ['constants']
   - isJson: true
-- set during construction: `this.constantsService = this.dependencies[0]`
+- set during construction: `this.constantsService = this.dependencies[0]; this.isFullRender = true`
 - functions:
   - saveFile(items): saves the array to file
     ```python
@@ -1795,7 +1898,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
             text = '\n'.join(items.lines)
             items[constant.name] = text
             fragmentItems[constant.name] = text
-        this.cache.setResult(fragment.key, fragmentItems)
+        this.cache.setResult(fragment.key, fragmentItems, fragmentItems)
       await saveFile(items)
     ```
 
@@ -1810,6 +1913,6 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   ```python
     def renderResult(fragment):
       result = '\n'.join(fragment.lines)
-      this.cache.setResult(key, result)
+      this.cache.setResult(key, result, [*fragment.lines])
       return result
   ```

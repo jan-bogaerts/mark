@@ -29,7 +29,7 @@ class BuildService {
    */
   set isBuilding(value) {
     this._isBuilding = value;
-    this.eventTarget.dispatchEvent(new Event('is-building'));
+    this.eventTarget.dispatchEvent(new CustomEvent('is-building', { detail: { isBuilding: value } }));
   }
 
   get isBuilding() {
@@ -42,23 +42,11 @@ class BuildService {
   async buildAll() {
     this.isBuilding = true;
     try {
-      if (CybertronService.activeEntryPoint.renderResults) {
-        BuildStackService.tryRegister(CybertronService.activeEntryPoint);
-        try {
-          await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
-        } finally {
-          BuildStackService.unRegister(CybertronService.activeEntryPoint);
-        }
+      if (CybertronService.activeEntryPoint.isFullRender) {
+        await CybertronService.activeEntryPoint.getResults();
       } else {
         for (let fragment of ProjectService.textFragments) {
-          if (CybertronService.activeEntryPoint.cache.isOutOfDate(fragment.key)) {
-            BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment);
-            try {
-              await CybertronService.activeEntryPoint.renderResult(fragment);
-            } finally {
-              BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment);
-            }
-          }
+          await CybertronService.activeEntryPoint.getResult(fragment);
         }
       }
     } finally {
@@ -73,14 +61,8 @@ class BuildService {
   async buildFragment(fragment) {
     this.isBuilding = true;
     try {
-      BuildStackService.tryRegister(CybertronService.activeEntryPoint, fragment);
-      if (CybertronService.activeEntryPoint.renderResults) {
-        await CybertronService.activeEntryPoint.renderResults(ProjectService.textFragments);
-      } else if (CybertronService.activeEntryPoint.cache.isOutOfDate(fragment.key)) {
-        await CybertronService.activeEntryPoint.renderResult(fragment);
-      }
+      await CybertronService.activeEntryPoint.getResult(fragment);
     } finally {
-      BuildStackService.unRegister(CybertronService.activeEntryPoint, fragment);
       this.isBuilding = false;
     }
   }
@@ -93,14 +75,8 @@ class BuildService {
   async runTransformer(fragment, transformer) {
     this.isBuilding = true;
     try {
-      BuildStackService.tryRegister(transformer, fragment);
-      if (transformer.renderResults) {
-        await transformer.renderResults(ProjectService.textFragments);
-      } else {
-        await transformer.renderResult(fragment);
-      }
+      await transformer.getResult(fragment);
     } finally {
-      BuildStackService.unRegister(transformer, fragment);
       this.isBuilding = false;
     }
   }

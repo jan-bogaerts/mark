@@ -1,15 +1,13 @@
 import React, { Component } from 'react';
 import { Tooltip, Button, Divider } from 'antd';
-import { BuildOutlined, PlayCircleOutlined, CodeOutlined, BugOutlined, StepForwardOutlined } from '@ant-design/icons';
+import { BuildOutlined, CodeOutlined, PlayCircleOutlined, BugOutlined, StepForwardOutlined } from '@ant-design/icons';
 import buildService from '../../../../services/build_service/BuildService';
 import projectService from '../../../../services/project_service/ProjectService';
 import positionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
+import CybertronService from '../../../../services/cybertron_service/CybertronService';
 import themeService from '../../../../services/Theme_service/ThemeService';
 import dialogService from '../../../../services/dialog_service/DialogService';
 
-/**
- * BuildSection component
- */
 class BuildSection extends Component {
   constructor(props) {
     super(props);
@@ -17,7 +15,7 @@ class BuildSection extends Component {
       allDisabled: true,
       fragmentDisabled: true,
       transformerDisabled: true,
-      debugDisabled: false,
+      debug: buildService.debug,
       nextDisabled: true,
     };
   }
@@ -36,11 +34,17 @@ class BuildSection extends Component {
   }
 
   updateButtonStates = () => {
+    const activeFragment = positionTrackingService.activeFragment;
+    const activeTransformer = positionTrackingService.activeTransformer;
+    const activeEntryPoint = CybertronService.activeEntryPoint;
+    const isBuilding = buildService.isBuilding;
+    const debug = buildService.debug;
+
     this.setState({
-      allDisabled: !projectService.isAnyFragmentOutOfDate() || buildService.isBuilding,
-      fragmentDisabled: !positionTrackingService.activeFragment?.isOutOfDate || buildService.isBuilding,
-      transformerDisabled: !positionTrackingService.activeFragment || !positionTrackingService.activeTransformer || buildService.isBuilding,
-      nextDisabled: !buildService.debug && !buildService.isBuilding,
+      allDisabled: !projectService.isAnyFragmentOutOfDate() || isBuilding,
+      fragmentDisabled: !(activeFragment?.isOutOfDate && !activeEntryPoint?.isFullRender) || isBuilding,
+      transformerDisabled: !activeFragment || !activeTransformer || activeTransformer.isFullRender || isBuilding,
+      nextDisabled: !debug && !isBuilding,
     });
   }
 
@@ -70,7 +74,7 @@ class BuildSection extends Component {
 
   handleDebugClick = () => {
     buildService.debug = !buildService.debug;
-    this.setState({ nextDisabled: !buildService.debug && !buildService.isBuilding });
+    this.updateButtonStates();
   }
 
   handleNextClick = () => {
@@ -96,7 +100,7 @@ class BuildSection extends Component {
         </Tooltip>
         <Divider type="vertical" style={{ height: '24px' }} />
         <Tooltip title="Toggle debug mode">
-          <Button icon={<BugOutlined />} onClick={this.handleDebugClick} disabled={this.state.debugDisabled} />
+          <Button icon={<BugOutlined />} onClick={this.handleDebugClick} type={this.state.debug ? 'primary' : 'default'} />
         </Tooltip>
         <Tooltip title="Continue rendering to the next transformer">
           <Button icon={<StepForwardOutlined />} onClick={this.handleNextClick} disabled={this.state.nextDisabled} />

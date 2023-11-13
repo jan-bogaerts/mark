@@ -10,6 +10,7 @@ class BuildStackService {
     // A dictionary that keeps track of the textframe - transformer pairs that are currently running.
     // Key calculation for the dict = transformer.name + textframe.key
     this.running = {};
+    this.state = 'normal'; // other states: 'validating'
   }
 
   /**

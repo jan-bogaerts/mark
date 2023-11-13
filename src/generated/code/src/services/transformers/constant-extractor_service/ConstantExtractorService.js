@@ -77,7 +77,7 @@ class ConstantExtractorService extends TransformerBaseService {
    */
   renderResult(textFragment) {
     const result = this.extractQuotes(textFragment.key, textFragment.lines);
-    this.cache.setResult(textFragment.key, result);
+    this.cache.setResult(textFragment.key, result, [...textFragment.lines]);
     return result;
   }
 

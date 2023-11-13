@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import resources from '../../../resources.json';
@@ -15,6 +14,7 @@ class PluginRendererService extends TransformerBaseService {
   constructor() {
     super('plugin renderer', ['constants'], false);
     this.constantsService = this.dependencies[0];
+    this.isFullRender = true;
   }
 
   /**
@@ -66,7 +66,7 @@ class PluginRendererService extends TransformerBaseService {
     result = this.cleanResult(result);
     const filename = this.saveFile(fragment.key, result);
     const key = keys.join(' | ');
-    this.cache.setResult(key, filename);
+    this.cache.setResult(key, filename, message);
     return filename;
   }
 

@@ -48,7 +48,7 @@ class ResultCacheService {
       cache: this.cache,
       secondaryCache: this.secondaryCache,
       overwrites: this.overwrites,
-      lastSaveDate: this.lastSaveDate,
+      lastSaveDate: new Date().toISOString(),
     };
     fs.writeFile(cachePath, JSON.stringify(data), err => {
       if (err) throw err;
@@ -109,7 +109,7 @@ class ResultCacheService {
     let isModified = false;
     if (cacheKeys) {
       for (const key of cacheKeys) {
-        if (this.cache[key].state !== 'out-of-date') {
+        if (this.cache[key].state !== 'out-of-date' && this.transformer.hasPromptChanged(key, this.cache[key].prompt)) {
           this.cache[key].state = 'out-of-date';
           this.isDirty = true;
           isModified = true;
@@ -121,10 +121,10 @@ class ResultCacheService {
     }
   }
 
-  setResult(key, result) {
+  setResult(key, result, prompt) {
     let isModified = true;
     if (!this.cache[key]) {
-      this.cache[key] = { result, state: 'still-valid' };
+      this.cache[key] = { result, prompt, state: 'still-valid' };
       const keyParts = key.split(' | ');
       for (const part of keyParts) {
         if (!this.secondaryCache[part]) {
@@ -133,8 +133,9 @@ class ResultCacheService {
           this.secondaryCache[part].push(key);
         }
       }
-    } else if (this.cache[key].result !== result) {
+    } else if (this.cache[key].result !== result || this.cache[key].prompt !== prompt) {
       this.cache[key].result = result;
+      this.cache[key].prompt = prompt;
       this.cache[key].state = 'still-valid';
     } else if (this.cache[key].state !== 'still-valid') {
       this.cache[key].state = 'still-valid';
@@ -156,6 +157,9 @@ class ResultCacheService {
   }
 
   isOutOfDate(keyPart) {
+    if (this.cache[keyPart]) {
+      return this.cache[keyPart].state !== 'still-valid';
+    }
     if (this.secondaryCache[keyPart]) {
       for (const key of this.secondaryCache[keyPart]) {
         if (this.cache[key].state !== 'still-valid') {

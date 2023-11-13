@@ -17,6 +17,7 @@ class PluginListRendererService extends TransformerBaseService {
   constructor() {
     super('plugin-list renderer', ['plugin renderer'], true);
     this.pluginRendererService = this.dependencies[0];
+    this.isFullRender = true;
   }
 
   /**
@@ -45,7 +46,7 @@ class PluginListRendererService extends TransformerBaseService {
         item = path.relative(output, item);
         items.push(item);
       }
-      this.cache.setResult(fragment.key, item);
+      this.cache.setResult(fragment.key, item, item);
     }
     this.saveFile(items);
   }

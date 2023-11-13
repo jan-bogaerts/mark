@@ -24,7 +24,7 @@ class ParserValidatorService extends TransformerBaseService {
    */
   renderResult(fragment) {
     const result = fragment.lines.join('\n');
-    this.cache.setResult(fragment.key, result);
+    this.cache.setResult(fragment.key, result, [...fragment.lines]);
     return result;
   }
 }

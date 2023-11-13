@@ -130,7 +130,7 @@ def process_data(writer):
                         'class_description': description
                     }
                     response = generate_response(params, fragment.full_title)
-                    if response == 'no':
+                    if response.lower() == 'no':
                         response = 'declare'
                     if response:
                         response_dict[item] = response
