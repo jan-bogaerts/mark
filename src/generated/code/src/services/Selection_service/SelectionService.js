@@ -1,6 +1,7 @@
 
 const { clipboard } = require('electron');
 const { editor } = require('monaco-editor');
+const { default: PositionTrackingService } = require('../position-tracking_service/PositionTrackingService');
 
 /**
  * SelectionService class
@@ -73,7 +74,20 @@ class SelectionService {
     if (this.editor) {
       const model = this.editor.getModel();
       if (model) {
-        return model.getModeId();
+        const line = PositionTrackingService.currentLine;
+        if (line < 0) return 'paragraph';
+        const lineContent = model.getLineContent(line + 1).trim();
+        if (lineContent.startsWith('# ')) return 'heading1';
+        if (lineContent.startsWith('## ')) return 'heading2';
+        if (lineContent.startsWith('### ')) return 'heading3';
+        if (lineContent.startsWith('#### ')) return 'heading4';
+        if (lineContent.startsWith('##### ')) return 'heading5';
+        if (lineContent.startsWith('###### ')) return 'heading6';
+        if (lineContent.startsWith('> ')) return 'quote';
+        if (lineContent.startsWith('- ')) return 'bulletList';
+        if (lineContent.startsWith('1. ')) return 'numberedList';
+        if (lineContent.startsWith('```')) return 'code';
+        return 'paragraph';
       }
       return model.getModeId();
     }

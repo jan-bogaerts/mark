@@ -14,8 +14,6 @@ BuildStackService
 ResultCacheService
 # MarkdownCode > services > dialog service
 DialogService
-# MarkdownCode > services > line parser
-LineParser
 # MarkdownCode > services > project service > change-processor service
 ChangeProcessorService
 # MarkdownCode > services > gpt service
@@ -24,10 +22,6 @@ GPTService
 double-compress-service
 # MarkdownCode > services > all-spark service
 AllSparkService
-# MarkdownCode > services > project service > storage service
-StorageService
-# MarkdownCode > services > line parser > line parser helpers
-LineParserHelpers
 # MarkdownCode > services > project service
 ProjectService
 # MarkdownCode > services > transformers > triple-compress service
@@ -56,3 +50,11 @@ PluginRendererService
 ParserValidatorService
 # MarkdownCode > services > transformers > constants-resource renderer
 ConstantsResourceRenderer
+# MarkdownCode > services > key service
+KeyService
+# MarkdownCode > services > project service > storage service
+StorageService
+# MarkdownCode > services > line parser
+LineParser
+# MarkdownCode > services > line parser > line parser helpers
+LineParserHelpers

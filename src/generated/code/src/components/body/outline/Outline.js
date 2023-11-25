@@ -23,7 +23,7 @@ class Outline extends Component {
     projectService.eventTarget.addEventListener('content-changed', this.handleContentChanged);
     projectService.eventTarget.addEventListener('fragment-deleted', this.handleFragmentDeleted);
     projectService.eventTarget.addEventListener('fragment-inserted', this.handleContentChanged);
-    projectService.eventTarget.addEventListener('key-changed', this.handleContentChanged);
+    projectService.eventTarget.addEventListener('title-changed', this.handleContentChanged);
     positionTrackingService.eventTarget.addEventListener('change', this.handlePositionChanged);
   }
 

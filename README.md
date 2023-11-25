@@ -3,8 +3,10 @@
 MarkdownCode is an ideation and software building tool driven by machine learning. It allows users to enter text in markdown of any length, which is automatically analyzed for various parameters and which can automatically be converted into various stages of software code.
 
 ## The problem(s) it's trying to solve
-- Large language models have a limited size: you can't just throw any large text to it and have it render any possible code size, they have limits. Some models can handle more tokens than others, but no matter the size of the model, there is a hard limit that determines how much can go in and out in 1 go.
+- Large language models have a limited size: even though models are getting bigger and bigger, you can't just throw any large text to it and have it render any possible code size, for the time being, they still have limits. Some models can handle more tokens than others, but no matter the size of the model, there is a hard limit that determines how much can go in and out in 1 go.
 To solve this, the prompt engine splits up the markdown text into smaller chunks and perform the conversions on each of these chunks (text fragment).
+- You don't always want to regenerate the entire code base, but instead only a couple of features at a time, which is an other great reason to split up the input prompt and use tools to track which parts have become out of date and for which prompts.
+- When you are chaining transformers (use the output of a prompt as the input of another prompt), it happens that at some point in the chain, the output of the transformers no longer changes cause the input hasn't changed. In order to prevent unneeded calls to the llm, some more advanced caching and prompt generation is needed. 
 - translating an application description to code takes a bit of time and requires a lot of calls to the llm. Some models are cheaper and faster but less accurate. Some prompts and text fragments are simple and can be handled by a simpler, faster model. Others need the big guns. In order to optimize speed and cost, you want to be able to determine which model is used by each prompt, and even for each text fragment.
 - not all applications or environments have the same structure (backend web servers usually don't have much use of UI components), so not all application descriptions can be processed with the same prompts, flexibility in the translation process is needed.
 - I am a software developer, so I want some control and debug ability over the entire conversion process. This is why the output of every step can be examined and manually overwritten.
@@ -38,7 +40,7 @@ That said, in general it is presumed:
 
 ## Code Conversion Customization
 
-You can overwrite results to influence the build process if certain features are not extracted correctly from the source text.
+The application only knows a limited set of hardcoded transformers. These are primarily used for building other transformers. Most of the transformers that you will use are loaded as plugins and can very easily be changed/created by you. Here's the [default set of plugins](https://github.com/jan-bogaerts/markdownCode/blob/main/src/plugins.md) which is also used for building the markdown application itself.
 
 ## Installation and Usage
 

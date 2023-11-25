@@ -68,7 +68,7 @@ def generate_response(params, key):
         messages.append({"role": "assistant", "content": prompt})
         total_tokens += reportTokens(prompt)
     
-    total_tokens += 4 
+    total_tokens = 4 
     if total_tokens > DEFAULT_MAX_TOKENS:
         total_tokens = DEFAULT_MAX_TOKENS
     params = {

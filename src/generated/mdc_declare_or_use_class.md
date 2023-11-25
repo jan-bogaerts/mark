@@ -14,8 +14,6 @@
 {"ResultCacheService": "declare"}
 # MarkdownCode > services > dialog service
 {"DialogService": "declare"}
-# MarkdownCode > services > line parser
-{"LineParser": "declare"}
 # MarkdownCode > services > project service > change-processor service
 {"ChangeProcessorService": "declare"}
 # MarkdownCode > services > gpt service
@@ -24,10 +22,6 @@
 {"double-compress-service": "declare"}
 # MarkdownCode > services > all-spark service
 {"AllSparkService": "declare"}
-# MarkdownCode > services > project service > storage service
-{"StorageService": "declare"}
-# MarkdownCode > services > line parser > line parser helpers
-{"LineParserHelpers": "declare"}
 # MarkdownCode > services > project service
 {"ProjectService": "declare"}
 # MarkdownCode > services > transformers > triple-compress service
@@ -56,3 +50,11 @@
 {"ConstantsResourceRenderer": "declare"}
 # MarkdownCode > services > transformers > parser validator service
 {"ParserValidatorService": "declare"}
+# MarkdownCode > services > key service
+{"KeyService": "declare"}
+# MarkdownCode > services > project service > storage service
+{"StorageService": "declare"}
+# MarkdownCode > services > line parser
+{"LineParser": "declare"}
+# MarkdownCode > services > line parser > line parser helpers
+{"LineParserHelpers": "declare"}

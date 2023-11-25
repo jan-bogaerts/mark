@@ -2,7 +2,7 @@ import CybertronService from '../cybertron_service/CybertronService';
 import BuildStackService from '../build-stack_service/BuildStackService';
 import ResultCacheService from '../result-cache_service/ResultCacheService';
 import GPTService from '../gpt_service/GPTService';
-import ProjectService from '../project_service/ProjectService'; // Assuming ProjectService is available for keyToMessageParams
+import ProjectService from '../project_service/ProjectService';
 
 /**
  * TransformerBaseService class
@@ -37,24 +37,24 @@ class TransformerBaseService {
     throw new Error('Method not implemented');
   }
 
-  /**
-   * Render result
-   * @param {Object} textFragment - The text fragment
-   * @returns {Promise<Object>} The result
-   */
   async renderResult(textFragment) {
     const keyedMessage = await this.buildMessage(textFragment);
     if (!keyedMessage) {
       return null;
     }
-    const [message, keys] = keyedMessage;
+    let [message, keys] = keyedMessage;
     const result = await GPTService.sendRequest(this.name, textFragment.key, message);
+    if (keys) {
+      keys.unshift(textFragment.key);
+    } else {
+      keys = [textFragment.key];
+    }
     const key = keys.join(' | ');
     this.cache.setResult(key, result, message);
     return result;
   }
 
-  hasPromptChanged(key, prompt) {
+  async hasPromptChanged(key, prompt) {
     BuildStackService.mode = 'validating';
     try {
       const args = this.keyToMessageParams(key.split(' | '));
@@ -110,11 +110,6 @@ class TransformerBaseService {
     }
   }
 
-  /**
-   * Calculate maximum tokens
-   * @param {Object} inputTokens - The input tokens
-   * @returns {number} The maximum tokens
-   */
   calculateMaxTokens(inputTokens) {
     let totalInput = 0;
     for (const value of Object.values(inputTokens)) {
@@ -123,12 +118,6 @@ class TransformerBaseService {
     return totalInput * 2;
   }
 
-	/**
-   * Build a message from a text fragment
-   * @param {Object} textFragment - The text fragment
-   * @returns {Array} The message and the keys
-   * @throws {Error} Method not implemented
-   */
   async buildMessage(textFragment) {
     throw new Error('Method not implemented');
   }

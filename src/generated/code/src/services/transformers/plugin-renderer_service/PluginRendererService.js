@@ -82,7 +82,7 @@ class PluginRendererService extends TransformerBaseService {
 		.replace('{{title}}', fragment.title)
 		.replace('{{content}}', await this.constantsService.getResult(fragment)) }
     ];
-    return [result, [fragment.key]];
+    return [result, []];
   }
 }
 

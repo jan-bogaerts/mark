@@ -98,8 +98,6 @@ The edit-section component has actions for clipboard and selected data. Buttons 
 - It can show dialog boxes for errors, warnings, and information.
 - All user-triggered actions in a component should have proper error handling, showing an electron dialog box with error details if necessary.
 - Functions: showErrorDialog(param1, param2), showSaveDialog(), showOpenDialog().
-# MarkdownCode > services > line parser
-The line-parser service is a singleton object that parses markdown lines and updates text-fragments in the project-service. It has a fragmentIndex array to store text-fragment objects. The createTextFragment function trims and converts the line to lowercase, determines the depth-level of the text-fragment, assigns the title, calculates the key, and adds it to the project-service. The calculateKey function calculates the key of a text-fragment based on its depth-level and title. The clear function clears the fragmentIndex list. The parse function handles different types of lines, and the insertLine and deleteLine functions insert and delete lines respectively.
 # MarkdownCode > services > project service > change-processor service
 The change-processor service keeps the project structure in sync with the source by processing changes in the project content. Its main function, `process(changes, full)`, updates the project service when the user makes edits. This function sets the project service content to the editor's value, gets the editor's model, and iterates through each change in the changes list. It then splits the change's text into lines, sets the current line to the start line number of the change, and sets the line end to the end line number of the change. The function also sets the line index to 0, replaces overwritten lines by parsing the line content and incrementing the line and index, and deletes or inserts lines based on the remaining lines and increments the line and index accordingly. Finally, it marks the storage service as dirty.
 # MarkdownCode > services > gpt service
@@ -110,20 +108,6 @@ The results-view-context-menu is a component that wraps the Dropdown antd compon
 The double-compress-service shortens the result of compress-service. It is useful for testing and as input for other processes. It inherits from transformer-base service with constructor parameters: name, dependencies, and isJson. The build-message function takes a text-fragment and returns a result (json array) and the key. The result includes system and user roles. The system role contains a constant value and the user role contains the result of compressService.getResult. The function returns the result and key.
 # MarkdownCode > services > all-spark service
 The All-Spark service creates and registers transformers into the Cybertron service. It has a Load function that is called during application construction. Transformers are registered using `cybertronService.register(transformer, false)` or `cybertronService.register(transformer, true)` for entry points. All transformers should be registered after construction to ensure they can be found by others. The transformers to create are the Compress service (entry point), Constant-extractor service, and Double-compress service.
-# MarkdownCode > services > project service > storage service
-The storage service is responsible for reading and writing project data globally. It has functions to clear data, set up a new project, load data from disk, load models for the project, update out-of-date transformers, mark the project as dirty for auto-saving, and save the project and models to disk.
-# MarkdownCode > services > line parser > line parser helpers
-- 'LineParserHelpers' module: helper functions for line parser service.
-- 'getFragmentAt': retrieves fragment at given index, handles null fragments.
-- 'handleEmptyLine': handles empty lines, updates fragments index.
-- 'updateFragmentTitle': updates fragment title, dispatches 'key-changed' event.
-- 'removeFragmentTitle': removes fragment title, sets to empty or merges with previous fragment.
-- 'insertFragment': inserts new fragment at given index, adjusts lines, updates project's status.
-- 'isInCode': checks if fragment is in code block by counting '```' lines.
-- 'handleTitleLine': handles title lines, creates or updates fragments.
-- 'updateFragmentLines': updates fragment lines at given index, adjusts lines and index.
-- 'handleRegularLine': handles regular lines, creates or updates fragments.
-- 'deleteLine': deletes line at given index, removes from corresponding fragment if applicable.
 # MarkdownCode > services > transformers > triple-compress service
 The triple-compress-service reduces the output of the double-compress-service to a single line. It is used as a description for linked components and services. It is a subclass of the transformer-base service with the constructor parameters: Name: 'triple compress', Dependencies: ['double compress'], isJson: false. During construction, it sets `this.doubleCompressService` to the first element of the dependencies array. The function `build-message(text-fragment)` takes a text fragment as input and returns a result (in JSON array format) with the roles and contents: system - Condense the following text to one sentence, user - `await this.doubleCompressService.getResult(text-fragment)`. The function also returns the result and the key of the text fragment.
 # MarkdownCode > services > transformers > component-lister service
@@ -205,3 +189,24 @@ The fragment-status icon component displays the status of a text-fragment object
 - The result is then returned.
 # MarkdownCode > services > transformers > constants-resource renderer
 The constants-resource renderer service creates a resource file with all constants from fragments. Plugins depend on this service. It inherits from transformer-base service with constructor parameters: name, dependencies, and isJson. constantsService is a dependency. The service has two functions: saveFile and renderResults.
+# MarkdownCode > services > key service
+The Key service maps UUIDs to text fragment locations. A location is a string of parent fragment titles separated by ' > '. The service has fields: uuidToLoc, locToUuid, and loadUuidFromLocs. It has functions: assignKey, updateLocation, delete, clear, and calculateLocation.
+# MarkdownCode > services > project service > storage service
+- The storage service handles reading and writing project data.
+- `gptService.onMarkDirty` marks the project as dirty when `modelsMap` changes.
+- `clear()` clears references to loaded data.
+- `new()` sets up a new project.
+- `open(filePath)` loads data from disk.
+- `loadModelsMap(filePath)` loads the JSON file defining project models.
+- `loadKeys(filePath)` loads the JSON file mapping fragment keys to locations.
+- `loadProjectConfig(filePath)` loads the JSON file with project configuration.
+- `updateOutOfDate()` updates out-of-date transformers for each fragment.
+- `markDirty()` marks the project as dirty.
+- `save(file)` saves the project to disk.
+- `saveModelsMap(file)` saves `gptService.modelsMap` to a JSON file.
+- `saveKeys(file)` saves `keyService.locToUuid` to a JSON file.
+- `saveProjectConfig(file)` saves `projectConfigurationService.config` to a JSON file.
+# MarkdownCode > services > line parser
+The line-parser service is a singleton object that parses markdown lines and updates text-fragments in the project-service. It has a fragmentIndex array to store text-fragment objects. The createTextFragment function trims and converts the line to lowercase, determines the depth-level of the text-fragment based on the number of '#' at the beginning of the line, assigns the trimmed line as the title, requests a key and calculates the fragment's location from the key-service, sets the 'is-out-of-date' flag, initializes arrays for 'lines' and 'outOfDateTransformers', adds the text-fragment to the project-service, and returns it. The clear function clears the fragmentIndex list. The getStartLine function returns the index of a fragment in the fragmentIndex. The parse function handles different types of lines, such as empty lines, title lines, and regular lines. The insertLine function inserts a line at a specific index and parses it. The deleteLine function deletes a line at a specific index.
+# MarkdownCode > services > line parser > line parser helpers
+The 'LineParserHelpers' module contains functions for the line parser service. These functions include retrieving fragments, handling empty lines, updating fragment titles, removing fragment titles, inserting fragments, checking if a fragment is in a code block, handling title lines, updating fragment lines, handling regular lines, and deleting lines.

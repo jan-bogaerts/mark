@@ -321,7 +321,7 @@ Remember that each button needs it's own appropriate icon.
 - When the component is loaded and whenever the project-service raises the 'content-changed' event to indicate that a new project was loaded, the project data (field: textFragments) is retrieved from the project-service and converted into a tree structure using the function 'convertToTreeData'.
   - note: register using `projectService.eventTarget.addEventListener('content-changed', handleContentChanged)`
 - Whenever the project service raises an event that a data item was removed (event: fragment-deleted), call the 'removeNode' function
-- Whenever the project service raises an event that a data item was added (fragment-inserted) or (multiple) item(s) were changed (the event 'key-changed'), rebuild the tree structure.
+- Whenever the project service raises an event that a data item was added (fragment-inserted) or (multiple) item(s) were changed (the event 'title-changed'), rebuild the tree structure.
 - whenever the user expands a tree item (callback: onExpand), the key of the expanded item is added to the list of expanded items, when the user collapses an item, the key is removed from the list of expanded items.
 - this component monitors the position-tracking service for changes to the currently selected text-fragment.
   - use `positionTrackingService.eventTarget.addEventListener('change', eventHandler)` to attach the event handler
@@ -401,7 +401,7 @@ Remember that each button needs it's own appropriate icon.
 - upon construction register an event handler with the project-service (prop: eventTarget) to handle the following events (Unregister when unloading):
   - `fragment-out-of-date`: 
     - if `e.detail === fragment?.key` then refresh the color of the icon and content of the tooltip when the event is triggered.
-  - `key-changed`:
+  - `title-changed`:
     - if `e.detail?.key === fragment?.key` then refresh the icon that is used, based on the new value for `fragment?.depth`
   - `fragment-building`:
     - if `e.detail?.fragment?.key === fragment?.key` then set the icon to null, so that the spinner is shown instead
@@ -612,7 +612,7 @@ Remember that each button needs it's own appropriate icon.
   - fragment-out-of-date: when a fragment is marked as out of date.
   - fragment-building: when a fragment is being built by a transformer
   - fragment-up-to-date: when a fragment has been built by a transformer and is marked as (partially) up-to-date
-  - key-changed: when the key of a fragment was changed (raised externally)
+  - title-changed: when the key of a fragment was changed (raised externally)
   - is-dirty-changed: when the project was saved or first time it is modified after saving/loading/creating.
 
 
@@ -669,6 +669,7 @@ Remember that each button needs it's own appropriate icon.
         content = fs.readFileSync(filePath, 'utf8')
         projectService.content = content
         projectService.filename = filePath
+        this.loadKeys(filePath) # must be done before parsing so the parser can find the related keys
         content.split('\n').forEach((line, index) => lineParser.parse(line, index))
         for transformer in cybertronService.transformers:
           transformer.cache.loadCache()
@@ -676,6 +677,7 @@ Remember that each button needs it's own appropriate icon.
         this.loadProjectConfig(filePath)
         this.updateOutOfDate() # do before lifting the block on events otherwise the resultcaches keep resetting
       finally:
+        keyService.loadUuidFromLocs = null # so the keyService knows loading the project is done.
         projectService.blockEvents = False
         projectService.dispatchEvent('content-changed')
         this.loading = False
@@ -684,10 +686,12 @@ Remember that each button needs it's own appropriate icon.
   - loadModelsMap(filePath): loads the json file that defines the models to be used with the project
     - build the json file name by replacing '.md' with '_models.json' at the end of the field 'file'
     - if the json file exists, load it and assign the parsed json to `gptService.modelsMap`
+  - loadKeys(filePath): loads the json file that stores the mappings between the fragment keys and the location of the fragments in the text.
+    - build the json file name by replacing '.md' with '_keys.json' at the end of the field 'file'
+    - if the json file exists, load it and assign the parsed json to `keyService.loadUuidFromLocs`
   - loadProjectConfig(filePath): loads the json file that contains the configuration settings for the project
     - json file name = folderService.projectConfig
     - if the json file exists, load it and store the parsed json with `projectConfigurationService.loadConfig(configString)`
-  
   - updateOutOfDate(): updates the list of out-of-date transformers for each text-fragment.
     ```python (pseudo)
     def updateOutOfDate():
@@ -734,6 +738,10 @@ Remember that each button needs it's own appropriate icon.
   - saveModelsMap(file): 
     - build the json file name by replacing '.md' wit '_models.json' at the end of the field 'file'
     - convert the json object in `gptService.modelsMap` to a string
+    - save the stringified json to the json file name
+  - saveKeys(file): 
+    - build the json file name by replacing '.md' wit '_keys.json' at the end of the field 'file'
+    - get the dictionary from `keyService.getLocations()` and convert the json object to a string
     - save the stringified json to the json file name
   - saveProjectConfig(file): 
     - json file name = folderService.projectConfig
@@ -847,22 +855,24 @@ Remember that each button needs it's own appropriate icon.
 - It has an undo and redo list.
 - don't freeze the global object
 
-### line parser
-- the line-parser service is a global singleton object used to parse markdown lines and update the the text-fragments stored in the project-service.
-- It has:
-  - fragmentIndex: the line-parser service maintains an array of text-fragment objects. When the service is created, this list is empty.
-  - createTextFragment: a function for creating new text-fragments (json objects). it accepts as input a string which is the line that is being processed and the index nr at which the object should be placed.
-    - trim the line and convert it to lower case.
-    - count the nr of '#' that are in front of the title and assign to the depth-level of the text-fragment. so '#' is level 1, '##' is level 2, '###' is level 3 and so on.
-    - remove all the '#' from the line, trim again (to remove any spaces at the front) and assign to the title value of the text-fragment.
-    - calculate the key for the text-fragment and store in the text-fragment.
-    - set the 'is-out-of-date' flag to true, indicating that this fragment hasn't been processed yet
-    - initialize an empty array for the 'lines' field
-    - initialize an empty arry for the 'outOfDateTransformers'
-    - ask the project-service to add the text-fragment in it's list of text-fragments (projectService.addTextFragment(textFragment, index)).
-    - do not add to the fragmentsIndex (is done separately)
-    - return textFragment
-  - calculateKey: for calculating the key of a text-fragment. It accepts as input a text-fragment and an index position. it goes as follows:
+### key service
+- the Key service is responsible for creating and loading UUID keys for text-fragment.
+- to map a key to a text fragment during loading, the location of the text fragment within the text is used.
+- A text fragment's location is a string built up out of the sequence of titles of all the parent text fragments in the project, concatenated with ' > '. ex: 'root > title1 > subtitle > item'. 
+Use the 'calculateLocation' function to build this string.
+- fields:
+  - loadUuidFromLocs: a dictionary, when assigned, indicates that the project is being loaded and these uuids should be used.
+- functions:
+  - assignKey(fragment, index): 
+    - if there is a loaduuidFromLocs dict, 
+      - create the location, 
+      - search the location, 
+      - if it exists: 
+        - assign the uuid to the fragment and remove the entry from the dict so that we know this was a valid key.
+    - if  there is no loaduuidFromLocs dict or the location wasn't in the dict:
+      - create a new UUID key and assigns the key to the fragment. 
+  - getLocations(): creates a dictionary of key - location pairs from the project service's fragments list and returns it. 
+  - calculateLocation: for calculating the key of a text-fragment. It accepts as input a text-fragment and the index position of that text-fragment in the project. it goes as follows:
     - the current depth = the depth-level of the text-fragment
     - the result value = the title of the text-fragment
     - loop from the given index position until 0 using the field idx
@@ -871,6 +881,22 @@ Remember that each button needs it's own appropriate icon.
         - store the new current depth
         - prepend the title of the prev-fragment + ' > ' to the result
         - if the new current depth == 1, stop the loop
+
+### line parser
+- the line-parser service is a global singleton object used to parse markdown lines and update the the text-fragments stored in the project-service.
+- It has:
+  - fragmentIndex: the line-parser service maintains an array of text-fragment objects. When the service is created, this list is empty.
+  - createTextFragment: a function for creating new text-fragments (json objects). it accepts as input a string which is the line that is being processed and the index nr at which the object should be placed.
+    - trim the line and convert it to lower case.
+    - count the nr of '#' that are in front of the title and assign to the depth-level of the text-fragment. so '#' is level 1, '##' is level 2, '###' is level 3 and so on.
+    - remove all the '#' from the line, trim again (to remove any spaces at the front) and assign to the title value of the text-fragment.
+    - set the 'is-out-of-date' flag to true, indicating that this fragment hasn't been processed yet
+    - initialize an empty array for the 'lines' field
+    - initialize an empty array for the 'outOfDateTransformers'
+    - ask the key-service to assign a key to the text-fragment `assignKey(textFragment, index)`.
+    - ask the project-service to add the text-fragment in it's list of text-fragments (projectService.addTextFragment(textFragment, index)).
+    - do not add to the fragmentsIndex (is done separately)
+    - return textFragment
   - clear: clear the fragmentsIndex list.
   - getStartLine(fragment): `return this.fragmentsIndex.indexOf(fragment)`
   - pseudo code for the parse function and related:
@@ -934,14 +960,12 @@ The module 'LineParserHelpers' contains the following helper functions used by t
               service.fragmentsIndex[index] = fragment
 
 
-      def updateFragmentTitle(service, fragment, line, fragmentPrjIndex):
-        oldKey = fragment.key
+      def updateFragmentTitle(service, fragment, line):
         line = line.trim().toLowerCase()
         fragment.depth = line.split('#').length - 1
         fragment.title = line.replace(/#/g, '').trim();
-        fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
-        eventParams = { fragment, oldKey }
-        projectService.dispatchEvent('key-changed', eventParams)
+        eventParams = { fragment }
+        projectService.dispatchEvent('title-changed', eventParams)
 
 
       def removeFragmentTitle(service, fragment, line, index):
@@ -949,8 +973,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         if not prevFragment: # title of first was removed, set title to empty
           if line:
             fragment.lines.insert(0, line)
-          fragmentPrjIndex = projectService.textFragments.indexOf(fragment)
-          updateFragmentTitle(service, fragment, '', fragmentPrjIndex)
+          updateFragmentTitle(service, fragment, '')
         else:
           if line:
             prevFragment.lines.push(line)
@@ -997,7 +1020,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
             raise Exception('internal error: no fragment found in non empty index table')
           fragmentPrjIndex = projectService.textFragments.indexOf(fragment)
           if fragmentStart == index:
-            updateFragmentTitle(service, fragment, line, fragmentPrjIndex)
+            updateFragmentTitle(service, fragment, line)
           elif isInCode(fragment):
             handleRegularLine(service, line, index)
           else:
@@ -1201,8 +1224,6 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - When the result-cache-service is created, it:
   - initializes the 'is-dirty' flag to false
   - initialize eventTarget `this.eventTarget = new EventTarget()`
-  - registers the event handler 'handleKeyChanged' with the project service to monitor when the key of a fragment changes
-    - register using pseudo: `projectService.eventTarget.addEventListener('key-changed', handleKeyChanged)`
   - registers the event handler 'handleFragmentDeleted' with the project service to monitor when a fragment is deleted
     - register using pseudo: `projectService.eventTarget.addEventListener('fragment-deleted', handleFragmentDeleted)`
   - registers an event handler with the project service to monitor when text fragments have changed
@@ -1224,23 +1245,57 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   ```python (pseudo)
   def handleFragmentDeleted(e):
     fragmentKey = e.detail
-    if fragmentKey in this.cache:
-      this.cache[fragmentKey].state = 'deleted'
-      this.isDirty = True
-    else:
-      cacheKeys = this.secondaryCache[fragmentKey]
-      if cacheKeys:
-        isModified = False
-        for key in cacheKeys: 
-          if this.cache[key].state != 'out-of-date':
-            this.cache[key].state = 'out-of-date'
-            isModified = true
-            this.isDirty = True
-        if isModified:
-          ProjectService.tryAddToOutOfDate(fragmentKey, this.transformer)
+    this.deleteResultsFor(fragmentKey)
+    # all values that are part of the result of another fragment, should also be deleted and the fragments marked out of date. 
+    cacheKeys = this.secondaryCache[fragmentKey]
+    if cacheKeys:
+      for key in cacheKeys: 
+        if this.cache[key].state != 'out-of-date':
+          this.cache[key].state = 'out-of-date'
+          keyParts = key.split(' | ')
+          outOfDateFragment = keyParts[0]
+          ProjectService.tryAddToOutOfDate(outOfDateFragment, this.transformer)
+      delete this.secondaryCache[fragmentKey]          
+      this.isDirty = True    
+  ```
+- deleteResultsFor(fragmentKey): all full-keys in the secondary cache for the specified key that start with that key, are deleted from the primary cache.
+  ```python
+    cacheKeys = this.secondaryCache[fragmentKey]
+    if cacheKeys:
+      leftOver = []
+      for key in cacheKeys:
+        # we are only interested in the results of specified fragment, so it must be it's first key 
+        if not key.startsWith(fragmentKey): 
+          leftOver.push(key)
+          continue
+        delete this.cache[key]        
+        this.removeKeyFromSecondary(fragmentKey, key)
+        this.isDirty = True
+      if len(leftOver) > 0:
+        this.secondaryCache[fragmentKey] = leftOver
+      else:
+        delete this.secondaryCache[fragmentKey]
+  ```
+- removeKeyFromSecondary(forFragmentKey, key):
+  ```python
+    keyParts = key.split[' | ']
+    for part in keyParts:
+      if part != forFragmentKey:
+        refKeys = this.secondaryCache[part]
+        refKeys.remove(key)
+        if len(refKeys) == 0:
+          delete this.secondaryCache[part]
+  ```  
+- deleteAfterUpdate(fragmentKey, keysToRemove): removes the results that are no longer valid after an update for the fragment with the specified key.
+  ```python
+    allKeys = this.secondaryCache[fragmentKey]
+    for oldKey in keysToRemove:
+      if allKeys:
+        allKeys.remove(oldKey)
+      this.removeKeyFromSecondary(fragmentKey, oldKey)        
+      delete this.cache.cache[oldKey]
   ```
 - getFragmentResults: a function to retrieve all the results related to a particular fragment. Definition in pseudo:
-
   ```python (pseudo)
   def getFragmentResults(fragmentKey):
     if this.overwrites[key]: # entire fragment could be overwritten, if so, return this
@@ -1249,11 +1304,15 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     cacheKeys = this.secondaryCache[fragmentKey]
     if cacheKeys:
       for key in cacheKeys:
+        # we are only interested in the results of specified fragment, so it must be it's first key 
+        if not key.startsWith(fragmentKey): 
+          continue
         cacheValue = this.getResult(key)
         keyParts = key.split(' | ')
         addTo = None
         if len(keyParts) > 1:
-          result = {}
+          if not result: # if the result is already created, reuse so we can append values.
+            result = {}
           addTo = result
         for part in keyParts[:-1]: # last is the key for the cache value
           nextAddTo = None
@@ -1265,25 +1324,14 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           addTo = nextAddTo
         if addTo:
           addTo[keyParts[-1]] = cacheValue
+        elif result:
+          if Array.isArray(result):
+            result.push(cacheValue)
+          else:
+            result = [result, cacheValue]
         else:
           result = cacheValue
     return result
-  ```
-- handleKeyChanged: an event handler, called when the key of a text-fragment has changed, definition in pseudo:
-  ```python (pseudo)
-  def handlekeyChanged(e):
-    params = e.detail
-    oldKeys = this.secondaryCache[params.oldKey]
-    if oldKeys:
-      newKeys = []
-      for oldKey in oldKeys:
-        newKey = oldKey.replace(params.oldKey, params.fragment.key)
-        newKeys.push(newKey)
-        this.cache[newKey] = this.cache[oldKey]
-        delete this.cache[oldKey]
-      this.secondaryCache[params.fragment.key] = newKeys
-      delete this.secondaryCache[params.oldKey] 
-      this.isDirty = True
   ```
 - setResult: stores the result in the cache. in pseudo:
   ```python (pseudo)
@@ -1308,7 +1356,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       this.isDirty = True
       storageService.markDirty()
   ```
-getResult(key): `if key in this.overwrites: return this.overwrites[key] else if key in this.cache: return this.cache[key] else return null`
+getResult(key): `if key in this.overwrites: return this.overwrites[key] else if key in this.cache: return this.cache[key].result else return null`
 - isOutOfDate(keyPart): checks if the specified key is present and marked as still-valid
   ```python (pseudo)
   def isOutOfDate(keyPart):
@@ -1474,6 +1522,10 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         return None
       message, keys = keyedMessage
       result = await GPT-service.sendRequest(this, textFragment.key, message) # need name and key so the gpt service can select the correct model
+      if keys:
+        keys.insert(0, textFragment.key)
+      else:
+        keys = [textFragment.key]
       key = ' | '.join(keys)
       this.cache.setResult(key, result, message)
       return result
@@ -1653,6 +1705,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     plugin.services.folderService = folderService
     plugin.services.gptService = gptService
     plugin.services.cybertronService = cybertronService
+    plugin.services.keyService = keyService
     plugin.services.cache = this.cache
   ```
 - calculateMaxTokens(inputTokens)
@@ -1671,7 +1724,9 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - renderResult(fragment)
   ```python
     if this.plugin.renderResult:
-      return this.plugin.renderResult(fragment)
+      result, message = this.plugin.renderResult(fragment)
+      this.cache.setResult(fragment.key, result, message)
+      return result
     if this.plugin.iterator:
       result = {}
       def iteratorStepHandler(*args):
@@ -1680,11 +1735,13 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
           return
         itemResult = await GPTService.sendRequest(transformer, fragment.key, message)
         if this.plugin.cleanResponse:
-          itemResult = this.plugin.cleanResponse(itemResult)
+          itemResult = this.plugin.cleanResponse(itemResult, *args)
         key = keys.join(' | ')
         this.cache.setResult(key, itemResult, message)
-        result[item] = itemResult
-      return this.plugin.iterator(fragment, result)
+        result[keys[-1]] = itemResult
+      this.cache.deleteResultsFor(fragment.key)
+      await this.plugin.iterator(fragment, result)
+      return result
     else:
       return super.renderResult(fragment)
   ```
@@ -1694,6 +1751,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       return this.plugin.updateResult(fragment)
     if this.plugin.iterator:
       result = {}
+      oldResultKeys = this.cache.secondaryCache(fragment.key).filter(x => x.startsWith(fragment.key))
       def iteratorStepHandler(*args):
         message, keys = await this.plugin.buildMessage(*args)
         if not message:
@@ -1702,12 +1760,14 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         if this.cache.isOutOfDate(key):
           itemResult = await GPTService.sendRequest(transformer, fragment.key, message)
           if this.plugin.cleanResponse:
-            itemResult = this.plugin.cleanResponse(itemResult)
+            itemResult = this.plugin.cleanResponse(itemResult, *args)
           this.cache.setResult(key, itemResult, message)
         else:
           itemResult = this.cache.getResult(key)
-        result[item] = itemResult
-      return this.plugin.iterator(fragment, result)
+        result[keys[-1]] = itemResult
+        oldResultKeys.remove(key)
+      await this.plugin.iterator(fragment, result)
+      this.cache.deleteAfterUpdate(fragment.key, oldResultKeys)
     else:
       return super.updateResult(fragment)
   ```
@@ -1724,7 +1784,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
           isChanged = JSON.stringify(message) == JSON.stringify(prompt)
         else:
           itemResult = this.cache.getResult(key)
-        result[item] = itemResult
+        result[keys[-1]] = itemResult
       buildStackService.mode = 'validating' # make certain that only cache values are used, no calls to the llm 
       try:
         this.plugin.iterator(fragment, result)
@@ -1823,7 +1883,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         >       },
         >     ];
         > 
-        >     return [result, [fragment.key]];
+        >     return [result, [ ]];
         > }
         > function calculateMaxTokens(inputTokenCount) {
         >   return inputTokenCount + 1;
@@ -1840,7 +1900,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
         replace:
         - {{title}}: `textFragment.title`
         - {{content}}: `await this.constantsService.getResult(fragment)`
-    - return result, [ fragment.key ]
+    - return result, [ ]
 
 
 #### plugin-list renderer service

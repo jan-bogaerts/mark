@@ -1,12 +1,12 @@
 
 import ProjectService from '../../project_service/ProjectService';
 
+/**
+ * Class containing helper functions for the line parser service
+ */
 class LineParserHelpers {
   /**
-   * Get the fragment at a specific index.
-   * @param {Object} service - The line parser service instance.
-   * @param {number} index - The index of the fragment.
-   * @returns {Array} - The fragment and its index.
+   * Helper function to get the fragment at a specific index
    */
   static getFragmentAt(service, index) {
     let curFragment = service.fragmentsIndex[index];
@@ -56,37 +56,30 @@ class LineParserHelpers {
   }
 
   /**
-   * Update the fragment title.
-   * @param {Object} service - The line parser service instance.
-   * @param {Object} fragment - The fragment to update.
-   * @param {string} line - The line to parse.
-   * @param {number} fragmentPrjIndex - The index of the fragment in the project.
+   * Helper function to update the fragment title
    */
-  static updateFragmentTitle(service, fragment, line, fragmentPrjIndex) {
-    const oldKey = fragment.key;
+  static updateFragmentTitle(fragment, line) {
     line = line.trim().toLowerCase();
     fragment.depth = line.split('#').length - 1;
     fragment.title = line.replace(/#/g, '').trim();
-    fragment.key = service.calculateKey(fragment, fragmentPrjIndex);
-    const eventParams = { fragment, oldKey };
-    ProjectService.dispatchEvent('key-changed', eventParams);
+    const eventParams = { fragment };
+    ProjectService.dispatchEvent('title-changed', eventParams);
   }
 
   /**
-   * Remove the fragment title.
-   * @param {Object} service - The line parser service instance.
-   * @param {Object} fragment - The fragment to remove.
-   * @param {string} line - The line to parse.
-   * @param {number} index - The index of the line.
-   */
+     * Remove the fragment title.
+     * @param {Object} service - The line parser service instance.
+     * @param {Object} fragment - The fragment to remove.
+     * @param {string} line - The line to parse.
+     * @param {number} index - The index of the line.
+     */
   static removeFragmentTitle(service, fragment, line, index) {
     const [prevFragment, prevIndex] = this.getFragmentAt(service, index - 1);
     if (!prevFragment) {
       if (line) {
         fragment.lines.unshift(line);
       }
-      const fragmentPrjIndex = ProjectService.textFragments.indexOf(fragment);
-      this.updateFragmentTitle(service, fragment, '', fragmentPrjIndex);
+      this.updateFragmentTitle(fragment, '');
     } else {
       if (line) {
         prevFragment.lines.push(line);
@@ -122,9 +115,7 @@ class LineParserHelpers {
   }
 
   /**
-   * Check if the fragment is in code.
-   * @param {Object} fragment - The fragment to check.
-   * @returns {boolean} - True if the fragment is in code, false otherwise.
+   * Helper function to check if the fragment is in code
    */
   static isInCode(fragment) {
     let linesStartingWithCode = 0;
@@ -157,7 +148,7 @@ class LineParserHelpers {
       }
       const fragmentPrjIndex = ProjectService.textFragments.indexOf(fragment);
       if (fragmentStart === index) {
-        this.updateFragmentTitle(service, fragment, line, fragmentPrjIndex);
+        this.updateFragmentTitle(fragment, line);
       } else if (this.isInCode(fragment)) {
         this.handleRegularLine(service, line, index);
       } else {
@@ -216,9 +207,7 @@ class LineParserHelpers {
   }
 
   /**
-   * Delete a line from the project content.
-   * @param {Object} service - The line parser service instance.
-   * @param {number} index - The index of the line to be deleted.
+   * Helper function to delete a line
    */
   static deleteLine(service, index) {
     const [fragment, fragmentStart] = this.getFragmentAt(service, index);

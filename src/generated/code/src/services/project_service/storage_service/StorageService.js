@@ -1,17 +1,20 @@
+
 import fs from 'fs';
 import path from 'path';
+import projectService from '../ProjectService';
 import folderService from '../../folder_service/FolderService';
 import cybertronService from '../../cybertron_service/CybertronService';
 import lineParser from '../../line_parser/LineParser';
 import gptService from '../../gpt_service/GPTService';
-import projectService from '../ProjectService';
 import positionTrackingService from '../../position-tracking_service/PositionTrackingService';
 import projectConfigurationService from '../project_configuration_service/ProjectConfigurationService';
+import keyService from '../../key_service/KeyService';
 
 class StorageService {
   constructor() {
+    gptService.onMarkDirty = this.markDirty;
+    this.loading = false;
     this.saveTimer = null;
-    gptService.onMarkDirty = this.markDirty.bind(this);
   }
 
   clear() {
@@ -25,15 +28,15 @@ class StorageService {
     projectConfigurationService.loadConfig({});
   }
 
-  async new() {
+  new() {
     projectService.blockEvents = true;
     this.loading = true;
     try {
       this.clear();
-      const userDataPath = window.electron.resourcesPath;
-      const templatePath = path.join(userDataPath, 'templates', 'default.md');
+      const resourcesPath = window.electron.resourcesPath;
+      const templatePath = path.join(resourcesPath, 'templates', 'default.md');
       if (fs.existsSync(templatePath)) {
-        const content = fs.readFileSync(templatePath, 'utf8')
+        const content = fs.readFileSync(templatePath, 'utf8');
         projectService.content = content;
         content.split('\n').forEach((line, index) => lineParser.parse(line, index));
       }
@@ -54,14 +57,14 @@ class StorageService {
       const content = fs.readFileSync(filePath, 'utf8');
       projectService.content = content;
       projectService.filename = filePath;
+      this.loadKeys(filePath);
       content.split('\n').forEach((line, index) => lineParser.parse(line, index));
-      for (const transformer of cybertronService.transformers) {
-        transformer.cache.loadCache();
-      }
+      cybertronService.transformers.forEach(transformer => transformer.cache.loadCache());
       this.loadModelsMap(filePath);
       this.loadProjectConfig(filePath);
       this.updateOutOfDate();
     } finally {
+      keyService.loadUuidFromLocs = null;
       projectService.blockEvents = false;
       projectService.dispatchEvent('content-changed');
       this.loading = false;
@@ -70,17 +73,26 @@ class StorageService {
   }
 
   loadModelsMap(filePath) {
-    const jsonFilePath = filePath.replace('.md', '_models.json');
-    if (fs.existsSync(jsonFilePath)) {
-      const modelsMap = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
+    const modelsMapPath = filePath.replace('.md', '_models.json');
+    if (fs.existsSync(modelsMapPath)) {
+      const modelsMap = JSON.parse(fs.readFileSync(modelsMapPath, 'utf8'));
       gptService.modelsMap = modelsMap;
     }
   }
 
+  loadKeys(filePath) {
+    const keysPath = filePath.replace('.md', '_keys.json');
+    if (fs.existsSync(keysPath)) {
+      const keys = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
+      keyService.loadUuidFromLocs = keys;
+    }
+  }
+
   loadProjectConfig(filePath) {
-    const jsonFilePath = folderService.projectConfig;
-    if (fs.existsSync(jsonFilePath)) {
-      const config = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
+    const configPath = folderService.projectConfig;
+    if (fs.existsSync(configPath)) {
+      const configString = fs.readFileSync(configPath, 'utf8');
+      const config = JSON.parse(configString);
       projectConfigurationService.loadConfig(config);
     }
   }
@@ -95,7 +107,7 @@ class StorageService {
         projectService.markOutOfDate(fragment);
       } else {
         fragment.isOutOfDate = false;
-    }
+      }
     });
   }
 
@@ -105,7 +117,7 @@ class StorageService {
     if (projectService.autoSave && projectService.filename && !this.saveTimer) {
       this.saveTimer = setTimeout(() => {
         this.save(projectService.filename);
-      }, 5000)
+      }, 5000);
     }
   }
 
@@ -121,21 +133,28 @@ class StorageService {
     }
     await this.saveModelsMap(file);
     await this.saveProjectConfig(file);
+    await this.saveKeys(file);
     projectService.filename = file;
     projectService.setIsDirty(false);
     this.saveTimer = null;
   }
 
   async saveModelsMap(file) {
-    const jsonFilePath = file.replace('.md', '_models.json');
+    const modelsMapPath = file.replace('.md', '_models.json');
     const modelsMapString = JSON.stringify(gptService.modelsMap);
-    await fs.promises.writeFile(jsonFilePath, modelsMapString, 'utf8');
+    await fs.promises.writeFile(modelsMapPath, modelsMapString, 'utf8');
+  }
+
+  async saveKeys(file) {
+    const keysPath = file.replace('.md', '_keys.json');
+    const keysString = JSON.stringify(keyService.getLocations());
+    await fs.promises.writeFile(keysPath, keysString, 'utf8');
   }
 
   async saveProjectConfig(file) {
-    const jsonFilePath = folderService.projectConfig;
+    const configPath = folderService.projectConfig;
     const configString = JSON.stringify(projectConfigurationService.config);
-    await fs.promises.writeFile(jsonFilePath, configString, 'utf8');
+    await fs.promises.writeFile(configPath, configString, 'utf8');
   }
 }
 

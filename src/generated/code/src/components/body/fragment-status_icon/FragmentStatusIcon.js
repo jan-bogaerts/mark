@@ -19,7 +19,7 @@ const FragmentStatusIcon = (props) => {
       }
     }
 
-    const handleKeyChanged = (e) => {
+    const handleTitleChanged = (e) => {
       if (e.detail?.key === props.fragment?.key) {
         updateIcon();
       }
@@ -60,7 +60,7 @@ const FragmentStatusIcon = (props) => {
     }
 
     ProjectService.eventTarget.addEventListener('fragment-out-of-date', handleOutOfDate);
-    ProjectService.eventTarget.addEventListener('key-changed', handleKeyChanged);
+    ProjectService.eventTarget.addEventListener('title-changed', handleTitleChanged);
     ProjectService.eventTarget.addEventListener('fragment-building', handleBuilding);
     ProjectService.eventTarget.addEventListener('fragment-up-to-date', handleUpToDate);
 
@@ -68,7 +68,7 @@ const FragmentStatusIcon = (props) => {
 
     return () => {
       ProjectService.eventTarget.removeEventListener('fragment-out-of-date', handleOutOfDate);
-      ProjectService.eventTarget.removeEventListener('key-changed', handleKeyChanged);
+      ProjectService.eventTarget.removeEventListener('title-changed', handleTitleChanged);
       ProjectService.eventTarget.removeEventListener('fragment-building', handleBuilding);
       ProjectService.eventTarget.removeEventListener('fragment-up-to-date', handleUpToDate);
     }

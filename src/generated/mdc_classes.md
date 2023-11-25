@@ -30,10 +30,6 @@
 [
   "DialogService"
 ]
-# MarkdownCode > services > line parser
-[
-  "LineParser"
-]
 # MarkdownCode > services > project service > change-processor service
 [
   "ChangeProcessorService"
@@ -49,14 +45,6 @@
 # MarkdownCode > services > all-spark service
 [
   "AllSparkService"
-]
-# MarkdownCode > services > project service > storage service
-[
-  "StorageService"
-]
-# MarkdownCode > services > line parser > line parser helpers
-[
-  "LineParserHelpers"
 ]
 # MarkdownCode > services > project service
 [
@@ -113,4 +101,20 @@
 # MarkdownCode > services > transformers > constants-resource renderer
 [
   "ConstantsResourceRenderer"
+]
+# MarkdownCode > services > key service
+[
+  "KeyService"
+]
+# MarkdownCode > services > project service > storage service
+[
+  "StorageService"
+]
+# MarkdownCode > services > line parser
+[
+  "LineParser"
+]
+# MarkdownCode > services > line parser > line parser helpers
+[
+  "LineParserHelpers"
 ]

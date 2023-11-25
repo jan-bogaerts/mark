@@ -50,8 +50,6 @@ The edit-section component supports clipboard actions such as cut, copy, paste, 
 The application uses components from the @geoffcox/react-splitter library, including a body component with a Split component, an outline component, and another Split component, all with specific initial and minimum sizes, and event handlers for the 'onSplitChanged' callback, with the positions of the splitters stored and restored from local storage.
 # MarkdownCode > services > dialog service
 The dialog service is a global singleton that can display dialog boxes for errors, warnings, information, and user-triggered actions in a component, including functions such as showErrorDialog, showSaveDialog, and showOpenDialog.
-# MarkdownCode > services > line parser
-The line-parser service is a singleton object that parses markdown lines and updates text-fragments in the project-service, using a fragmentIndex array to store text-fragment objects, a createTextFragment function to trim and convert the line to lowercase, determine the depth-level of the text-fragment, assign the title, calculate the key, and add it to the project-service, a calculateKey function to calculate the key of a text-fragment based on its depth-level and title, a clear function to clear the fragmentIndex list, and parse, insertLine, and deleteLine functions to handle different types of lines and insert or delete lines.
 # MarkdownCode > services > project service > change-processor service
 The change-processor service updates the project service with the user's edits by processing changes in the project content, including updating the content, parsing and replacing lines, and marking the storage service as dirty.
 # MarkdownCode > services > gpt service
@@ -62,10 +60,6 @@ The results-view-context-menu is a component that wraps the Dropdown antd compon
 The double-compress-service is a transformer-based service that shortens the result of compress-service, useful for testing and as input for other processes, with a build-message function that takes a text-fragment and returns a result (json array) and key, including system and user roles where the system role contains a constant value and the user role contains the result of compressService.getResult, ultimately returning the result and key.
 # MarkdownCode > services > all-spark service
 The All-Spark service registers transformers into the Cybertron service, including the Compress service (entry point), Constant-extractor service, and Double-compress service, using the `cybertronService.register(transformer, false)` or `cybertronService.register(transformer, true)` functions, with all transformers needing to be registered after construction for accessibility.
-# MarkdownCode > services > project service > storage service
-The storage service handles global reading and writing of project data, including functions for clearing data, setting up new projects, loading data and models, updating transformers, auto-saving, and saving to disk.
-# MarkdownCode > services > line parser > line parser helpers
-The 'LineParserHelpers' module provides helper functions for the line parser service, including functions to retrieve fragments at a given index, handle empty lines, update fragment titles, remove fragment titles, insert new fragments, check if a fragment is in a code block, handle title lines, update fragment lines, handle regular lines, and delete lines.
 # MarkdownCode > services > transformers > triple-compress service
 The triple-compress-service is a subclass of the transformer-base service that reduces the output of the double-compress-service to a single line, and it has a constructor with specific parameters and a function that takes a text fragment as input and returns a result with roles and contents.
 # MarkdownCode > services > transformers > component-lister service
@@ -116,3 +110,11 @@ The fragment-status icon component displays the status of a text-fragment object
 The parser-validator service checks the state of the specified text-fragment for the internal markdown parser, is used for debugging, inherits from the transformer-base service, has a renderResult function that takes a fragment as input, joins the lines of the fragment and stores it in a variable called result, calls the cache's setResult method with the key and result, and finally returns the result.
 # MarkdownCode > services > transformers > constants-resource renderer
 The constants-resource renderer service is a dependency for plugins, inheriting from the transformer-base service and having the constantsService as a dependency, with functions to save a file and render results.
+# MarkdownCode > services > key service
+The Key service maps UUIDs to text fragment locations and has fields for uuidToLoc, locToUuid, and loadUuidFromLocs, as well as functions for assigning keys, updating locations, deleting, clearing, and calculating locations.
+# MarkdownCode > services > project service > storage service
+The storage service handles reading and writing project data, including loading and saving JSON files for project models, fragment keys, and project configuration, as well as marking the project as dirty, clearing loaded data, setting up a new project, updating out-of-date transformers, and saving the project to disk.
+# MarkdownCode > services > line parser
+The line-parser service is a singleton object that parses markdown lines and updates text-fragments in the project-service, with functions to create, clear, get the start line, parse, insert, and delete lines.
+# MarkdownCode > services > line parser > line parser helpers
+The 'LineParserHelpers' module provides various functions for the line parser service, such as retrieving, updating, inserting, and deleting fragments, handling empty lines, title lines, regular lines, and code blocks.

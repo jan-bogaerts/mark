@@ -14,7 +14,7 @@
      > compress the following text:
 
     - role: user, content: `await deps.constants.getResult(text-fragment)`.
-  - return result, [ text-fragment.key ]
+  - return result, [ ]
   
   
 ## double-compress service
@@ -30,7 +30,7 @@
      > condense the following text as much as possible, without loosing any meaning:
 
     - role: user, content: `await deps.compress.getResult(text-fragment)`.
-  - return result, [ text-fragment.key ]
+  - return result, [ ]
 
 
 ## triple-compress service
@@ -46,7 +46,7 @@
      > condense the following text to 1 sentence:
 
     - role: user, content: `await deps['double compress'].getResult(text-fragment)`.
-  - return result, [ text-fragment.key ]
+  - return result, [ ]
 
 ## component-lister service
 - the component-lister service is responsible for extracting all the component names it can find in a text-fragment.
@@ -97,7 +97,7 @@
     if len(refs.projectService.textFragments) >= 1:
       return result, [ textFragment.key, refs.projectService.textFragments[1].key ]
     else:
-      result, [ textFragment.key ]
+      result, []
     ```
 
 ## class-lister service
@@ -162,9 +162,9 @@
           - return:
             ```python
             if len(services.projectService.textFragments) >= 1:
-              return result, [ textFragment.key, services.projectService.textFragments[1].key ]
+              return result, [ services.projectService.textFragments[1].key ]
             else:
-              result, [ textFragment.key ]
+              result, [  ]
            ```
 
 
@@ -207,7 +207,7 @@
       > bad response:
       > the primary / root component is x
        
-    - return: `result, [ textFragment.key ]`
+    - return: `result, [ ]`
 
 
 ## primary-class service
@@ -249,14 +249,14 @@
       > bad response:
       > the primary / root class is x
        
-    - return: `result, [ fragment.key ]`
+    - return: `result, [ ]`
 
 ## class-description service
 - The class-description-service is responsible for generating descriptions of classes based on the text-fragments that contain references to those classes.
 - Used as input for various other transformers that require the description of only 1 class in a fragment instead of everything.
 - name: 'class description'
 - dependencies: ['double compress', 'classes']
-- isJson: true
+- isJson: false
 - functions:
   - iterator(fragment, callback):
     ```python
@@ -283,7 +283,7 @@
         replace:
         - {{name}}: `item`
         - {{content}}: `content`    
-    - return: `result, [ fragment.key, item ]`
+    - return: `result, [ item ]`
 
 
 ## component-description service
@@ -291,7 +291,7 @@
 - Used as input for various other transformers that require the description of only 1 component in a fragment instead of everything.
 - name: 'component description'
 - dependencies: ['double compress', 'components']
-- isJson: true
+- isJson: false
 - functions:
   - iterator(fragment, callback):
     ```python
@@ -318,7 +318,7 @@
         replace:
         - {{name}}: `item`
         - {{content}}: `content`    
-    - return: `result, [ fragment.key, item ]`
+    - return: `result, [ item ]`
 
 
 ## component-exact-description service
@@ -326,7 +326,7 @@
 - Used as input for various other transformers that require the description of exactly only 1 component in a fragment instead of everything.
 - name: 'component exact description'
 - dependencies: ['compress', 'components', 'primary component']
-- isJson: true
+- isJson: false
 - functions:
   - iterator(fragment, callback):
     ```python
@@ -357,7 +357,7 @@
         
         replace:
         - {{content}}: `content`    
-    - return: `result, [ fragment.key, item ]`
+    - return: `result, [ item ]`
   
   - buildContent(fragment, components, primary, item):
     ```python
@@ -420,7 +420,7 @@
         replace:
         - {{name}}: `item`
         - {{content}}: `content`    
-    - return: `result, [ fragment.key, item ]`
+    - return: `result, [ item ]`
 
 
 ## declare-or-use-class classification service
@@ -433,7 +433,7 @@
   - calculateMaxTokens(inputTokenCount): inputTokenCount + 20
   - iterator(fragment, callback, result):
     ```python
-      titles = getKeysWithClasses(fragment.key)
+      titles = await getKeysWithClasses(fragment.key)
       classes = await deps.classes.getResult(fragment)
       if len(classes) > 0:
         primary = await deps['primary class'].getResult(fragment)
@@ -456,7 +456,7 @@
   ```python
     result = []
     for fragment in services.projectService.textFragments:
-      classes = deps.classes.cache.getResult(fragment.key)
+      classes = await deps.classes.getResult(fragment)
       if classes and fragment.key != toExclude:
         result.push(fragment.key)
     return result
@@ -492,7 +492,7 @@
         replace:
         - {{titles}}: `titles`
 
-    - return: `result, [ fragment.key, item ]`
+    - return: `result, [ item ]`
 
 
 ## is-service-used service
@@ -500,16 +500,16 @@
 - Used to determine which files should be imported and which interfaces should be known about.
 - name: 'is service used'
 - dependencies: ['declare or use class', 'class description', 'constants']
-- isJson: true
+- isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount): inputTokenCount + 4
   - iterator(fragment, callback, result):
     ```python
       for toCheck in services.projectService.textFragments:
         if toCheck.key == fragment.key: continue
-          classes = deps['declare or use class'].cache.getResult(toCheck.key)
-          if len(classes) == 0: continue
-          for className in classes:
+        classes = await deps['declare or use class'].getResult(toCheck)
+        for className, value in classes.items():
+          if value == 'declare':
             callback(fragment, toCheck, className)
     ```
     
@@ -548,4 +548,407 @@
         replace:
         - {{feature_desc}}: `content`
 
-    - return: `result, [ fragment.key, checkAgainst.key, item ]`
+    - return: `result, [  checkAgainst.key, className ]`
+
+## is-service-singleton service
+- The is-service-singleton service is responsible for figuring out if a class that is declared in a text fragment is described as being a singleton or not.
+- Used to determine how a class should be rendered.
+- name: 'is service singleton'
+- dependencies: ['declare or use class', 'constants']
+- isJson: false
+- functions:
+  - calculateMaxTokens(inputTokenCount): inputTokenCount + 3
+  - iterator(fragment, callback, result):
+    ```python
+        classes = await deps['declare or use class'].getResult(fragment)
+        for className, value in classes.items():
+          if value == 'declare':
+            callback(fragment, className)
+    ```
+    
+  - buildMessage(fragment, className):
+    - content = await deps.constants.getResult(fragment)
+    - result (json array):
+      - role: system, content:
+        
+        > Act as an ai software analyst.
+        > It is your task to to classify if a service is described as a singleton / global instance or not.
+        > 
+        > Does the source-text require that "{{class}}" is a singleton object?
+        > 
+        > only return 'yes' or 'no'
+        > 
+        > good response:
+        > yes
+        > 
+        > bad response:
+        > the following text does describes the service as a singleton.
+
+        replace:
+        - {{class}}: `className`
+        
+      - role: user, content:
+
+        > source-text: 
+        > {{feature_desc}}
+
+        replace:
+        - {{feature_desc}}: `content`
+
+    - return: `result, [ className ]`
+
+## list-component-props service
+- The list-component-props service builds a list of properties that a component is described to have.
+- Used to determine how a class should be rendered.
+- name: 'component props'
+- dependencies: ['declare or use component', 'component exact description']
+- isJson: true
+- functions:
+  - calculateMaxTokens(inputTokenCount): inputTokenCount + 240
+  - iterator(fragment, callback):
+    ```python
+        components = await deps['declare or use component'].getResult(fragment)
+        for compName, value in components.items():
+          if value == 'declare':
+            callback(fragment, compName)
+    ```
+  - buildMessage(fragment, compName):
+    - description = `await deps['component exact description'].getResult(fragment)`
+    - result (json array):
+      - role: system, content:
+        
+        > list all features that the {{name}} component declares consumers of the {{name}} component should provide as property values for the {{name}}.
+        > Return the result as a json object of key-value pairs where the value is a short description. Do not include any introduction or explanation. Return an empty object if nothing is found.
+
+        replace:
+        - {{name}}: `compName`
+        
+      - role: user, content:
+
+        > {{feature_desc}}
+
+        replace:
+        - {{feature_desc}}: `description`
+
+    - return: `result, [ compName ]`
+
+## is-service-for-all-components service
+- The is-service-for-all-components  service is responsible for figuring out if a class described in the fragment should be usd by all components or not.
+- Used to determine which files should be imported and which extra info needs to be added to component rendering.
+- name: 'is service for all components'
+- dependencies: ['declare or use class', 'class description']
+- isJson: false
+- functions:
+  - calculateMaxTokens(inputTokenCount): inputTokenCount + 4
+  - iterator(fragment, callback, result):
+    ```python
+        classes = await deps['declare or use class'].getResult(fragment)
+        for className, value in classes.items():
+          if value == 'declare':
+            callback(fragment, className)
+    ```
+    
+  - buildMessage(fragment, className):
+    - description = await deps['class description'].getResult(fragment)
+      if not description return null
+      description = description[className] # a fragment can have multiple classes, so get the description of the class we are searching for
+      if not description return null
+    - result (json array):
+      - role: system, content:
+        
+        > It is your task to classify the class description.
+        > 
+        > Does the description contain any features that should be applied to all UI components in the project?
+        > 
+        > 
+        > only return 'yes' or 'no'
+        > 
+        > good response:
+        > yes
+        > 
+        > bad response:
+        > the following text does not contain any references to all components.
+        
+      - role: user, content:
+
+        > {{feature_desc}}
+
+        replace:
+        - {{feature_desc}}: `description`
+
+    - return: `result, [ className ]`
+
+
+## service-usage service
+- The service-usage service is responsible for extracting all the features described in a fragment that relate to a particular service.
+- Used to determine the full set of feature requirements of a class.
+- name: 'service usage'
+- dependencies: ['declare or use class', 'is service used', 'constants']
+- isJson: true
+- functions:
+  - calculateMaxTokens(inputTokenCount): inputTokenCount * 2
+  - iterator(fragment, callback, result):
+    ```python
+        for toCheck in services.projectService.textFragments:
+          if toCheck.key == fragment.key: continue
+          classes = await deps['declare or use class'].getResult(toCheck)
+          for className, value in classes.items():
+            if value == 'declare':
+              isUsed = await getIfClassIsUsed(fragment, toCheck, className)
+              if isUsed:
+                callback(fragment, className)
+    ```
+  - getIfClassIsUsed(fragment, toCheck, className):
+    ```python
+      isUsedData = await deps['is service used'].getResult(fragment)
+      if isUsedData and toCheck.key in isUsedData:
+        section = isUsedData[toCheck.key]
+        if section and className in section:
+          return section[className].lower() == 'yes'
+      return False
+
+    ``` 
+  - cleanResponse(response, fragment, toCheck)
+    ```python
+      return {
+                'value': response,
+                'source': toCheck.key,
+              }
+    ```
+  - buildMessage(fragment, className):
+    - content = await deps.constants.getResult(fragment)
+    - result (json array):
+      - role: system, content:
+        
+        > list everything related to '{{class}}' that is declared in the source text. If nothing is found, return an empty value.
+        > Do not say: the source text doesn't contain'or provide any information specifically related to...
+
+        replace:
+        - {{class}}: `className`
+        
+      - role: user, content:
+
+        > source-text: 
+        > {{feature_desc}}
+
+        replace:
+        - {{feature_desc}}: `content`
+
+      - role: assistant, content:
+
+        > Remember: only include features related to '{{class}}' and return an empty string (no quotes) if nothing is found.
+
+        replace:
+        - {{class}}: `className`
+
+    - return: `result, [ className ]`
+
+## global-component-features service
+- The global-component-features service extracts the list of features that all components should implement according to a service.
+- Used to determine how a components should be rendered.
+- name: 'global component features'
+- dependencies: ['is service for all components', 'constants']
+- isJson: false
+- functions:
+  - calculateMaxTokens(inputTokenCount): inputTokenCount * 2
+  - iterator(fragment, callback):
+    ```python
+        toCheck = await deps['is service for all components'].getResult(fragment)
+        for service, value in toCheck.items():
+          if value == 'yes':
+            callback(fragment, service)
+    ```
+  - buildMessage(fragment, service):
+    - description = `await deps.constants.getResult(fragment)`
+    - result (json array):
+      - role: system, content:
+        
+        > List how all components should use the service described in the source text. If nothing is found, return an empty value (no quotes).
+        > Do not say: the source text doesn't contain or provide any information specifically related to...
+        > Keep the response as short as possible
+        
+      - role: user, content:
+
+        > Source text:
+        > {{feature_desc}}
+
+        replace:
+        - {{feature_desc}}: `description`
+
+    - return: `result, [ service ]`
+
+## component-imports service
+- The component-imports service is responsible for generating the list of modules that should be imported by a component.
+- Used to prepare the rendering of the code file for a component.
+- name: 'component imports'
+- dependencies: ['components', 'declare or use component', 'service usage', 'global component features', 'component description']
+- isJson: false
+- functions:
+  - iterator(fragment, callback, result):
+    ```python
+      components = await deps.components.getResult(fragment)
+      for component in components:
+        isDeclare = await getIsDeclared(fragment, component) 
+        if isDeclare:
+            imports = await getServiceImports(fragment)
+            results[component] = imports
+        else:
+            await resolveComponentImports(fragment, component, callback, results)
+      return [result, None]
+    ```
+  - getIsDeclared(fragment, component): get the result of the declare-or-use transformer and see if the specified component is declared or not. 
+  Do case insensitive search.
+    ```python
+      component = component.lower()
+      result = await deps['declare or use component'].getResult(fragment)
+      temp_items = {k.lower(): v for k, v in result.items()}
+      if name in temp_items:
+        return temp_items[name] == 'declare'
+      else:
+        return False
+    ```
+  - getAllDeclared(fragment):
+    ```python
+      data = await deps['declare or use component'].getResult(fragment)
+      return [name for name in data if data[name] == 'declare']
+    ```
+  - getDeclaredIn(fragment, component): Returns the key of the text fragment where the item is declared. 
+  Do case insensitive search.
+    ```python
+      component = component.lower()
+      result = await deps['declare or use component'].getResult(fragment)
+      temp_items = {k.lower(): v for k, v in result.items()}
+      if name in temp_items:
+        return temp_items[name]
+      return None
+    ```
+  - buildPath(declaredIn, filename):
+    ```python
+      declaredIn = declaredIn.key 
+      declared_in_parts = declaredIn.split(" > ")
+      declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
+      path = os.path.join(*declared_in_parts, filename.replace(" ", "_").replace('-', '_') )
+      return path
+    ```
+  - getServiceImports(fragment):
+    ```python
+      imported = {} # so we don't list the same thing twice
+      results = []
+    
+      services_used = await deps['service usage'].getResult(fragment)
+      if services_used:
+          for service, rec in services_used.items():
+              if not rec['value']:
+                  continue # some services are included in the list cause the previous step had flagged them (cheap run), but then list_service_usage didn't find any usage of them (expensive run)
+              service_loc = rec['source']
+              cur_path_parts = service_loc.split(" > ")
+              # replace all spaces with underscores
+              cur_path_parts = [part.replace(" ", "_") for part in cur_path_parts]
+              cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
+              if not service in imported:
+                  imported[service] = True
+                  service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
+                  results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
+      for fragment in refs.projectService.textFragments:
+          globalFeatures = await deps['global component features'].getResult(fragment)
+          if globalFeatures:
+            cur_path_parts = fragment.key.split(" > ")
+            # replace all spaces with underscores
+            cur_path_parts = [part.replace(" ", "_").replace('-', '_') for part in cur_path_parts]
+            cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
+            for service, features in globalFeatures.items():
+                if not service in imported:
+                    imported[service] = True
+                    service_path = os.path.join(*cur_path_parts, service.replace(" ", "_").replace('-', '_')).strip()
+                    results.append({'service': service, 'path': service_path, 'service_loc': fragment.full_title})
+      return results  
+    ```     
+  - resolveComponentImports(fragment, component, callback, results):
+    ```python
+      declared_in = await getDeclaredIn(fragment, component)
+      if not declared_in:
+          raise new Error(f"can't find import location for component {component} used in {fragment.key}")
+      else:
+          declaredInFragment = refs.projectService.getFragment(declared_in.replace("'", "").replace('"', '')) # remove quotes cause gpr sometimes adds them
+          if not declaredInFragment:
+            raise new Error(f'component declared in {declared_in}, but fragment cant be found at specified index')
+          components = await deps.components.getResult(declaredInFragment)
+          if component in components:
+              path = buildPath(declaredInFragment, component)
+              results[component] = path
+          else:
+              # if there is only 1 component declared in the fragment, we can presume that's the one we need
+              declared_comps = await getAllDeclared(declaredInFragment)
+              if len(declared_comps) == 1:
+                  path = buildPath(declaredInFragment, declared_comps[0])
+                  results[component] = path
+              else:
+                  iterator(fragment, component, declared_comps, declaredInFragment) # declaredInFragment is needed for cleanresponse
+    ```
+  - cleanResponse(response, fragment, component, declared_comps, declaredInFragment): `return buildPath(declaredInFragment, response)` 
+  - buildMessage(fragment, component, declared_comps):
+    - description = await deps['component description'].getResult(fragment)
+      if not description return null
+      description = description[component] # a fragment can have multiple classes, so get the description of the class we are searching for
+      if not description return null
+    - result (json array):
+      - role: system, content:
+        
+        > Only return the name of the most likely match, don't give any introduction or explanation.
+        
+      - role: user, content:
+
+        > Which of these component names best matches '{{component}}', described as {{description}}:
+        > {{items}}
+
+        replace:
+        - {{description}}: `description`
+        - {{items}}: `\n- '.join(declared_comps)`
+        - {{component}}: `component`
+
+    - return: `result, [ component ]`
+    
+
+## found-interface-parts service
+- The found-interface-parts is responsible for listing all parts of the interface of a service that are used in the code.
+- Used to find the exact definitions that are used in the code so that the same name and parameters can be used everywhere.
+- name: 'found interface parts'
+- dependencies: ['component renderer']
+- isJson: true
+- functions:
+
+## interface-parts-used service
+- The interface-parts-used is responsible for filtering the interface definition of a service or component to only those items that are used in the description.
+- Used to remove all definitions from the prompt that have no relationship to the current task as to not confuse the llm.
+- name: 'interface parts used'
+- dependencies: ['components', 'component imports', 'found interface parts', 'component exact description', 'global component features']
+- isJson: true
+- functions:
+  - iterator(fragment, callback, result):
+    ```python
+      components = await deps.components.getResult(fragment)
+      for component in components:
+        importsList = await deps['component imports'].getResult(fragment)
+        if importsList:
+          importsList = importsList[component] 
+        if importsList:
+          for import_def in importsList:
+            service = import_def['service']
+            serviceLoc = import_def['service_loc']
+            serviceFragment = refs.projectService.getFragment(serviceLoc)
+            if not serviceFragment:
+              raise new Error(f'fragment with key {serviceLoc} not found in the project')
+            interfaceDef = await deps['found interface parts'].getResult(serviceFragment)
+            if interfaceDef:
+              interfaceDef = interfaceDef[service]
+            globalInterfaceDef = await deps['global component features'].getResults(serviceFragment)
+
+      return [result, None]
+    ```
+
+## component-renderer service
+- the component-renderer service is responsible for generating all the code related to UI components.
+- used to build UI applications
+- name: 'component renderer'
+- dependencies: ['components', 'declare or use component', 'is service singleton', 'global component features', 'component exact description', 'component imports']
+- isJson: false

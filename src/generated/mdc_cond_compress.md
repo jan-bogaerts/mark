@@ -222,45 +222,6 @@
   - showErrorDialog(param1, param2): Shows an error dialog box with the title and content specified in the parameters.
   - showSaveDialog(): Shows a save dialog box with filters for markdown and any file types.
   - showOpenDialog(): Shows an open dialog box with filters for markdown and any file types.
-# MarkdownCode > services > line parser
-- The line-parser service is a global singleton object that parses markdown lines and updates the text-fragments stored in the project-service.
-- It has:
-  - fragmentIndex: an empty array that stores text-fragment objects.
-  - createTextFragment: a function that creates new text-fragments. It takes a line and an index as input.
-    - Trims and converts the line to lowercase.
-    - Counts the number of '#' at the beginning of the line to determine the depth-level of the text-fragment.
-    - Removes the '#' from the line and assigns it as the title of the text-fragment.
-    - Calculates the key for the text-fragment and stores it.
-    - Sets the 'out-of-date' flag to true.
-    - Initializes empty arrays for the 'lines' and 'outOfDateTransformers' fields.
-    - Asks the project-service to add the text-fragment to its list.
-  - calculateKey: calculates the key of a text-fragment. It takes a text-fragment and an index position as input.
-    - Sets the current depth to the depth-level of the text-fragment.
-    - Sets the result value to the title of the text-fragment.
-    - Loops from the given index position until 0.
-    - Compares the depth-level of the previous text-fragment with the current depth.
-    - If the previous depth-level is smaller, updates the current depth and prepends the title of the previous text-fragment to the result.
-    - Stops the loop if the new current depth is 1.
-  - clear: clears the fragmentsIndex list.
-  - Pseudo code for the parse function and related:
-    ```python (pseudo)
-
-      def parse(line, index):
-        if line == '':
-          handleEmptyLine(this, index)
-        elif line.startsWith('#'):
-          handleTitleLine(this, line, index)
-        else:
-          handleRegularLine(this, line, index)
-
-      def insertLine(line, index):
-        fragmentsIndex.insert(index, null)
-        parse(line, index)
-
-      def deleteLine(index):
-        deleteLine(index)
-        del fragmentsIndex[index]
-    ```
 # MarkdownCode > services > project service > change-processor service
 - The change-processor service ensures that the project structure stays synchronized with the source by processing changes in the project content.
 - Functions:
@@ -327,29 +288,6 @@
       - Compress service (entry point)
       - Constant-extractor service
       - Double-compress service
-# MarkdownCode > services > project service > storage service
-- The storage service is a global singleton responsible for reading and writing project data to and from storage.
-- Functions:
-  - clear(): clears all references to previously loaded data.
-  - new(): sets up everything for a new project.
-  - open(filePath): loads all data from disk.
-  - loadModelsMap(filePath): loads the json file that defines the models for the project.
-  - updateOutOfDate(): updates the list of out-of-date transformers for each text-fragment.
-  - markDirty(): marks the project as dirty for auto-saving.
-  - save(file): saves the project to disk.
-  - saveModelsMap(file): saves the models map to a json file.
-# MarkdownCode > services > line parser > line parser helpers
-- The 'LineParserHelpers' module contains helper functions used by the line parser service.
-- The 'getFragmentAt' function retrieves a fragment at a given index, taking into account any null fragments.
-- The 'handleEmptyLine' function handles empty lines in the line parser service, ensuring that the fragments index is updated correctly.
-- The 'updateFragmentTitle' function updates the title of a fragment, calculating a new key and dispatching a 'key-changed' event.
-- The 'removeFragmentTitle' function removes the title of a fragment, either setting it to empty or merging it with the previous fragment.
-- The 'insertFragment' function inserts a new fragment at a given index, adjusting the lines and updating the project's out-of-date status.
-- The 'isInCode' function checks if a fragment is within a code block by counting the number of lines starting with '```'.
-- The 'handleTitleLine' function handles title lines in the line parser service, creating new fragments or updating existing ones.
-- The 'updateFragmentLines' function updates the lines of a fragment at a given index, adjusting the fragment's lines and the fragments index.
-- The 'handleRegularLine' function handles regular lines in the line parser service, creating new fragments or updating existing ones.
-- The 'deleteLine' function deletes a line at a given index, removing the line from the corresponding fragment if applicable.
 # MarkdownCode > services > transformers > triple-compress service
 - The triple-compress-service takes the output of the double-compress-service and reduces it to a single line.
 - It is used as a description for each fragment when searching for linked components and services.
@@ -660,3 +598,82 @@ The component-lister service extracts component names from text and is used to d
 - The service has two functions:
   - saveFile(items): saves the array to a file.
   - renderResults(fragments): builds a JSON dictionary of constants and saves it.
+# MarkdownCode > services > key service
+- The Key service maintains a mapping between UUIDs and text fragment locations.
+- A text fragment's location is a string that consists of the titles of all parent text fragments in the project, separated by ' > '.
+- The 'calculateLocation' function is used to build this string.
+- The Key service has the following fields:
+  - uuidToLoc: a dictionary that maps UUID keys to locations.
+  - locToUuid: a dictionary that maps locations to UUID keys.
+  - loadUuidFromLocs: a dictionary that indicates that the project is being loaded and specifies which UUIDs to use.
+- The Key service has the following functions:
+  - assignKey(fragment): creates the location for the fragment and assigns a UUID key to it. If a loadUuidFromLocs dictionary is provided, it checks if the location exists and assigns the UUID from the dictionary if it does.
+  - updateLocation(oldLocation, newLocation): updates all entries in the locToUuid dictionary that start with oldLocation to use newLocation instead. It also updates the corresponding value in the uuidToLoc dictionary.
+  - delete(fragment): removes all mappings related to the key of the fragment.
+  - clear(): clears all mappings.
+  - calculateLocation: calculates the key of a text fragment based on its depth level and position in the project. It iterates through the text fragments and appends their titles to the result string, separated by ' > '. The loop stops when the depth level is 1.
+# MarkdownCode > services > project service > storage service
+- The storage service is a global singleton responsible for reading and writing project data to and from storage.
+- The `gptService.onMarkDirty` function is set to `this.markDirty` during construction to mark the project as dirty when the `gpt-service`'s `modelsMap` changes.
+- The `clear()` function clears all references to previously loaded data.
+- The `new()` function sets up everything for a new project.
+- The `open(filePath)` function loads all the data from disk.
+- The `loadModelsMap(filePath)` function loads the JSON file that defines the models to be used with the project.
+- The `loadKeys(filePath)` function loads the JSON file that stores the mappings between fragment keys and fragment locations in the text.
+- The `loadProjectConfig(filePath)` function loads the JSON file that contains the configuration settings for the project.
+- The `updateOutOfDate()` function updates the list of out-of-date transformers for each text fragment.
+- The `markDirty()` function marks the project as dirty.
+- The `save(file)` function saves the project to disk.
+- The `saveModelsMap(file)` function saves the `gptService.modelsMap` to a JSON file.
+- The `saveKeys(file)` function saves the `keyService.locToUuid` to a JSON file.
+- The `saveProjectConfig(file)` function saves the `projectConfigurationService.config` to a JSON file.
+# MarkdownCode > services > line parser
+- The line-parser service is a global singleton object used to parse markdown lines and update the text-fragments stored in the project-service.
+- It has:
+  - fragmentIndex: an empty array that stores text-fragment objects.
+  - createTextFragment: a function that creates new text-fragments.
+    - Trims and converts the line to lowercase.
+    - Counts the number of '#' at the beginning of the line to determine the depth-level of the text-fragment.
+    - Removes the '#' from the line and trims it again to assign it as the title of the text-fragment.
+    - Requests the key-service to assign a key to the text-fragment.
+    - Requests the key-service to calculate the location of the fragment.
+    - Sets the 'is-out-of-date' flag to true.
+    - Initializes empty arrays for the 'lines' and 'outOfDateTransformers' fields.
+    - Asks the project-service to add the text-fragment to its list of text-fragments.
+    - Returns the text-fragment.
+  - clear: clears the fragmentsIndex list.
+  - getStartLine(fragment): returns the index of the fragment in the fragmentsIndex.
+  - Pseudo code for the parse function and related:
+    ```python (pseudo)
+      def parse(line, index):
+        trimmedLine = line.trim()
+        if trimmedLine == '':
+          handleEmptyLine(this, index)
+        elif trimmedLine.startsWith('#'):
+          handleTitleLine(this, trimmedLine, index)
+        else:
+          if line[-1] == '\r':
+            line = line[:-1]
+          handleRegularLine(this, line, index)
+
+      def insertLine(line, index):
+        fragmentsIndex.insert(index, null)
+        parse(line, index)
+
+      def deleteLine(index):
+        deleteLine(this, index)
+        del fragmentsIndex[index]
+    ```
+# MarkdownCode > services > line parser > line parser helpers
+The 'LineParserHelpers' module contains helper functions for the line parser service. These functions are described in pseudo code and include:
+
+- `getFragmentAt(service, index)`: Retrieves the fragment at a given index, taking into account any empty fragments.
+- `handleEmptyLine(service, index)`: Handles an empty line by either adding a null fragment to the fragments index or updating an existing fragment.
+- `updateFragmentTitle(service, fragment, line, fragmentPrjIndex)`: Updates the title of a fragment by calculating its location, setting its depth, and updating its title.
+- `removeFragmentTitle(service, fragment, line, index)`: Removes the title of a fragment, either setting it to empty or merging it with the previous fragment.
+- `insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index)`: Inserts a new fragment at a given index, adjusting the lines and index accordingly.
+- `isInCode(fragment)`: Checks if a fragment is within a code block.
+- `handleTitleLine(service, line, index)`: Handles a line that contains a title, either creating a new fragment or updating an existing one.
+- `updateFragmentLines(service, fragment, line, index, fragmentStart)`: Updates the lines of a fragment, either changing an existing line or adding a new one.
+- `handleRegularLine(service, line, index)`: Handles a regular line, either creating a new fragment or updating an existing one.
+- `deleteLine(service, index)`: Deletes a line from a fragment, either removing the fragment or deleting the line within the fragment.
