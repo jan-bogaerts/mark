@@ -17,12 +17,12 @@ class PluginTransformerService extends TransformerBaseService {
     if (typeof plugin.getDescription !== 'function') {
       throw new Error('Invalid plugin: getDescription function not provided');
     }
-    this.plugin = plugin;
     const description = plugin.getDescription();
     if (!description) {
       throw new Error('Invalid plugin: no description provided');
     }
     super(description.name, description.dependencies, description.isJson, description.language, description.temperature || 0, description.isFullRender);
+    this.plugin = plugin;
     this.description = description;
     for (const dep of this.dependencies) {
       this.plugin.deps[dep.name] = dep;

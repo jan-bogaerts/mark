@@ -275,6 +275,8 @@ def get_interface_parts_of_others(fragment, component):
                     comp_and_global_service_desc += '\n'
                     for key, value in service_features_fragment.items():
                         comp_and_global_service_desc += f'\n{value}'
+
+                        
                 interface_def = format_interface(interface_def)
                 interface = get_interface_parts_usage.list_used_interface_parts(service, service_loc, interface_def, comp_and_global_service_desc, fragment.full_title)
                 if interface:

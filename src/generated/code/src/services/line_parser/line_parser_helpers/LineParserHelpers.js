@@ -87,6 +87,7 @@ class LineParserHelpers {
       fragment.lines.forEach(l => prevFragment.lines.push(l));
       while (service.fragmentsIndex[index] === fragment) {
         service.fragmentsIndex[index] = prevFragment;
+        index++;
       }
       ProjectService.deleteTextFragment(fragment);
       ProjectService.markOutOfDate(prevFragment);
@@ -105,11 +106,14 @@ class LineParserHelpers {
   static insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index) {
     const toAdd = service.createTextFragment(line, fragmentPrjIndex);
     service.fragmentsIndex[index] = toAdd;
-    let fragmentLineIndex = index - (fragmentStart + fragment.lines.length + 1);
-    while (fragmentLineIndex > 0 && fragment.lines.length > 0) {
-      toAdd.lines.unshift(fragment.lines.pop());
-      service.fragmentsIndex[index + fragmentLineIndex] = toAdd;
-      fragmentLineIndex -= 1;
+    let localIndexOfNewFragment = index - (fragmentStart + 1);
+    if (localIndexOfNewFragment < fragment.lines.length) {
+      fragment.lines.splice(localIndexOfNewFragment, 1);
+      while (localIndexOfNewFragment < fragment.lines.length) {
+        index += 1;
+        service.fragmentsIndex[index] = toAdd;
+        toAdd.lines.unshift(fragment.lines.pop());
+      }
     }
     ProjectService.markOutOfDate(fragment);
   }

@@ -848,6 +848,8 @@ Remember that each button needs it's own appropriate icon.
   - clear selection: if there is a reference to an editor, ask the monaco editor to clear the current selection.
   - select all: if there is a reference to an editor, ask the monaco editor to select all the text.
   - hasSelection: returns true if there is an editor and it has a non-empty selection
+  - getCurrentStyle: return the type of the currently selected line. This is done by checking the comparing the start of the line (after trimming) with all the possible markdown values (heading1, heading2, ..., heading6, code, quote,..) 
+     
 
 
 ### Undo service
@@ -983,6 +985,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           # update the index cause the fragment will be replaced by the previous
           while (service.fragmentsIndex[index] == fragment):
             service.fragmentsIndex[index] = prevFragment
+            index += 1
           projectService.deleteTextFragment(fragment)
           projectService.markOutOfDate(prevFragment)
 
@@ -990,12 +993,15 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       def insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex, index):
         toAdd = service.createTextFragment(line, fragmentPrjIndex)
         service.fragmentsIndex[index] = toAdd
-        fragmentLineIndex = index - (fragmentStart + fragment.lines.length + 1)
-        # copy over all the lines and adjust the index
-        while fragmentLineIndex > 0 and fragment.lines.length > 0:
-          toAdd.lines.insert(0, fragment.lines.pop())
-          service.fragmentsIndex[index + fragmentLineIndex] = toAdd
-          fragmentLineIndex -= 1
+        localIndexOfNewFragment = index - (fragmentStart + 1) # add 1 to fragment start for the title
+        # the index of the new fragment local to the previous now contains a title instead of line, so remove
+        if localIndexOfNewFragment < fragment.lines.length:
+          fragment.lines.deleteAtIndex(localIndexOfNewFragment)
+          #everything that came after local-index needs to be copied to the new fragment
+          while localIndexOfNewFragment < fragment.lines.length:
+            index += 1
+            service.fragmentsIndex[index] = toAdd
+            toAdd.lines.insert(0, fragment.lines.pop())
         projectService.markOutOfDate(fragment)
 
 

@@ -25,7 +25,7 @@ class LineParser {
     let title = trimmedLine.replace(/#/g, '').trim();
     let textFragment = {
       title: title,
-      depthLevel: depthLevel,
+      depth: depthLevel,
       isOutOfDate: true,
       lines: [],
       outOfDateTransformers: []
