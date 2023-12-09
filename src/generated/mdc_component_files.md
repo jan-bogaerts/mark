@@ -48,3 +48,5 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\results_view\\transformer-status_icon\\TransformerStatusIcon.js"]
 # MarkdownCode > components > body > fragment-status icon
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\body\\fragment-status_icon\\FragmentStatusIcon.js"]
+# MarkdownCode > components > log window
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\components\\log_window\\LogWindow.js"]

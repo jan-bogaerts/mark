@@ -40,3 +40,5 @@
 {"TransformerStatusIcon": {"transformer": "A reference to the transformer object for which status info is displayed"}}
 # MarkdownCode > components > body > fragment-status icon
 {"FragmentStatusIcon": {"fragment": "A reference to the text-fragment object"}}
+# MarkdownCode > components > log window
+{"LogWindow": {}}

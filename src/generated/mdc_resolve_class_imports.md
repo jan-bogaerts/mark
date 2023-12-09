@@ -44,8 +44,6 @@
 {"PluginListRendererService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"},{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
 # MarkdownCode > services > transformers > constant-extractor service
 {"ConstantExtractorService": [{"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"PluginRendererService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "GPTService", "path": "src\\services\\gpt_service\\GPTService", "service_loc": "# MarkdownCode > services > gpt service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
 # MarkdownCode > services > transformers > constants-resource renderer
 {"ConstantsResourceRenderer": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}]}
 # MarkdownCode > services > transformers > parser validator service
@@ -58,3 +56,7 @@
 {"LineParser": [{"service": "LineParserHelpers", "path": "src\\services\\line_parser\\line_parser_helpers\\LineParserHelpers", "service_loc": "# MarkdownCode > services > line parser > line parser helpers"}, {"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}, {"service": "KeyService", "path": "src\\services\\key_service\\KeyService", "service_loc": "# MarkdownCode > services > key service"}]}
 # MarkdownCode > services > line parser > line parser helpers
 {"LineParserHelpers": [{"service": "ProjectService", "path": "src\\services\\project_service\\ProjectService", "service_loc": "# MarkdownCode > services > project service"}]}
+# MarkdownCode > services > log service
+{"LogService": []}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"PluginRendererService": [{"service": "FolderService", "path": "src\\services\\folder_service\\FolderService", "service_loc": "# MarkdownCode > services > folder service"}, {"service": "GPTService", "path": "src\\services\\gpt_service\\GPTService", "service_loc": "# MarkdownCode > services > gpt service"}, {"service": "TransformerBaseService", "path": "src\\services\\transformer-base_service\\TransformerBaseService", "service_loc": "# MarkdownCode > services > transformer-base service"}, {"service": "KeyService", "path": "src\\services\\key_service\\KeyService", "service_loc": "# MarkdownCode > services > key service"}]}

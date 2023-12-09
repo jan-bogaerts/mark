@@ -10,7 +10,7 @@ class FileSection extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      autoSave: projectService.autoSave,
+      autoSave: projectService.getAutoSaveState(),
       isDirty: projectService.isDirty,
       filename: projectService.filename
     };
@@ -28,13 +28,13 @@ class FileSection extends Component {
 
   updateState = () => {
     this.setState({
-      autoSave: projectService.autoSave,
+      autoSave: projectService.getAutoSaveState(),
       isDirty: projectService.isDirty,
       filename: projectService.filename
     });
   }
 
-  tryCanClose = async (e) => { 
+  tryCanClose = async () => {
     const res = await this.trySave();
     window.electron.canCloseProcessed(res);
   }
@@ -42,7 +42,7 @@ class FileSection extends Component {
   trySave = async () => {
     if (this.state.isDirty) {
       const confirm = await dialogService.confirm('Do you want to save the changes first?');
-      if (confirm === null) {
+      if (confirm === undefined) {
         return false;
       } else if (confirm) {
         await this.saveProject();
@@ -52,7 +52,7 @@ class FileSection extends Component {
   }
 
   newProject = async () => {
-    if (await this.trySave() === true) {
+    if (await this.trySave()) {
       if (!window.electron.isPluginMode) {
         await storageService.new();
       }
@@ -61,13 +61,15 @@ class FileSection extends Component {
 
   openProject = async () => {
     if (window.electron.isPluginMode) return;
-    try {
-      const dialogResult = await dialogService.showOpenDialog();
-      if (dialogResult && !dialogResult.canceled && dialogResult.filePaths) {
-        storageService.open(dialogResult.filePaths[0]);
+    if (await this.trySave()) {
+      try {
+        const dialogResult = await dialogService.showOpenDialog();
+        if (dialogResult && !dialogResult.canceled && dialogResult.filePaths) {
+          await storageService.open(dialogResult.filePaths[0]);
+        }
+      } catch (error) {
+        dialogService.showErrorDialog(error);
       }
-    } catch (error) {
-      dialogService.showErrorDialog(error);
     }
   }
 
@@ -80,6 +82,7 @@ class FileSection extends Component {
         filename = dialogResult.filePath;
       }
       await storageService.save(filename);
+      this.updateState(); // Update state after saving
     } catch (error) {
       dialogService.showErrorDialog(error);
     }
@@ -89,7 +92,8 @@ class FileSection extends Component {
     try {
       const dialogResult = await dialogService.showSaveDialog();
       if (dialogResult && !dialogResult.canceled && dialogResult.filePath) {
-        storageService.save(dialogResult.filePath);
+        await storageService.save(dialogResult.filePath);
+        this.updateState(); // Update state after saving
       }
     } catch (error) {
       dialogService.showErrorDialog(error);
@@ -99,7 +103,7 @@ class FileSection extends Component {
   toggleAutoSave = () => {
     const newValue = !this.state.autoSave;
     projectService.setAutoSaveState(newValue);
-    this.setState({ autoSave: newValue });
+    this.updateState(); // Update state after toggling auto-save
   }
 
   render() {

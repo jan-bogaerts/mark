@@ -44,8 +44,6 @@ PluginTransformerService
 PluginListRendererService
 # MarkdownCode > services > transformers > constant-extractor service
 ConstantExtractorService
-# MarkdownCode > services > transformers > plugin-renderer service
-PluginRendererService
 # MarkdownCode > services > transformers > parser validator service
 ParserValidatorService
 # MarkdownCode > services > transformers > constants-resource renderer
@@ -58,3 +56,7 @@ StorageService
 LineParser
 # MarkdownCode > services > line parser > line parser helpers
 LineParserHelpers
+# MarkdownCode > services > log service
+LogService
+# MarkdownCode > services > transformers > plugin-renderer service
+PluginRendererService

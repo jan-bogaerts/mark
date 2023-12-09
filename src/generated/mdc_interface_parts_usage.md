@@ -70,8 +70,6 @@
 {"# MarkdownCode > services > folder service": {"FolderService": {}}}
 # MarkdownCode > components > body > results view > transformer-status icon
 {"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > position-tracking service": {"PositionTrackingService": {}}, "# MarkdownCode > services > Theme service": {"ThemeService": {"getCurrentTheme": "A method that returns the current theme of the application. Used by components to retrieve the currently selected theme and apply it."}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > gpt service": {"GPTService": {}}}
 # MarkdownCode > components > body > fragment-status icon
 {"# MarkdownCode > services > project service": {"ProjectService": {"eventTarget": "A property that holds the event target for dispatching events. It is used to register event handlers for 'fragment-out-of-date', 'key-changed', 'fragment-building', and 'fragment-up-to-date' events."}}, "# MarkdownCode > services > Theme service": {"ThemeService": {"getCurrentTheme": "A method that returns the current theme of the application. Used by components to retrieve the currently selected theme and apply it."}}, "# MarkdownCode > services > dialog service": {"DialogService": {"showErrorDialog": "A method that displays an error dialog with the provided error message", "showSaveDialog": "A function that opens a dialog box allowing the user to select a location and name to save a file, returning the selected file name", "showOpenDialog": "A function that opens a dialog box allowing the user to select a file to open, returning the selected file name"}}}
 # MarkdownCode > services > transformers > constants-resource renderer
@@ -86,3 +84,7 @@
 {"# MarkdownCode > services > project service": {"ProjectService": {}}, "# MarkdownCode > services > key service": {"KeyService": {}}}
 # MarkdownCode > services > line parser > line parser helpers
 {"# MarkdownCode > services > project service": {"ProjectService": {"dispatchEvent": "A function that dispatches an event with the provided name from the ProjectService."}}}
+# MarkdownCode > components > log window
+{"# MarkdownCode > services > Theme service": {"ThemeService": {"getCurrentTheme": "A method that returns the current theme of the application. Used by components to retrieve and apply the currently selected theme."}}, "# MarkdownCode > services > dialog service": {"DialogService": {}}}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"# MarkdownCode > services > folder service": {"FolderService": {}}, "# MarkdownCode > services > gpt service": {"GPTService": {}}, "# MarkdownCode > services > transformer-base service": {"TransformerBaseService": {}}, "# MarkdownCode > services > key service": {"KeyService": {}}}

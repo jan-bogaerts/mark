@@ -1,6 +1,5 @@
 import CybertronService from '../cybertron_service/CybertronService';
 import ProjectService from '../project_service/ProjectService';
-import BuildStackService from '../build-stack_service/BuildStackService';
 
 /**
  * BuildService class
@@ -16,6 +15,7 @@ class BuildService {
    * Toggles the debug mode
    */
   set debug(value) {
+    if (this._debug === value) return;
     this._debug = value;
     localStorage.setItem('debug', value);
   }

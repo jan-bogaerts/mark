@@ -26,6 +26,7 @@
     "react-icons": "^4.11.0",
     "react-monaco-editor": "^0.54.0",
     "react-scripts": "5.0.1",
+    "uuid": "^9.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -71,7 +72,9 @@
     "directories": {
       "buildResources": "public"
     },
-    "extraResources": ["./resources/**"],
+    "extraResources": [
+      "./resources/**"
+    ],
     "mac": {
       "target": "dmg"
     },

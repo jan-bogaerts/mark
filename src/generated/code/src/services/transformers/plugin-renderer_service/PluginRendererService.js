@@ -1,9 +1,11 @@
+
 import fs from 'fs';
 import path from 'path';
 import resources from '../../../resources.json';
 import FolderService from '../../folder_service/FolderService';
 import GPTService from '../../gpt_service/GPTService';
 import TransformerBaseService from '../../transformer-base_service/TransformerBaseService';
+import KeyService from '../../key_service/KeyService';
 
 /**
  * PluginRendererService class
@@ -48,8 +50,8 @@ class PluginRendererService extends TransformerBaseService {
       if (content.endsWith("```")) {
         content = content.substring(0, content.length - "```".length);
       }
-      return content;
     }
+    return content;
   }
 
   /**
@@ -58,13 +60,17 @@ class PluginRendererService extends TransformerBaseService {
    * @returns {string} - The filename of the rendered result
    */
   async renderResult(fragment) {
-    const [message, keys] = await this.buildMessage(fragment);
+    const location = KeyService.calculateLocation(fragment);
+    const [message, keys] = await this.buildMessage(fragment, location.includes('shared >'));
     if (!message) {
       return null;
     }
-    let result = await GPTService.sendRequest(this, fragment.key, message);
-    result = this.cleanResult(result);
-    const filename = this.saveFile(fragment.key, result);
+    let filename = '';
+    if (fragment.lines.length) {
+      const result = await GPTService.sendRequest(this, fragment.key, message);
+      const cleanedResult = this.cleanResult(result);
+      filename = this.saveFile(fragment.key, cleanedResult);
+    }
     const key = keys.join(' | ');
     this.cache.setResult(key, filename, message);
     return filename;
@@ -72,16 +78,24 @@ class PluginRendererService extends TransformerBaseService {
 
   /**
    * Build the message
-   * @param {object} fragment - The fragment to be used to build the message
+   * @param {object} fragment - The fragment to be used in the message
+   * @param {boolean} asShared - Whether the fragment is shared
    * @returns {Array} - The built message and keys
    */
-  async buildMessage(fragment) {
-    const result = [
-      { role: 'system', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_0 },
-      { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_1
-		.replace('{{title}}', fragment.title)
-		.replace('{{content}}', await this.constantsService.getResult(fragment)) }
-    ];
+  async buildMessage(fragment, asShared) {
+    let result;
+    const content = await this.constantsService.getResult(fragment);
+    if (asShared) {
+      result = [
+        { role: 'system', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_0 },
+        { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_1.replace('{{content}}', content) }
+      ];
+    } else {
+      result = [
+        { role: 'system', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_2 },
+        { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_3.replace('{{title}}', fragment.title).replace('{{content}}', content) }
+      ];
+    }
     return [result, []];
   }
 }

@@ -96,11 +96,15 @@
 []
 # MarkdownCode > services > transformers > plugin-transformer service
 []
-# MarkdownCode > services > transformers > plugin-renderer service
-[{"start": 45, "end": 95, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 97, "end": 100, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}]
 # MarkdownCode > services > transformers > plugin-list renderer service
 []
 # MarkdownCode > services > transformers > constants-resource renderer
 []
 # MarkdownCode > services > transformers > parser validator service
 []
+# MarkdownCode > components > log window
+[]
+# MarkdownCode > services > log service
+[]
+# MarkdownCode > services > transformers > plugin-renderer service
+[{"start": 50, "end": 60, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 62, "end": 65, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}, {"start": 71, "end": 121, "name": "MarkdownCode_services_transformers_plugin_renderer_service_2"}, {"start": 123, "end": 126, "name": "MarkdownCode_services_transformers_plugin_renderer_service_3"}]

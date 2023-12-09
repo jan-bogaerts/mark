@@ -44,8 +44,6 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\plugin-list_renderer_service\\PluginListRendererService.js"]
 # MarkdownCode > services > transformers > constant-extractor service
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\constant-extractor_service\\ConstantExtractorService.js"]
-# MarkdownCode > services > transformers > plugin-renderer service
-["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\plugin-renderer_service\\PluginRendererService.js"]
 # MarkdownCode > services > transformers > constants-resource renderer
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\constants-resource_renderer\\ConstantsResourceRenderer.js"]
 # MarkdownCode > services > transformers > parser validator service
@@ -58,3 +56,7 @@
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\line_parser\\LineParser.js"]
 # MarkdownCode > services > line parser > line parser helpers
 ["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\line_parser\\line_parser_helpers\\LineParserHelpers.js"]
+# MarkdownCode > services > log service
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\log_service\\LogService.js"]
+# MarkdownCode > services > transformers > plugin-renderer service
+["C:\\Users\\janbo\\Documents\\dev\\markdownCode/src/generated/code/src\\services\\transformers\\plugin-renderer_service\\PluginRendererService.js"]

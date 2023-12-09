@@ -73,6 +73,7 @@ class AllSparkService {
   }
 
   async load() {
+    if (window.electron.isLogMode === true) return;
     CybertronService.register(new ConstantExtractorService(), false);
     CybertronService.register(new PluginRendererService(), true);
     CybertronService.register(new PluginListRendererService(), true);
@@ -83,7 +84,7 @@ class AllSparkService {
   }
 
   async loadPlugins() {
-    if (window.electron.isPluginMode === true) return;
+    if (window.electron.isPluginMode === true || window.electron.isLogMode === true) return;
     const pluginDefs = this.getPlugins();
     for (const pluginDef of pluginDefs) {
       const pluginObj = await this.loadPlugin(pluginDef);

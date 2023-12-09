@@ -219,7 +219,7 @@ class LineParserHelpers {
       if (fragmentStart === index) {
         this.removeFragmentTitle(service, fragment, null, index);
       } else {
-        fragment.lines.splice(index - fragmentStart + 1, 1);
+        fragment.lines.splice(index - fragmentStart - 1, 1);
       }
     }
   }

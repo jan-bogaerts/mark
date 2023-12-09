@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Tooltip, Button, Divider } from 'antd';
-import { BuildOutlined, CodeOutlined, PlayCircleOutlined, BugOutlined, StepForwardOutlined } from '@ant-design/icons';
+import { BuildOutlined, CodeOutlined, PlayCircleOutlined, BugOutlined, StepForwardOutlined, FileTextOutlined } from '@ant-design/icons';
 import buildService from '../../../../services/build_service/BuildService';
 import projectService from '../../../../services/project_service/ProjectService';
 import positionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
@@ -44,6 +44,7 @@ class BuildSection extends Component {
       allDisabled: !projectService.isAnyFragmentOutOfDate() || isBuilding,
       fragmentDisabled: !(activeFragment?.isOutOfDate && !activeEntryPoint?.isFullRender) || isBuilding,
       transformerDisabled: !activeFragment || !activeTransformer || activeTransformer.isFullRender || isBuilding,
+      debug: debug,
       nextDisabled: !debug && !isBuilding,
     });
   }
@@ -85,6 +86,10 @@ class BuildSection extends Component {
     }
   }
 
+  handleShowLogClick = () => {
+    window.electron.showLogWindow(true);
+  }
+
   render() {
     const theme = themeService.getCurrentTheme();
     return (
@@ -99,6 +104,9 @@ class BuildSection extends Component {
           <Button icon={<PlayCircleOutlined />} onClick={this.handleTransformerClick} disabled={this.state.transformerDisabled} />
         </Tooltip>
         <Divider type="vertical" style={{ height: '24px' }} />
+        <Tooltip title="Show log window">
+          <Button icon={<FileTextOutlined />} onClick={this.handleShowLogClick} />
+        </Tooltip>
         <Tooltip title="Toggle debug mode">
           <Button icon={<BugOutlined />} onClick={this.handleDebugClick} type={this.state.debug ? 'primary' : 'default'} />
         </Tooltip>

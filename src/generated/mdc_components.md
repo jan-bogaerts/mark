@@ -48,3 +48,5 @@
 ["TransformerStatusIcon"]
 # MarkdownCode > components > body > fragment-status icon
 ["FragmentStatusIcon"]
+# MarkdownCode > components > log window
+["LogWindow"]

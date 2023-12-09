@@ -27,7 +27,16 @@
           used.append(component)
     return to_render, used
 ```
-
+- getPath(services, fragment): calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
+  ```python
+    fullTitle = services.keyService.calculateLocation(fragment)
+    titleToPath = fullTitle.replace(":", "").replace('?', '').replace('!', '')
+    pathItems = titleToPath.split(" > ")
+    pathItems = [part.replace(" ", "_") for part in pathItems]
+    pathItems[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
+    return os.path.join(services.folderService.output, *pathItems)
+  ```
+- readFile(filePath): read the contents of the specified file and return as a string.
 ## transformers
 
 ### compress service
@@ -128,8 +137,8 @@
 
   - return:
     ```python
-    if len(refs.projectService.textFragments) >= 1:
-      return result, [refs.projectService.textFragments[1].key ]
+    if len(services.projectService.textFragments) >= 1:
+      return result, [services.projectService.textFragments[1].key ]
     else:
       result, []
     ```
@@ -930,7 +939,7 @@
                   imported[service] = True
                   service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
                   results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
-      for fragment in refs.projectService.textFragments:
+      for fragment in services.projectService.textFragments:
           globalFeatures = await deps['global component features'].getResult(fragment)
           if globalFeatures:
             cur_path_parts = fragment.key.split(" > ")
@@ -1070,7 +1079,7 @@
       if not declared_in:
           raise new Error(f"can't find import location for component {item} used in {fragment.key}")
       else:
-          declaredInFragment = refs.projectService.getFragment(declared_in.replace("'", "").replace('"', '')) # remove quotes cause gpr sometimes adds them
+          declaredInFragment = services.projectService.getFragment(declared_in.replace("'", "").replace('"', '')) # remove quotes cause gpr sometimes adds them
           if not declaredInFragment:
             raise new Error(f'component declared in {declared_in}, but fragment cant be found at specified index')
           classes = await deps.classes.getResult(declaredInFragment)
@@ -1221,7 +1230,7 @@
           for import_def in importsList:
             service = import_def['service']
             serviceLoc = import_def['service_loc']
-            serviceFragment = refs.projectService.getFragment(serviceLoc)
+            serviceFragment = services.projectService.getFragment(serviceLoc)
             if not serviceFragment:
               raise new Error(f'fragment with key {serviceLoc} not found in the project')
             interfaceDef = (await deps['found interface parts'].getResult(serviceFragment))?.[service]
@@ -1286,7 +1295,7 @@
           for import_def in importsList:
             service = import_def['service']
             serviceLoc = import_def['service_loc']
-            serviceFragment = refs.projectService.getFragment(serviceLoc)
+            serviceFragment = services.projectService.getFragment(serviceLoc)
             if not serviceFragment:
               raise new Error(f'fragment with key {serviceLoc} not found in the project')
             interfaceDef = (await deps['found interface parts'].getResult(serviceFragment))?.[service]
@@ -1330,13 +1339,13 @@
 - the component-renderer service is responsible for generating all the code related to UI components.
 - used to build UI applications
 - name: 'component renderer'
-- dependencies: ['components', 'declare or use component', 'is service singleton', 'global component features', 'component exact description', 'component imports', 'primary component']
+- dependencies: ['components', 'declare or use component', 'is service singleton', 'component imports', 'primary component', 'consumed interfaces component', 'usage-extractor']
 - isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
   - iterator(fragment, callback, result): 
     ```python
-      renderToPath = getPath(fragment)
+      renderToPath = getPath(services, fragment)
       components = await deps.components.getResult(fragment)
       primary = await deps['primary component'].getResult(fragment)
       if not primary:
@@ -1346,15 +1355,6 @@
       for component in toRender:
         if component != primary:
           callback(fragment, component, components, renderToPath) # renderToPath for the cleanup (which saves)
-    ```
-  - getPath(fragment): calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
-    ```python
-      fullTitle = services.keyService.calculateLocation(fragment)
-      titleToPath = fullTitle.replace(":", "").replace('?', '').replace('!', '')
-      pathItems = titleToPath.split(" > ")
-      pathItems = [part.replace(" ", "_") for part in pathItems]
-      pathItems[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
-      return os.path.join(services.folderService.output, *pathItems)
     ```
   - cleanResponse(response, fragment, component, components, renderToPath): save to file
     ```python
@@ -1389,7 +1389,49 @@
         return f'\nMake certain that {component} has:\n- ' + '\n- '.join(toJoin) + '\n'
       return ''
     ```
-  - buildMessage(fragment, component, components):
+  - getOtherInterfaces(fragment, component): get the interface definitions of other components & classes that are used by this component. Only include parts of the interface that are actually used in the code that needs to be rendered.
+    ```python
+      interfaceTxt = ''
+      all = (await deps['consumed interfaces component'].getResult(fragment))?.[component]
+      if all:
+        for key, value in all.items():
+          found = False
+          results = {}
+          for service, usage in value:
+            interfaceTxt += f'\n{service} has the following interface:\n' + JSON.stringify(usage) + '\n'
+      return interfaceTxt
+    ```    
+  - getAllImports(fragment, component): build the text that defines which modules should be imported
+    ```python
+      importsTxt = None
+      constants = deps.constants.cache.getFragmentResults(fragment.key)
+      if constants:
+        resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
+        relPath = os.path.relpath(resourcesPath, renderToPath)
+        relPath = relPath.replaceAll('\\', '/')
+        importsTxt += f"The const 'resources' can be imported from {relPath}\n"
+      imports = await deps['component imports'].getResult(fragment)?.[item]
+      if imports:
+        for importDef in imports:
+          importsTxt += await getImportServiceLine(importDef, renderToPath)
+      if importsTxt:
+        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
+      return importsTxt
+    ```
+  - getImportServiceLine(importDef, renderToPath):
+    ```python
+      service = importDef['service']
+      servicePath = importDef['path']
+      servicePath = os.path.relpath(servicePath, renderToPath)
+      isGlobal = (await deps['is service singleton'].getResult(importDef['key']))?.[service]
+      if isGlobal:
+          serviceTxt = "global object"
+          service = service.lower()
+      else:
+          serviceTxt = "service"
+      return f"The {serviceTxt} {service} can be imported from {servicePath} (exported as default)\n"
+    ```          
+  - buildMessage(fragment, component, components, renderToPath):
     - result (json array):
       - role: system, content:
         
@@ -1398,29 +1440,210 @@
         > 
         > use the following development stack:
         > {{devStack}}
-        >
-        > bad response:
-        > The component 'X' is not declared in any of the titles.
 
         replace:
         - {{name}}: `component`
-        - {{devStack}}: `description`  
+        - {{devStack}}: `services.projectService.textFragments[1]?.lines.join('\n')`  
         
       - role: user, content:
 
         > The component '{{name}}' is described as follows:
         > {{ownDescription}}
-        > {{externalDescription}}
-        > globally declared features:
-        > {{globalFeatures}}
-        >
-        > imports (only include the imports that are used in the code):
-        > {{importsToAdd}}
+        > {{externalDescription}}{{otherInterfaces}}{{importsToAdd}}
         
         replace:
         - {{name}}: `component`
         - {{ownDescription}}: `if len(components) > 1: await deps['component exact description'].getResult(fragment) else: '\n'.join(fragment.lines)`
         - {{externalDescription}}:  `await getExternalDescription(fragment, component)`
-        - {{globalFeatures}}: 
+        - {{otherInterfaces}}: `await getOtherInterfaces(fragment, component)`
+        - {{importsToAdd}}: `await getAllImports(fragment, component, renderToPath)`
 
-    - return: `result, [ component ]`    
+    - return: `result, [ component ]`
+
+### class-renderer service
+- the class-renderer service is responsible for generating all the code for the services in the form of classes.
+- used to build UI applications
+- name: 'class renderer'
+- dependencies: ['classes', 'declare or use class', 'is service singleton', 'class imports', 'primary class', 'consumed interfaces class', 'usage-extractor']
+- isJson: false
+- functions:
+  - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
+  - iterator(fragment, callback, result): 
+    ```python
+      renderToPath = getPath(services, fragment)
+      classes = await deps.classes.getResult(fragment)
+      primary = await deps['primary class'].getResult(fragment)
+      if not primary:
+        raise Exception('no primary found for ', fragment.title)
+      callback(fragment, primary, classes, renderToPath)
+      for item in classes:
+        if item != primary:
+          callback(fragment, item, classes, renderToPath) # renderToPath for the cleanup (which saves)
+    ```
+  - cleanResponse(response, fragment, item, classes, renderToPath): save to file
+    ```python
+      response = response.strip() # need to remove the newline at the end
+      if response.startswith("```javascript"):
+          response = response[len("```javascript"):]
+      if response.endswith("```"):
+          response = response[:-len("```")]
+      if not os.path.exists(renderToPath):
+          os.makedirs(renderToPath)
+      filePath = os.path.join(renderToPath, item + ".js")
+      with open(filePath, "w") as writer:
+          writer.write(response)
+      return filePath
+    ```    
+  - getExternalDescription(fragment, item): get how other code has used the class
+    ```python
+      results = {}
+      found = False
+      all = (await deps['usage-extractor'].getResult(fragment))?.[item]
+      if all:
+        for key, value in all.items():
+          for service, usage in value:
+            for feature, desc in usage:
+              if not feature in results:
+                results[feature] = desc
+                found = True
+      if found:
+        toJoin = []
+        for key, value in results.items():
+          toJoin.append(f'{key}: {value}')
+        return f'\nMake certain that {item} has:\n- ' + '\n- '.join(toJoin) + '\n'
+      return ''
+    ```
+  - getOtherInterfaces(fragment, item): get the interface definitions of other classes that are used by this class. Only include parts of the interface that are actually used in the code that needs to be rendered.
+    ```python
+      interfaceTxt = ''
+      all = (await deps['consumed interfaces class'].getResult(fragment))?.[item]
+      if all:
+        for key, value in all.items():
+          found = False
+          results = {}
+          for service, usage in value:
+            interfaceTxt += f'\n{service} has the following interface:\n' + JSON.stringify(usage) + '\n'
+      return interfaceTxt
+    ```  
+  - getAllImports(fragment, item, renderToPath): build the text that defines which modules should be imported
+    ```python
+      importsTxt = None
+      constants = deps.constants.cache.getFragmentResults(fragment.key)
+      if constants:
+        resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
+        relPath = os.path.relpath(resourcesPath, renderToPath)
+        relPath = relPath.replaceAll('\\', '/')
+        importsTxt += f"The const 'resources' can be imported from {relPath}\n"
+      imports = await deps['class imports'].getResult(fragment)?.[item]
+      if imports:
+        for importDef in imports:
+          importsTxt += await getImportServiceLine(importDef, renderToPath)
+      if importsTxt:
+        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
+      return importsTxt
+    ```    
+  - getImportServiceLine(importDef, renderToPath):
+    ```python
+      service = importDef['service']
+      servicePath = importDef['path']
+      servicePath = os.path.relpath(servicePath, renderToPath)
+      isGlobal = (await deps['is service singleton'].getResult(importDef['key']))?.[service]
+      if isGlobal:
+          serviceTxt = "global object"
+          service = service.lower()
+      else:
+          serviceTxt = "service"
+      return f"The {serviceTxt} {service} can be imported from {servicePath} (exported as default)\n"
+    ```      
+  - buildMessage(fragment, item, classes, renderToPath):
+    - result (json array):
+      - role: system, content:
+        
+        > Act as a full-stack ai software developer.
+        > It is your task to write all the code for the class '{{name}}'
+        > 
+        > use the following development stack:
+        > {{devStack}}
+       
+        replace:
+        - {{name}}: `item`
+        - {{devStack}}: `services.projectService.textFragments[1]?.lines.join('\n')`  
+        
+      - role: user, content:
+
+        > The class '{{name}}' is described as follows:
+        > {{ownDescription}}
+        > {{externalDescription}}{{otherInterfaces}}{{importsToAdd}}
+        
+        replace:
+        - {{name}}: `item`
+        - {{ownDescription}}: `if len(classes) > 1: await deps['class exact description'].getResult(fragment) else: '\n'.join(fragment.lines)`
+        - {{externalDescription}}:  `await getExternalDescription(fragment, item)`
+        - {{otherInterfaces}}: `await getOtherInterfaces(fragment, item)`
+        - {{importsToAdd}}: `await getAllImports(fragment, item, renderToPath)`
+
+    - return: `result, [ item ]`
+
+### render service
+- the render service is the main transformer responsible for generating code from fragments.
+- used to render code
+- name: 'renderer'
+- isEntryPoint: true
+- dependencies: ['class renderer', 'component renderer']
+- functions:
+  - iterator(fragment, callback, result): 
+    ```python
+      result['components'] = await deps['component renderer'].getResult(fragment)
+      result['classes'] = await deps['class renderer'].getResult(fragment)
+    ```
+  - buildMessage(fragment, item, classes, renderToPath): `return ''`
+
+### update-code service
+- The update-code service can be used to update the code that was rendered for a fragment according to the new specs of that fragment.
+- Useful to check if the system understands the fragment and can be used as input for other processes.
+- name: 'update code'
+- dependencies: ['constants', 'renderer']
+- isJson: false
+- calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
+- iterator(fragment, callback, result): 
+    ```python
+      files = await deps.renderer.getResult(fragment)
+      if files:
+        if files.components:
+          for file in files.components:
+            code = readFile(file)
+            iterator(fragment, code)
+        if files.classes:
+          for file in file.classes:
+            code = readFile(file)
+            iterator(fragment, code)
+    ```
+- build-message(fragment, code):
+  - result (json array):
+    - role: system, content:
+      
+      > Act as a full-stack ai software developer.
+      > It is your task to update the specified code according to the new specifications.
+      > 
+      > - keep comments
+      > - minimize any explanation, if any
+      > 
+      > use the following development stack:
+      > {{devStack}}
+
+      replace:
+        - {{name}}: `services.projectService.textFragments[1]?.lines.join('\n')`
+
+    - role: user, content: 
+
+      > {{code}}
+      > 
+      > update the previous code so that it fits the new specifications:
+      > 
+      > {{specs}}
+
+      replace:
+        - {{code}}: `code`
+        - {{specs}}: `await deps.constants.getResult(fragment)`
+
+  - return result, [ ]

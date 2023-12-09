@@ -7,6 +7,7 @@ import StorageService from './services/project_service/storage_service/StorageSe
 
 import allSpark from './services/all-spark_service/AllSparkService';  // import so that everything is registered
 import DialogService from './services/dialog_service/DialogService';
+import LogWindow from './components/log_window/LogWindow';
 
 let isLoaded = false;
 
@@ -42,6 +43,11 @@ class App extends Component {
   }
 
   render() {
+    if (window.electron.isLogMode === true) {
+      return (
+        <LogWindow />
+      );
+    }
     return (
       <MainWindow />
     );

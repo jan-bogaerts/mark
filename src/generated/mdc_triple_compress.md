@@ -102,8 +102,6 @@ The results-view-tab component uses the monaco editor npm package to display tra
 The results-view-context-menu is a component that wraps the Dropdown antd component and requires the properties 'transformer' and 'key' to be provided, displaying a dropdown menu with a 'more' button icon positioned as a floating button in the top-right corner, allowing users to select the GPT model to be used by the transformer and providing submenu items from the gpt-service's list of available models, with the currently selected model highlighted, and the ability to update the model-name used for the transformer when a different model is selected, as well as an option to select the GPT model for the current key, with similar submenu items and functionality, and including a splitter and a "Refresh" option for recalculating the result for the current tab.
 # MarkdownCode > services > transformers > constant-extractor service
 The constant-extractor service extracts constant definitions from source code and replaces them with references to a json file, inheriting from the transformer-base service and having functions for extracting quotes, collecting responses, rendering results, and retrieving up-to-date results using caching.
-# MarkdownCode > services > transformers > plugin-renderer service
-The plugin-renderer service is used to translate a plugin definition into a javascript module, inherits from the transformer-base service, and has functions for saving a file, cleaning content, rendering a result, and building a message.
 # MarkdownCode > components > body > fragment-status icon
 The fragment-status icon component displays the status of a text-fragment object using different icons based on the fragment's depth, with a spinner shown if the fragment is being built, and the icon's color determined by the fragment's status, while also including a tooltip and registering event handlers with the project-service for various events related to the fragment's status.
 # MarkdownCode > services > transformers > parser validator service
@@ -118,3 +116,9 @@ The storage service handles reading and writing project data, including loading 
 The line-parser service is a singleton object that parses markdown lines and updates text-fragments in the project-service, with functions to create, clear, get the start line, parse, insert, and delete lines.
 # MarkdownCode > services > line parser > line parser helpers
 The 'LineParserHelpers' module provides various functions for the line parser service, such as retrieving, updating, inserting, and deleting fragments, handling empty lines, title lines, regular lines, and code blocks.
+# MarkdownCode > components > log window
+The log-window component displays log messages in a secondary window and registers the event handler `handleLogMsg` when loaded, which adds the parameter value to the `logMsgs` state field, and removes it when unloaded, while the log window renderer displays the text in a scrollable div.
+# MarkdownCode > services > log service
+The log service is a global singleton that manages user messages, with functions to create log items for GPT messages and send them to the log window, returning the log object, as well as creating and sending serialized objects with response and UUID fields to the log window.
+# MarkdownCode > services > transformers > plugin-renderer service
+The plugin-renderer service translates a plugin definition into a javascript module, inherits from the transformer-base service, sets `this.constantsService` during construction, and has functions to save files, clean content, render results, and build messages.

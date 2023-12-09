@@ -50,6 +50,9 @@ class KeyService {
    * @returns {string} The location of the fragment
    */
   calculateLocation(fragment, index) {
+    if (index === undefined) {
+      index = ProjectService.textFragments.indexOf(fragment);
+    }
     let currentDepth = fragment.depth;
     let result = fragment.title;
 

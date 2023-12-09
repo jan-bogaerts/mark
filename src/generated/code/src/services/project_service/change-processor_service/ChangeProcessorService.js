@@ -40,6 +40,9 @@ class ChangeProcessorService {
         LineParser.deleteLine(lineEnd); // need to do in reverse
         lineEnd -= 1;
       }
+      if (curLine === 0 && lineEnd === 0) {
+        LineParser.parse(model.getLineContent(1), 0);
+      }
 
       if (cleanedText.length > 0) { // only insert if there is text (split of empty string gives array with 1 empty string)
         while (lineIdx < lines.length) {

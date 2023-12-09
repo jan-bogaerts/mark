@@ -8,6 +8,7 @@ const mainRemote = require("@electron/remote/main");
 
 let mainWindow;
 let pluginsWindow;
+let logWindow;
 let canCloseResolver = null; // a callback to resolve the promise, that is set when the can-close event is sent and main is waiting for a response
 
 const windowConfig = {
@@ -74,6 +75,9 @@ function createWindow () {
       if (pluginsWindow) {
         pluginsWindow.close();
       }
+      if (logWindow) {
+        logWindow.close();
+      }
       mainWindow.destroy();  // important: need to destroy otherwise we are stuck in a loop
     }
   });
@@ -95,7 +99,6 @@ function createPluginWindow (path) {
     }
     mainRemote.enable(pluginsWindow.webContents);
 
-
     // Emitted when the window is closed.
     pluginsWindow.on('closed', function () {
       pluginsWindow = null;
@@ -103,6 +106,33 @@ function createPluginWindow (path) {
     });
   });
 }
+
+function createLogWindow() {
+  return new Promise((resolve, reject) => {
+    // Create the browser window.
+    if (logWindow) { // not if already open
+      logWindow.focus();
+      resolve();
+      return;
+    }
+    logWindow = new BrowserWindow(windowConfig);
+    logWindow.setTitle('Log');
+    const urlWithParams = `${url}?log=true&isPackaged=${app.isPackaged}`;
+    logWindow.loadURL(urlWithParams);
+    // Automatically open Chrome's DevTools in development mode.
+    if (!app.isPackaged) {
+      logWindow.webContents.openDevTools();
+    }
+    mainRemote.enable(logWindow.webContents);
+
+    // Emitted when the window is closed.
+    logWindow.on('closed', function () {
+      logWindow = null;
+      resolve();
+    });
+  });
+}
+
 
 app.on('ready', createWindow);
 
@@ -160,5 +190,25 @@ ipcMain.handle('openPluginEditor', async (event, path) => {
 ipcMain.handle('can-close-processed', async (event, canClose) => {
   if (canCloseResolver) {
     canCloseResolver(canClose);
+  }
+});
+
+ipcMain.handle('log-msg', async (event, msg) => {
+  if (logWindow) {
+    logWindow.webContents.send('show-log-msg', msg);
+  }
+});
+
+ipcMain.handle('show-log-window', async (event, value) => {
+  try {
+    if (value) {
+      await createLogWindow();
+    } else {
+      if (logWindow) {
+        logWindow.close();
+      }
+    }
+  } catch (error) {
+    dialog.showErrorDialog(error.message);
   }
 });

@@ -44,8 +44,6 @@
 {"PluginListRendererService": "declare"}
 # MarkdownCode > services > transformers > constant-extractor service
 {"ConstantExtractorService": "declare"}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"PluginRendererService": "declare"}
 # MarkdownCode > services > transformers > constants-resource renderer
 {"ConstantsResourceRenderer": "declare"}
 # MarkdownCode > services > transformers > parser validator service
@@ -58,3 +56,7 @@
 {"LineParser": "declare"}
 # MarkdownCode > services > line parser > line parser helpers
 {"LineParserHelpers": "declare"}
+# MarkdownCode > services > log service
+{"LogService": "declare"}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"PluginRendererService": "declare"}

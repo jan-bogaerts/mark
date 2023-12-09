@@ -44,8 +44,6 @@
 {"PluginListRendererService": "The PluginListRendererService generates a file with all the plugins to be loaded and informs the application about which files to load for the transformer-plugins. It has functions to save an array to a file and render results by building an array of files for each fragment."}
 # MarkdownCode > services > transformers > constant-extractor service
 {"ConstantExtractorService": "The ConstantExtractorService is a service that extracts constant definitions from source code and replaces them with references to a json file. It inherits from the transformer-base service and has functions for extracting quotes, collecting responses, rendering results, and retrieving up-to-date results using caching."}
-# MarkdownCode > services > transformers > plugin-renderer service
-{"PluginRendererService": "The PluginRendererService is a service that translates a plugin definition into a javascript module. It is used to build plugin transformers for the application. It inherits from the transformer-base service and has a constructor with specific parameters. It provides functions to save a file, clean content, render a result, and build a message."}
 # MarkdownCode > services > transformers > parser validator service
 {"ParserValidatorService": "The ParserValidatorService is a service class that checks the state of a specified text-fragment using an internal markdown parser. It is used for debugging and inherits from the transformer-base service. It has a renderResult function that joins the lines of the fragment, stores the result, and returns it."}
 # MarkdownCode > services > transformers > constants-resource renderer
@@ -58,3 +56,7 @@
 {"LineParser": "The 'LineParser' service is a singleton object that parses markdown lines and updates text-fragments in the project-service. It provides functions to create, clear, get the start line, parse, insert, and delete lines in the text-fragments."}
 # MarkdownCode > services > line parser > line parser helpers
 {"LineParserHelpers": "The 'LineParserHelpers' service class provides functions for handling various operations related to line parsing, such as retrieving fragments, updating titles, inserting and deleting fragments, and handling different types of lines."}
+# MarkdownCode > services > log service
+{"LogService": "The LogService is a global singleton that manages user messages. It provides functions to create log items for GPT messages, assign UUIDs, and send them to the log window."}
+# MarkdownCode > services > transformers > plugin-renderer service
+{"PluginRendererService": "The PluginRendererService is a service that translates a plugin definition into a javascript module. It creates plugin transformers for the application and provides functions for saving files, cleaning content, rendering results, and building messages."}

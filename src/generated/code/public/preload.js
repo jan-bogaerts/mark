@@ -1,9 +1,11 @@
 const {ipcRenderer } = require('electron');
 const path = require('path');
 
-console.log(path.join(__dirname, '../resources'));
 const params = new URLSearchParams(global.location.search);
 const pluginFile = params.get("plugin");
+const logModeTxt = params.get("log");
+const isLogMode = logModeTxt === 'true' || logModeTxt === true;
+console.log('isLogMode', isLogMode, logModeTxt);
 const dataFile = params.get("file");
 const isPackaged = params.get("isPackaged") === 'true';
 
@@ -16,7 +18,12 @@ window.electron = {
     onCanClose: (callback) => { ipcRenderer.on('can-close', callback) },
     removeOnCanClose: (callback) => { ipcRenderer.removeListener('can-close', callback) },
     canCloseProcessed: (canClose) => { return (ipcRenderer.invoke('can-close-processed', canClose)) },
+    onLogMsg: (callback) => { ipcRenderer.on('show-log-msg', callback) },
+    removeOnLogMsg: (callback) => { ipcRenderer.removeListener('show-log-msg', callback) },
+    logMsg: (msg) => { ipcRenderer.invoke('log-msg', msg) },
+    showLogWindow: (value) => { ipcRenderer.invoke('show-log-window', value) },
     isPluginMode: pluginFile !== null,
+    isLogMode: isLogMode,
     fileToOpen: dataFile || pluginFile,
     resourcesPath: isPackaged ? path.join(process.resourcesPath, 'resources') : path.join(__dirname, '../resources'),
 }

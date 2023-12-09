@@ -44,8 +44,6 @@
 {}
 # MarkdownCode > services > transformers > constant-extractor service
 {}
-# MarkdownCode > services > transformers > plugin-renderer service
-{}
 # MarkdownCode > services > transformers > constants-resource renderer
 {}
 # MarkdownCode > services > transformers > parser validator service
@@ -57,4 +55,8 @@
 # MarkdownCode > services > line parser
 {}
 # MarkdownCode > services > line parser > line parser helpers
+{}
+# MarkdownCode > services > log service
+{}
+# MarkdownCode > services > transformers > plugin-renderer service
 {}
