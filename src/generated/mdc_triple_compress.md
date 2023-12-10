@@ -121,4 +121,4 @@ The log-window component displays log messages in a secondary window and registe
 # MarkdownCode > services > log service
 The log service is a global singleton that manages user messages, with functions to create log items for GPT messages and send them to the log window, returning the log object, as well as creating and sending serialized objects with response and UUID fields to the log window.
 # MarkdownCode > services > transformers > plugin-renderer service
-The plugin-renderer service translates a plugin definition into a javascript module, inherits from the transformer-base service, sets `this.constantsService` during construction, and has functions to save files, clean content, render results, and build messages.
+The plugin-renderer service is responsible for translating plugin definitions into javascript modules, building plugin transformers for the application, and has functions for saving files, cleaning content, rendering results, and building messages, while inheriting from the transformer-base service and having the constantsService as a dependency.

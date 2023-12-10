@@ -1,12 +1,12 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button, Tooltip } from 'antd';
-import { BiPaste } from 'react-icons/bi';
 import { clipboard, ipcRenderer } from 'electron';
 import SelectionService from '../../../../services/Selection_service/SelectionService';
 import DialogService from '../../../../services/dialog_service/DialogService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
-import { ScissorOutlined, CopyOutlined, DeleteOutlined, SelectOutlined, ClearOutlined } from '@ant-design/icons';
+import { ScissorOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
+import { BiPaste } from 'react-icons/bi';
+import { MdSelectAll, MdOutlineDeselect } from 'react-icons/md';
 
 /**
  * EditSection component
@@ -16,16 +16,28 @@ function EditSection() {
   const [selectionExists, setSelectionExists] = useState(false);
 
   useEffect(() => {
+    const handleSelectionChanged = () => {
+      setSelectionExists(SelectionService.hasSelection());
+    };
+
     setClipboardHasText(clipboard.has('text/plain'));
-    setSelectionExists(SelectionService.hasSelection());
+    handleSelectionChanged();
 
     ipcRenderer.on('focused', () => {
-      setClipboardHasText(clipboard.has('text/plain'));
+      const available = clipboard.availableFormats();
+      setClipboardHasText(available.includes('text/plain'));
     });
+
+    SelectionService.subscribe(handleSelectionChanged);
+
+    return () => {
+      ipcRenderer.removeAllListeners('focused');
+      SelectionService.unsubscribe(handleSelectionChanged);
+    };
   }, []);
 
   const handleCut = () => {
-    if (SelectionService.hasSelection()) {
+    if (selectionExists) {
       SelectionService.cut();
     } else {
       DialogService.showError('No selection to cut');
@@ -33,7 +45,7 @@ function EditSection() {
   };
 
   const handleCopy = () => {
-    if (SelectionService.hasSelection()) {
+    if (selectionExists) {
       SelectionService.copy();
     } else {
       DialogService.showError('No selection to copy');
@@ -49,7 +61,7 @@ function EditSection() {
   };
 
   const handleDelete = () => {
-    if (SelectionService.hasSelection()) {
+    if (selectionExists) {
       SelectionService.delete();
     } else {
       DialogService.showError('No selection to delete');
@@ -61,7 +73,7 @@ function EditSection() {
   };
 
   const handleClearSelection = () => {
-    if (SelectionService.hasSelection()) {
+    if (selectionExists) {
       SelectionService.clearSelection();
     } else {
       DialogService.showError('No selection to clear');
@@ -77,16 +89,16 @@ function EditSection() {
         <Button icon={<CopyOutlined />} onClick={handleCopy} disabled={!selectionExists} />
       </Tooltip>
       <Tooltip title="Paste">
-        <Button icon={<BiPaste />} onClick={handlePaste} disabled={!clipboardHasText} />
+        <Button icon={<BiPaste />} onClick={handlePaste} disabled={!clipboardHasText || !SelectionService.getEditor()} />
       </Tooltip>
       <Tooltip title="Delete">
         <Button icon={<DeleteOutlined />} onClick={handleDelete} disabled={!selectionExists} />
       </Tooltip>
       <Tooltip title="Select All">
-        <Button icon={<SelectOutlined />} onClick={handleSelectAll} />
+        <Button icon={<MdSelectAll />} onClick={handleSelectAll} />
       </Tooltip>
       <Tooltip title="Clear Selection">
-        <Button icon={<ClearOutlined />} onClick={handleClearSelection} disabled={!selectionExists} />
+        <Button icon={<MdOutlineDeselect />} onClick={handleClearSelection} disabled={!selectionExists} />
       </Tooltip>
     </div>
   );

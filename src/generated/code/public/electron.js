@@ -81,6 +81,7 @@ function createWindow () {
       mainWindow.destroy();  // important: need to destroy otherwise we are stuck in a loop
     }
   });
+  mainWindow.on('focus', () => { mainWindow.webContents.send('focused') });
 }
 
 function createPluginWindow (path) {
@@ -104,6 +105,7 @@ function createPluginWindow (path) {
       pluginsWindow = null;
       resolve();
     });
+    pluginsWindow.on('focus', () => { pluginsWindow.webContents.send('focused') });
   });
 }
 
@@ -150,9 +152,6 @@ app.on('activate', function () {
   }
 });
 
-app.on('browser-window-focus', () => {
-  mainWindow.webContents.send('focused')
-})
 
 app.on('browser-window-blur', () => {
   mainWindow.webContents.send('blurred')

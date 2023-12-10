@@ -89,7 +89,6 @@ class ResultsViewTab extends Component {
   handleEditorMount = (editor) => {
     this.editor = editor;
     editor.onDidFocusEditorWidget(this.handleEditorFocus);
-    editor.onDidBlurEditorWidget(this.handleEditorBlur);
     editor.onDidChangeCursorSelection(this.handleCursorChange);
   }
 
@@ -98,11 +97,6 @@ class ResultsViewTab extends Component {
     PositionTrackingService.activeTransformer = this.props.transformer;
   }
 
-  handleEditorBlur = () => {
-    if (SelectionService.getEditor() === this.editor) {
-      SelectionService.setEditor(null);
-    }
-  }
 
   handleCursorChange = () => {
     if (SelectionService.getEditor() === this.editor) {

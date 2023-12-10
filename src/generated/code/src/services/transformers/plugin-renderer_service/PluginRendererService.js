@@ -1,28 +1,27 @@
 
 import fs from 'fs';
-import path from 'path';
+import os from 'os';
 import resources from '../../../resources.json';
 import FolderService from '../../folder_service/FolderService';
 import GPTService from '../../gpt_service/GPTService';
+import ProjectService from '../../project_service/ProjectService';
 import TransformerBaseService from '../../transformer-base_service/TransformerBaseService';
 import KeyService from '../../key_service/KeyService';
 
 /**
  * PluginRendererService class
- * Translates a plugin definition into a javascript module
  * Inherits from TransformerBaseService
  */
 class PluginRendererService extends TransformerBaseService {
   constructor() {
-    super('plugin renderer', ['constants'], false);
+    super('plugin renderer', ['constants'], false, true);
     this.constantsService = this.dependencies[0];
-    this.isFullRender = true;
   }
 
   /**
-   * Save the content to a file
-   * @param {string} key - The key to be used as filename
-   * @param {string} content - The content to be written to the file
+   * Save file to the output folder
+   * @param {string} key - The key of the file
+   * @param {string} content - The content of the file
    * @returns {string} - The path of the saved file
    */
   saveFile(key, content) {
@@ -31,7 +30,7 @@ class PluginRendererService extends TransformerBaseService {
       fs.mkdirSync(rootFolder);
     }
     const fileName = key.replace(" > ", "_").replace(" ", "_");
-    const filePath = path.join(rootFolder, fileName + ".js");
+    const filePath = os.path.join(rootFolder, fileName + ".js");
     fs.writeFileSync(filePath, content);
     return filePath;
   }
@@ -57,11 +56,12 @@ class PluginRendererService extends TransformerBaseService {
   /**
    * Render the result
    * @param {object} fragment - The fragment to be rendered
-   * @returns {string} - The filename of the rendered result
+   * @returns {Promise<string>} - The path of the rendered file
    */
   async renderResult(fragment) {
     const location = KeyService.calculateLocation(fragment);
-    const [message, keys] = await this.buildMessage(fragment, location.includes('shared >'));
+    const hasShared = ProjectService.textFragments.some(f => f.title === 'shared');
+    const [message, keys] = await this.buildMessage(fragment, location.includes('shared >'), hasShared);
     if (!message) {
       return null;
     }
@@ -80,20 +80,20 @@ class PluginRendererService extends TransformerBaseService {
    * Build the message
    * @param {object} fragment - The fragment to be used in the message
    * @param {boolean} asShared - Whether the fragment is shared
-   * @returns {Array} - The built message and keys
+   * @param {boolean} hasShared - Whether there is a shared fragment
+   * @returns {Promise<Array>} - The built message and keys
    */
-  async buildMessage(fragment, asShared) {
-    let result;
-    const content = await this.constantsService.getResult(fragment);
+  async buildMessage(fragment, asShared, hasShared) {
+    let result = [];
     if (asShared) {
       result = [
         { role: 'system', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_0 },
-        { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_1.replace('{{content}}', content) }
+        { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_1.replace('{{content}}', await this.constantsService.getResult(fragment)) }
       ];
     } else {
       result = [
-        { role: 'system', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_2 },
-        { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_3.replace('{{title}}', fragment.title).replace('{{content}}', content) }
+        { role: 'system', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_2.replace('{{sharedImport}}', hasShared ? `const shared = require('./shared.js');` : '') },
+        { role: 'user', content: resources.MarkdownCode_services_transformers_plugin_renderer_service_3.replace('{{title}}', fragment.title).replace('{{content}}', await this.constantsService.getResult(fragment)) }
       ];
     }
     return [result, []];

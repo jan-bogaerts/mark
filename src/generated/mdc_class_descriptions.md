@@ -59,4 +59,4 @@
 # MarkdownCode > services > log service
 {"LogService": "The LogService is a global singleton that manages user messages. It provides functions to create log items for GPT messages, assign UUIDs, and send them to the log window."}
 # MarkdownCode > services > transformers > plugin-renderer service
-{"PluginRendererService": "The PluginRendererService is a service that translates a plugin definition into a javascript module. It creates plugin transformers for the application and provides functions for saving files, cleaning content, rendering results, and building messages."}
+{"PluginRendererService": "The PluginRendererService is a service that translates plugin definitions into javascript modules. It is used to build plugin transformers for the application. It inherits from the transformer-base service and has a constructor with specific parameters. It has functions for saving files, cleaning content, rendering results, and building messages."}

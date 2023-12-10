@@ -1,6 +1,5 @@
 
-const { clipboard } = require('electron');
-const { editor } = require('monaco-editor');
+const { Selection } = require('monaco-editor');
 const { default: PositionTrackingService } = require('../position-tracking_service/PositionTrackingService');
 
 /**
@@ -13,52 +12,63 @@ class SelectionService {
     this.subscribers = [];
   }
 
-  setEditor(editor) {
+  setEditor = (editor) => {
     this.editor = editor;
   }
 
-  getEditor() {
+  getEditor = () => {
     return this.editor;
   }
 
-  hasSelection() {
+  hasSelection = () => {
     return this.editor && !this.editor.getSelection().isEmpty();
   }
 
 
   cut() {
     if (this.editor) {
-      this.editor.trigger('keyboard', 'cut');
+      this.editor.focus();
+      this.editor.trigger('source', 'editor.action.clipboardCutAction');
     }
   }
 
   copy() {
     if (this.editor) {
-      this.editor.trigger('keyboard', 'copy');
+      this.editor.focus();
+      this.editor.trigger('source', 'editor.action.clipboardCopyAction');
     }
   }
 
   paste() {
     if (this.editor) {
-      this.editor.trigger('keyboard', 'paste');
+      this.editor.focus();
+      this.editor.trigger('source', 'editor.action.clipboardPasteAction');
     }
   }
 
   delete() {
     if (this.editor) {
-      this.editor.trigger('keyboard', 'delete');
+      this.editor.focus();
+      var selection = this.editor.getSelection();
+      var id = { major: 1, minor: 1 };             
+      var text = "";
+      var op = {identifier: id, range: selection, text: text, forceMoveMarkers: true};
+      this.editor.executeEdits("my-source", [op]);
     }
   }
 
-  selectAll() {
+  selectAll = () => {
     if (this.editor) {
-      this.editor.trigger('keyboard', 'selectAll');
+      const model = this.editor.getModel();
+      if (!model) return;
+      const range = model.getFullModelRange();
+      this.editor.setSelection(range);
     }
   }
 
   clearSelection() {
     if (this.editor) {
-      this.editor.setSelection(new editor.Selection(0, 0, 0, 0));
+      this.editor.setSelection(new Selection(0, 0, 0, 0));
     }
   }
 

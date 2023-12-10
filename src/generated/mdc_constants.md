@@ -107,4 +107,4 @@
 # MarkdownCode > services > log service
 []
 # MarkdownCode > services > transformers > plugin-renderer service
-[{"start": 50, "end": 60, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 62, "end": 65, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}, {"start": 71, "end": 121, "name": "MarkdownCode_services_transformers_plugin_renderer_service_2"}, {"start": 123, "end": 126, "name": "MarkdownCode_services_transformers_plugin_renderer_service_3"}]
+[{"start": 52, "end": 62, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 64, "end": 67, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}, {"start": 73, "end": 124, "name": "MarkdownCode_services_transformers_plugin_renderer_service_2"}, {"start": 129, "end": 132, "name": "MarkdownCode_services_transformers_plugin_renderer_service_3"}]

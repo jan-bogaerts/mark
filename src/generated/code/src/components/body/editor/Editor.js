@@ -64,7 +64,6 @@ class Editor extends Component {
     this.settingValue = true; // when loading content, don't process changes
     editor.onDidChangeModelContent(this.handleDidChangeModelContent);
     editor.onDidFocusEditorWidget(this.handleDidFocusEditorWidget);
-    editor.onDidBlurEditorWidget(this.handleDidBlurEditorWidget);
     editor.onDidChangeCursorPosition(this.handleDidChangeCursorPosition);
     editor.onDidChangeCursorSelection(this.handleDidChangeCursorSelection);
   }
@@ -83,14 +82,9 @@ class Editor extends Component {
   }
 
   handleDidFocusEditorWidget = () =>  {
-    SelectionService.editor = this.editorRef.current;
+    SelectionService.setEditor(this.editorRef.current);
   }
 
-  handleDidBlurEditorWidget = () =>  {
-    if (SelectionService.editor === this.editorRef.current) {
-      SelectionService.editor = null;
-    }
-  }
 
   handleDidChangeCursorPosition = (e) => {
     if (SelectionService.editor === this.editorRef.current) {

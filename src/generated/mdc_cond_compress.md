@@ -677,14 +677,15 @@ The 'LineParserHelpers' module contains helper functions for the line parser ser
   - logMsgResponse(logObj, response): creates an object with the response and UUID field of logObj, serializes it, and sends it to the log window using `window.electron.logMsgResponse`.
 # MarkdownCode > services > transformers > plugin-renderer service
 - The plugin-renderer service translates a plugin definition into a javascript module.
-- It is used to create plugin transformers that can be loaded and used by the application.
+- It is used to build plugin transformers that can be loaded and used by the application.
 - The plugin-renderer service inherits from the transformer-base service and has the following constructor parameters:
   - name: 'plugin renderer'
   - dependencies: ['constants']
   - isJson: false
-- During construction, the plugin-renderer service sets `this.constantsService` to `this.dependencies[0]`.
+  - isFullRender: true
+- The constantsService is set as a dependency during construction.
 - The plugin-renderer service has the following functions:
-  - `saveFile(key, content)`: saves the content to a file and returns the file path.
-  - `cleanResult(content)`: removes markdown formatting from the content.
-  - `renderResult(fragment)`: calculates the location, builds a message, sends a request to GPTService, cleans the result, saves the result to a file, and returns the file path.
-  - `buildMessage(fragment, asShared)`: builds a message based on the fragment and whether it is shared or not, and returns the message and an empty array.
+  - saveFile(key, content): saves the content to a file and returns the file path.
+  - cleanResult(content): removes markdown formatting from the content.
+  - renderResult(fragment): renders the result of a fragment and saves it to a file.
+  - buildMessage(fragment, asShared, hasShared): builds a message based on the fragment, asShared, and hasShared parameters.

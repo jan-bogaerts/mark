@@ -103,17 +103,21 @@ the following tabs are available:
   - copy: a button to initiate the copy command of the selection service
     - enabled when the selection service has any data marked as selected.
   - paste: a button to initiate the paste command of the selection service
-    - enabled when the clipboard contains text data.
+    - enabled when the clipboard contains text data && SelectionService.getEditor().
     - use the BiPaste icon from react-icons
     - call `clipboard.readText()` to get the data that needs to be pasted.
   - delete: a button to initiate the delete command of the selection service
     - enabled when the selection service has any data marked as selected.
   - select all: a button to select all the text in the currently active window.
+    - use the icon MdSelectAll  from react-icons
   - clear selection: a button to clear the current selection buffer.
     - enabled when the selection service has any data marked as selected.
+    - use the icon MdOutlineDeselect from react-icons
 - to check if the clipboard contains text data:
   - use the clipboard imported from electron
-  - when the component is loaded and when the ipcRenderer emits the 'focused' event, call `clipboard.has('text/plain')` to see if there is data in the clipboard.
+  - when the component is loaded and when the ipcRenderer emits the 'focused' event, call `available = clipboard.availableFormats(); available.includes('text/plain')` to see if there is supported data in the clipboard.
+- when loaded, subscribe the callback `handleSelectionChanged` to the selection service. Unsubscribe when unloading.
+- `handleSelectionChanged`: update the state of the buttons.
 
 ##### undo section
 - the undo-section component contains actions that the undo / redo service can perform.
@@ -313,8 +317,7 @@ Remember that each button needs it's own appropriate icon.
         catch (e):
           dialogService.showErrorDialog(e)
     ```
-    - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
-    - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
+    - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor (setEditor).
     - onDidChangeCursorPosition: if the selection service currently references this monaco editor, ask the position-tracking service to update the current line with the new cursor position `setCurrentLine(e.position.lineNumber - 1)`
     - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed `selectionService.notifySubscribers()`
 - the monaco editor always occupies all the space that is available.
@@ -482,7 +485,6 @@ Remember that each button needs it's own appropriate icon.
     - onDidFocusEditorWidget: 
       - store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor.
       - set `position-tracking-service.activeTransformer = transformer`
-    - onDidBlurEditorWidget: if the selection service currently references this monaco editor, assign null to the selection service's editor reference.
     - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed
 - put a results-view-context-menu component below the monaco editor (so it's rendered after the editor)
 - the component monitors events triggered by the position-tracking service (field: eventTarget, event: change) and the project-service (field: eventTarget, event: content-changed) for changes to the currently selected text-fragment and when the project changes. 
@@ -836,10 +838,17 @@ Remember that each button needs it's own appropriate icon.
 - the selection service keeps track of the currently active editor (an object from the monaco editor npm package)
 - the service can be monitored for changes in the selection.
 - supports the following actions / functions:
-  - cut: if there is a reference to an editor, ask the monaco editor to cut the selected text to the clipboard.
-  - copy: if there is a reference to an editor, ask the monaco editor to copy the selected text to the clipboard.
-  - paste: if there is a reference to an editor, ask the monaco editor to paste the clipboard content at the current cursor position.
-  - delete: if there is a reference to an editor, ask the monaco editor to delete the selected text.
+  - cut: if there is a reference to an editor, focus it and ask the monaco editor to cut the selected text to the clipboard.
+  - copy: if there is a reference to an editor, focus it and ask the monaco editor to copy the selected text to the clipboard.
+  - paste: if there is a reference to an editor, focus it and ask the monaco editor to paste the clipboard content at the current cursor position.
+  - delete: if there is a reference to an editor, focus it and ask the monaco editor to replace the selected text with an empty value:
+    ```javascript
+      var selection = this.editor.getSelection();
+      var id = { major: 1, minor: 1 };             
+      var text = "";
+      var op = {identifier: id, range: selection, text: text, forceMoveMarkers: true};
+      this.editor.executeEdits("my-source", [op]);
+    ```
   - clear selection: if there is a reference to an editor, ask the monaco editor to clear the current selection.
   - select all: if there is a reference to an editor, ask the monaco editor to select all the text.
   - hasSelection: returns true if there is an editor and it has a non-empty selection
@@ -1818,6 +1827,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - name: 'plugin renderer'
   - dependencies: ['constants']
   - isJson: false
+  - isFullRender: true
 - set during construction: `this.constantsService = this.dependencies[0]`
 - functions:
   - saveFile(key, content):
@@ -1845,7 +1855,8 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - renderResult(fragment):
     ```python
       location = keyService.calculateLocation(fragment)
-      message, keys = await this.buildMessage(fragment, location.contains('shared >'))
+      haShared = ProjectService.textFragments.some(f => f.title === 'shared')
+      message, keys = await this.buildMessage(fragment, location.contains('shared >'), hasShared)
       if not message:
         return None
       if not len(fragment.lines):
@@ -1858,7 +1869,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       this.cache.setResult(key, filename, message)
       return filename
     ```
-  - buildMessage(fragment, asShared):
+  - buildMessage(fragment, asShared, hasShared):
     - if asShared:
       - result (json array):
         - role: system, content:
@@ -1910,6 +1921,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
           > const resources = require('./resources.json');
           > const services = {}; // must always be present
           > const deps = {}; // must always be present
+          > {{sharedImport}}
           > function getDescription() {
           >   return {name: 'test', dependencies: ['constants'], isJson: true};
           > }
@@ -1933,6 +1945,9 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
           > module.exports = { getDescription, buildMessage, calculateMaxTokens, services, deps };
           > ```
           > Do not include an introduction or any explanation, only generate the code. Only include function that are required or the user included, do not write any optional functions from the example when not provided in the following text. Include a description field when possible.
+
+          replace:
+          - {{sharedImport}}: hasShared ? `const shared = require('./shared.js');` : ''
 
         - role: user, content:
 
