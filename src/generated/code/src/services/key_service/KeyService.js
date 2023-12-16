@@ -38,7 +38,7 @@ class KeyService {
     const locations = {};
     ProjectService.textFragments.forEach((fragment, index) => {
       const location = this.calculateLocation(fragment, index);
-      locations[fragment.key] = location;
+      locations[location] = fragment.key;
     });
     return locations;
   }

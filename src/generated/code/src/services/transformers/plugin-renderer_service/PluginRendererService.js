@@ -1,6 +1,6 @@
 
 import fs from 'fs';
-import os from 'os';
+import path from 'path';
 import resources from '../../../resources.json';
 import FolderService from '../../folder_service/FolderService';
 import GPTService from '../../gpt_service/GPTService';
@@ -20,17 +20,18 @@ class PluginRendererService extends TransformerBaseService {
 
   /**
    * Save file to the output folder
-   * @param {string} key - The key of the file
+   * @param {object} fragment - the fragment that was rendered
    * @param {string} content - The content of the file
    * @returns {string} - The path of the saved file
    */
-  saveFile(key, content) {
+  saveFile(fragment, content) {
     const rootFolder = FolderService.output;
     if (!fs.existsSync(rootFolder)) {
       fs.mkdirSync(rootFolder);
     }
-    const fileName = key.replace(" > ", "_").replace(" ", "_");
-    const filePath = os.path.join(rootFolder, fileName + ".js");
+    const location = KeyService.calculateLocation(fragment);
+    const fileName = location.replace(" > ", "_").replace(" ", "_");
+    const filePath = path.join(rootFolder, fileName + ".js");
     fs.writeFileSync(filePath, content);
     return filePath;
   }
@@ -61,7 +62,7 @@ class PluginRendererService extends TransformerBaseService {
   async renderResult(fragment) {
     const location = KeyService.calculateLocation(fragment);
     const hasShared = ProjectService.textFragments.some(f => f.title === 'shared');
-    const [message, keys] = await this.buildMessage(fragment, location.includes('shared >'), hasShared);
+    const [message,] = await this.buildMessage(fragment, location.includes('shared >'), hasShared);
     if (!message) {
       return null;
     }
@@ -69,10 +70,9 @@ class PluginRendererService extends TransformerBaseService {
     if (fragment.lines.length) {
       const result = await GPTService.sendRequest(this, fragment.key, message);
       const cleanedResult = this.cleanResult(result);
-      filename = this.saveFile(fragment.key, cleanedResult);
-    }
-    const key = keys.join(' | ');
-    this.cache.setResult(key, filename, message);
+      filename = this.saveFile(fragment, cleanedResult);
+    };
+    this.cache.setResult(fragment.key, filename, message);
     return filename;
   }
 

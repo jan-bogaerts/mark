@@ -28,6 +28,11 @@ div {
     height: 100vh;
 }
 
+.log-window.dark {
+    background-color: #252526;
+    color: white;
+}
+
 .toolbar {
     height: 102px; 
     padding-left: 10px;
@@ -41,6 +46,16 @@ div {
 .toolbar.dark {
     background-color: #323233;
     color: white;
+}
+
+.os-draggable {
+    -webkit-app-region: drag;  /*allow the toolbar to be draggable */
+    height: 31px;
+    width: calc(100% - 352px);
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    background: transparent;
 }
 
 .home-tab,

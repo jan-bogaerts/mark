@@ -42,7 +42,7 @@ class FileSection extends Component {
   trySave = async () => {
     if (this.state.isDirty) {
       const confirm = await dialogService.confirm('Do you want to save the changes first?');
-      if (confirm === undefined) {
+      if (confirm === null) {
         return false;
       } else if (confirm) {
         await this.saveProject();

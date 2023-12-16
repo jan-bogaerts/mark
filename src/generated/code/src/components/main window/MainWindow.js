@@ -37,6 +37,7 @@ const MainWindow = () => {
       <Layout className={`main-window ${theme}`}>
         <Header className={`toolbar ${theme}`}>
           <Toolbar />
+          <div className='os-draggable'/>
         </Header>
         <Content className="body">
           <Body />

@@ -39,7 +39,7 @@ class App extends Component {
   };
 
   componentDidMount() {
-    this.handleOpen();
+    setTimeout(this.handleOpen, 100); // add a small timeout. in debug mode, this could cause problems related to 'access problems' when load the plugins
   }
 
   render() {

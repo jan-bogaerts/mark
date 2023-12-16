@@ -4,6 +4,8 @@
 []
 # MarkdownCode > components > main window
 []
+# MarkdownCode > components > log window
+[]
 # MarkdownCode > components > toolbar
 []
 # MarkdownCode > components > toolbar > home
@@ -78,6 +80,8 @@
 []
 # MarkdownCode > services > position-tracking service
 []
+# MarkdownCode > services > log service
+[]
 # MarkdownCode > services > gpt service
 []
 # MarkdownCode > services > result-cache service
@@ -96,15 +100,11 @@
 []
 # MarkdownCode > services > transformers > plugin-transformer service
 []
+# MarkdownCode > services > transformers > plugin-renderer service
+[{"start": 53, "end": 63, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 65, "end": 68, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}, {"start": 74, "end": 125, "name": "MarkdownCode_services_transformers_plugin_renderer_service_2"}, {"start": 130, "end": 133, "name": "MarkdownCode_services_transformers_plugin_renderer_service_3"}]
 # MarkdownCode > services > transformers > plugin-list renderer service
 []
 # MarkdownCode > services > transformers > constants-resource renderer
 []
 # MarkdownCode > services > transformers > parser validator service
 []
-# MarkdownCode > components > log window
-[]
-# MarkdownCode > services > log service
-[]
-# MarkdownCode > services > transformers > plugin-renderer service
-[{"start": 52, "end": 62, "name": "MarkdownCode_services_transformers_plugin_renderer_service_0"}, {"start": 64, "end": 67, "name": "MarkdownCode_services_transformers_plugin_renderer_service_1"}, {"start": 73, "end": 124, "name": "MarkdownCode_services_transformers_plugin_renderer_service_2"}, {"start": 129, "end": 132, "name": "MarkdownCode_services_transformers_plugin_renderer_service_3"}]

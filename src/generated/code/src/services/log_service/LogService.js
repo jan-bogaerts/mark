@@ -1,6 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import keyService from '../key_service/KeyService';
+import ProjectService from '../project_service/ProjectService';
 
 /**
  * LogService class
@@ -21,11 +22,11 @@ class LogService {
       uuid: uuidv4(),
       transformerName,
       fragmentKey,
-      location: keyService.calculateLocation(fragmentKey),
+      location: keyService.calculateLocation(ProjectService.getFragment(fragmentKey)),
       inputData,
     };
 
-    window.electron.logMsg(JSON.stringify(logObj));
+    window.electron.logMsg(JSON.stringify(logObj, null, 2));
 
     return logObj;
   }

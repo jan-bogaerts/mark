@@ -15,6 +15,8 @@ const windowConfig = {
   width: 800,
   height: 600,
   autoHideMenuBar: true,
+  titleBarStyle: 'hidden',
+  titleBarOverlay: true,
   // for these to work, there also needs to be a div in the header with css style `-webkit-app-region: drag;` to make the window draggable
   // titleBarStyle: 'hidden',
   // titleBarOverlay: true,
@@ -70,6 +72,7 @@ function createWindow () {
     const canCloseProcessed = new Promise((resolve) => { canCloseResolver = resolve });
     mainWindow.webContents.send('can-close');
     const canClose = await canCloseProcessed;
+    console.log('canClose', canClose);
     canCloseResolver = null;
     if (canClose) {
       if (pluginsWindow) {
@@ -79,6 +82,8 @@ function createWindow () {
         logWindow.close();
       }
       mainWindow.destroy();  // important: need to destroy otherwise we are stuck in a loop
+    } else {
+      event.preventDefault();
     }
   });
   mainWindow.on('focus', () => { mainWindow.webContents.send('focused') });
