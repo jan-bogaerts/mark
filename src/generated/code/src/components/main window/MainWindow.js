@@ -35,13 +35,13 @@ const MainWindow = () => {
       algorithm: theme === 'dark' ? darkAlgorithm : defaultAlgorithm,
     }}>
       <Layout className={`main-window ${theme}`}>
-      <Header className={`toolbar ${theme}`}>
-        <Toolbar />
-      </Header>
-      <Content className="body">
-        <Body />
-      </Content>
-    </Layout>
+        <Header className={`toolbar ${theme}`}>
+          <Toolbar />
+        </Header>
+        <Content className="body">
+          <Body />
+        </Content>
+      </Layout>
     </ConfigProvider>
   );
 };

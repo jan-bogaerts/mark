@@ -51,7 +51,7 @@ class LogWindow extends Component {
           size="small"
           bordered
           dataSource={this.state.logMsgs}
-          renderItem={item => <List.Item><Typography.Text>{item}</Typography.Text></List.Item>}
+          renderItem={item => <List.Item><Typography.Text style={{whiteSpace: 'pre-wrap'}}>{item}</Typography.Text></List.Item>}
           style={{ overflow: 'auto' }}
         />
       </div>
