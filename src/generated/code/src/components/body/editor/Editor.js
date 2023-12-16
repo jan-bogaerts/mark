@@ -88,7 +88,7 @@ class Editor extends Component {
 
   handleDidChangeCursorPosition = (e) => {
     if (SelectionService.editor === this.editorRef.current) {
-      PositionTrackingService.setCurrentLine(e.position.lineNumber - 1);
+      PositionTrackingService.setCurrentPos(e.position);
     }
   }
 
@@ -99,12 +99,14 @@ class Editor extends Component {
   }
 
   render() {
+    const theme = ThemeService.getCurrentTheme();
     return (
       <MonacoEditor
         language="markdown"
-        theme={ThemeService.getCurrentTheme() === 'light' ? 'vs-light' : 'vs-dark'}
         value={ProjectService.content}
+        theme= {theme === 'light' ? 'vs-light' : 'vs-dark'}
         options={{
+          theme: theme === 'light' ? 'vs-light' : 'vs-dark',
           fontFamily: ThemeService.getCurrentFont(),
           fontSize: ThemeService.getCurrentFontSize(),
           automaticLayout: true,

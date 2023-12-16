@@ -15,7 +15,7 @@ class ResultsViewTab extends Component {
       editorKey: null,
       editorValue: '',
       editorOptions: {
-        theme: ThemeService.getCurrentTheme(),
+        theme: ThemeService.getCurrentTheme() === 'light' ? 'vs-light' : 'vs-dark',
         fontFamily: ThemeService.getCurrentFont(),
         fontSize: ThemeService.getCurrentFontSize(),
         automaticLayout: true,
@@ -31,6 +31,7 @@ class ResultsViewTab extends Component {
 
   componentDidMount() {
     this.updateEditorValue();
+    ThemeService.subscribe(this.handleThemeChanged);
     PositionTrackingService.eventTarget.addEventListener('change', this.updateEditorValue);
     ProjectService.eventTarget.addEventListener('content-changed', this.updateEditorValue);
     if (this.props.transformer) {
@@ -48,11 +49,28 @@ class ResultsViewTab extends Component {
   }
 
   componentWillUnmount() {
+    ThemeService.unsubscribe(this.handleThemeChanged);
     PositionTrackingService.eventTarget.removeEventListener('change', this.updateEditorValue);
     ProjectService.eventTarget.removeEventListener('content-changed', this.updateEditorValue);
     if (this.props.transformer) {
       this.props.transformer.cache.eventTarget.removeEventListener('result-changed', this.updateEditorValue);
     }
+  }
+
+  handleThemeChanged = () => {
+    if (!this.editor) return;
+    const theme = ThemeService.getCurrentTheme();
+    const font = ThemeService.getCurrentFont();
+    const fontSize = ThemeService.getCurrentFontSize();
+    this.editor.updateOptions({
+      theme: theme === 'light' ? 'vs-light' : 'vs-dark',
+      fontFamily: font,
+      fontSize: fontSize,
+      automaticLayout: true,
+      selectOnLineNumbers: true,
+      roundedSelection: false,
+      readOnly: false,
+    });
   }
 
   updateEditorValue = () => {
@@ -105,7 +123,7 @@ class ResultsViewTab extends Component {
   }
 
   render() {
-    const { isOutdated, isDeleted, isOverwritten } = this.state;
+    const { isOutdated, isDeleted, isOverwritten, editorOptions } = this.state;
     let editorClassName = 'results-view-tab';
     if (isOutdated || isDeleted) {
       editorClassName += ' grayed-out';
@@ -113,16 +131,16 @@ class ResultsViewTab extends Component {
     if (isOverwritten) {
       editorClassName += ' red-text';
     }
-
+    
     return (
       <div className={editorClassName}>
         <MonacoEditor
           width="100%"
           height="100%"
           language={this.props.transformer.language}
-          theme={this.state.editorOptions.theme}
           value={this.state.editorValue}
-          options={this.state.editorOptions}
+          theme= {editorOptions.theme}
+          options={editorOptions}
           onChange={this.handleEditorChange}
           editorDidMount={this.handleEditorMount}
         />

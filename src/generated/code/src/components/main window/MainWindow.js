@@ -1,10 +1,12 @@
 
 // Importing required modules and components
 import React, { useEffect, useState } from 'react';
-import { Layout } from 'antd';
+import { Layout, ConfigProvider, theme } from 'antd';
 import ThemeService from '../../services/Theme_service/ThemeService';
 import Toolbar from '../toolbar/Toolbar';
 import Body from '../body/Body';
+
+const { defaultAlgorithm, darkAlgorithm } = theme;
 
 // Constants
 const { Header, Content } = Layout;
@@ -29,14 +31,18 @@ const MainWindow = () => {
   }, []);
 
   return (
-    <Layout className={`main-window ${theme}`}>
-      <Header className="toolbar">
+    <ConfigProvider theme={{
+      algorithm: theme === 'dark' ? darkAlgorithm : defaultAlgorithm,
+    }}>
+      <Layout className={`main-window ${theme}`}>
+      <Header className={`toolbar ${theme}`}>
         <Toolbar />
       </Header>
       <Content className="body">
         <Body />
       </Content>
     </Layout>
+    </ConfigProvider>
   );
 };
 

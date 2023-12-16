@@ -48,9 +48,7 @@ class App extends Component {
         <LogWindow />
       );
     }
-    return (
-      <MainWindow />
-    );
+    return (<MainWindow />);
   }
 }
 

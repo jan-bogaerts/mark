@@ -37,9 +37,9 @@ class LogWindow extends Component {
    * Adds the received log message to the state.
    * @param {string} msg - The log message
    */
-  handleLogMsg(msg) {
+  handleLogMsg(event, msg) {
     this.setState(prevState => ({
-      logMsgs: [...prevState.logMsgs, msg],
+      logMsgs: [...prevState.logMsgs, JSON.stringify(msg, null, 2)],
     }));
   }
 

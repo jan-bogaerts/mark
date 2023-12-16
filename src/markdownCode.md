@@ -27,7 +27,7 @@ the application uses a toolbar similar to applications like mS Access, excel, wo
 
 - At the top of the toolbar are a nr of tabs (use the tabs from the antd library)
 - all components on the toolbar show a tooltip (from the antd library) containing a short description of the action.
-- create a json structure for all the tabs (fields: key, label, children).
+- create a json structure for all the tabs (fields: key, label, children). rebuild the list at every render so that the tabs are recreated, needed to apply the theme when it changes.
 - assign the json structure to the items property.
   
 the following tabs are available:
@@ -216,20 +216,25 @@ Remember that each button needs it's own appropriate icon.
 ##### paragraph section
 - the paragraph-section component contains actions related to the markup used in the text for applying markdown formatting.
 - all buttons use an appropriate icon as content, no text.
+- all buttons are wrapped in a tooltip (from the antd library) containing an extensive description of the action.
 - it supports the following actions
   - indent: a button to increase the indent of the current line or selection. The selection-service performs this action on the selected text or current cursor position.
+    - use the icon MdFormatIndentDecrease from react-icons
   - unindent: a button to decrease the indent of the current line or selection. The selection-service performs this action on the selected text or current cursor position.
-
+    - icon: MdOutlineFormatIndentDecrease from react-icons
   
 ##### font section
 - the font-section component contains actions related to the markup used in the text for applying markdown formatting.
 - all buttons use an appropriate icon as content, no text.
+- all buttons are wrapped in a tooltip (from the antd library) containing an extensive description of the action.
 - whenever the text selection is changed (in the selection-service), the state of the toggle buttons is updated to reflect the state of the selected text.
+- whenever the cursor position is changed (in the position-tracking-service, event: pos-changed), update the state of the buttons. 
 - it supports the following actions
   - bold: a toggle button to set the bold state on/off on the selected text and to show the state of the current selection. 
   - italic: a toggle button to set the italic state on/off on the selected text and to show the state of the current selection. 
   - underline: a toggle button to set the underline state on/off on the selected text and to show the state of the current selection. 
   - strike-though: a toggle button to set the strike-through state on/off on the selected text and to show the state of the current selection. 
+- all actions call the `selectionService.setBlockStyle` function to apply the selection and `selectionService.getBlockStyles` to set the state of te buttons.
 
 #### preferences
 - the preferences-tab component is a wrapper that displays it's children in a row.
@@ -274,6 +279,22 @@ Remember that each button needs it's own appropriate icon.
   - initialPrimarySize = this.state.verticalSplitSize
   - minPrimarySize='50px'
   - minSecondarySize='15%'
+  - defaultSplitterColors = colors, note:
+    ``` javascript
+      if (theme === 'light') {
+        colors = {
+          color: '#e8e8e8',
+          hover: 'gray',
+          drag: '#f5f5f5',
+        };
+      } else {
+        colors = {
+          color: '#323233',
+          hover: 'gray',
+          drag: '#979797',
+        };
+      }
+    ```
   - children:
     - outline component
     - Split component:
@@ -318,7 +339,7 @@ Remember that each button needs it's own appropriate icon.
           dialogService.showErrorDialog(e)
     ```
     - onDidFocusEditorWidget: store a reference to the monaco editor in the selection service to indicate so that it can work with the correct editor (setEditor).
-    - onDidChangeCursorPosition: if the selection service currently references this monaco editor, ask the position-tracking service to update the current line with the new cursor position `setCurrentLine(e.position.lineNumber - 1)`
+    - onDidChangeCursorPosition: if the selection service currently references this monaco editor, ask the position-tracking service to update the current line with the new cursor position `setCurrentPos(e.position)`
     - onDidChangeCursorSelection: if the selection service currently references this monaco editor, inform the subscribers of the selection-service that the selection has changed `selectionService.notifySubscribers()`
 - the monaco editor always occupies all the space that is available.
 - always include these options for the monaco editor:
@@ -467,7 +488,7 @@ Remember that each button needs it's own appropriate icon.
     if this.props.transformer.isJson:
       toDisplay = JSON.stringify(toDisplay, 0, 2) # do a pretty format with 2 tabs spacing
   ```
-  - theme (light or dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
+  - theme (convert light to vs-light or dark to vs-dark), font & font-size are retrieved from the theme-service and applied to the monaco editor.
 - the results-cache of the transformer is monitored for changes in the result (only for changes in the result with the current key).
   - if the result is marked as 'out-of-date' or 'deleted', show the text as grayed-out.
   - if the result is marked as 'overwritten', show the text in red 
@@ -480,6 +501,9 @@ Remember that each button needs it's own appropriate icon.
       continue # if we cant parse to json, save as text so we still have the value.  
   transformer.cache.overwriteResult(editorKey, newValue)
   ```
+- subscribe to the theme-service for changes `themeService.subscribe(this.handleThemeChanged)` when the component is loaded and unsubscribe upon unloading `themeService.unsubscribe(this.handleThemeChanged)`
+  - return if no this.editorRef.current
+  - update the options of the editor, call `this.editorRef.current.updateOptions(newOptions)`  
 - monitor the following events on the monaco editor:
   - editorDidMount: store a reference to the editor for further use and register the other event handlers (bound) with the mounted editor:
     - onDidFocusEditorWidget: 
@@ -1087,11 +1111,14 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   - a reference to the currently active transformer. This is used to run a build only for the active transformer (field: activeTransformer)
   - an eventTarget that stores the events which monitor changes in the currently selected text-fragment.
 - it provides the following methods:
-  - set currently selected line, input: line-index.
-      - if the new value is different from the current selected line index:
-        - get the object at the line-index position found on the fragmentsIndex array of the line-parser service.
-          - if undefined was found, try again with `lineIndex - 1`. (This is because when adding an empty line at the end, no text-fragment index is kept for as long as the line remains empty) 
-        - If this object differs from currently selected text-fragment, then store the object as the new currently selected text-fragment and trigger the 'change' event for all the registered event handlers, passing the text-fragment as event data.
+  - setCurrentPos: set currently selected line and column, input: pos.
+    - col-index = pos.column - 1
+    - line-index = pos.lineNumber - 1
+    - if the new line-index is different from the currently stored line index:
+      - get the object at the line-index position found on the fragmentsIndex array of the line-parser service.
+        - if undefined was found, try again with `lineIndex - 1`. (This is because when adding an empty line at the end, no text-fragment index is kept for as long as the line remains empty) 
+      - If this object differs from currently selected text-fragment, then store the object as the new currently selected text-fragment and trigger the 'change' event for all the registered event handlers, passing the text-fragment as event data.
+    - trigger the 'pos-changed' event for all the registered event handlers so that components that need to be updated at every position change, can be updated
   - clear:
     - set activeFragment & currentLine to null
   - setActiveFragment(fragment):
@@ -1379,6 +1406,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     if isModified:
       this.isDirty = True
       storageService.markDirty()
+      this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }))
   ```
 getResult(key): `if key in this.overwrites: return this.overwrites[key] else if key in this.cache: return this.cache[key].result else return null`
 - isOutOfDate(keyPart): checks if the specified key is present and marked as still-valid

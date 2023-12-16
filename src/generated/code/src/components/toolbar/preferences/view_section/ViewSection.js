@@ -49,8 +49,9 @@ class ViewSection extends React.Component {
   };
 
   render() {
+    const theme = ThemeService.getCurrentTheme();
     return (
-      <div className="view-section">
+      <div className={`view-section  ${theme}`}>
         <Select value={this.state.theme} onChange={this.handleThemeChange} className="theme-select">
           {THEMES.map((theme) => (
             <Option key={theme} value={theme}>

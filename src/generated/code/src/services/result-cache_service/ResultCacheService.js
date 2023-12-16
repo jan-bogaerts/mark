@@ -119,6 +119,7 @@ class ResultCacheService {
     if (isModified) {
       this.isDirty = true;
       StorageService.markDirty();
+      this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }));
     }
   }
 

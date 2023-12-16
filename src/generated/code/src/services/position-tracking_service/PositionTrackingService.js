@@ -8,16 +8,19 @@ import LineParser from '../line_parser/LineParser';
 class PositionTrackingService {
   constructor() {
     this.currentLine = null;
+    this.currentColumn = null;
     this.activeFragment = null;
     this.activeTransformer = null;
     this.eventTarget = new EventTarget();
   }
 
   /**
-   * Sets the currently selected line
-   * @param {number} lineIndex - The line index to set
+   * Sets the currently selected line and column
+   * @param {object} pos - The position info
    */
-  setCurrentLine(lineIndex) {
+  setCurrentPos(pos) {
+    this.currentColumn = pos.column - 1;
+    const lineIndex = pos.lineNumber - 1;
     if (this.currentLine !== lineIndex) {
       let fragment = LineParser.fragmentsIndex[lineIndex];
       if (!fragment) {
@@ -30,6 +33,8 @@ class PositionTrackingService {
       }
       this.currentLine = lineIndex;
     }
+    const posChangeEvent = new CustomEvent('pos-changed');
+    this.eventTarget.dispatchEvent(posChangeEvent);
   }
 
   /**

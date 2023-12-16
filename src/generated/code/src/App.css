@@ -29,14 +29,24 @@ div {
 }
 
 .toolbar {
-    height: 130px;
+    height: 102px; 
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.toolbar.light {
     background-color: #f0f0f0;
-    padding: 10px;
-  }
+}
+
+.toolbar.dark {
+    background-color: #323233;
+    color: white;
+}
 
 .home-tab,
 .transformers-tab {
     display: flex;
+   
   }
 
 .build-section, 
@@ -58,6 +68,27 @@ div {
     margin-right: 4px;
 }
 
+.build-section.dark, 
+.undo-section.dark, 
+.edit-section.dark, 
+.file-section.dark, 
+.font-section.dark, 
+.paragraph-section.dark, 
+.style-section.dark,
+.gpt-section.dark,
+.configuration-section.dark,
+.view-section.dark {
+    background: #1e1e1e;
+}
+
+.ant-tabs-nav {
+    margin-bottom: 8px !important;
+}
+.ant-tabs-tab {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
 .body, .outline, .ant-tree, .results-view, .ant-tabs, .results-view-tab,
 .results-view > .ant-tabs-content-holder, .results-view > .ant-tabs-content-holder > .ant-tabs-content,
 .results-view > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
@@ -69,7 +100,7 @@ div {
 }
 
 .outline.dark {
-    background-color: #001b35;
+    background-color: #252526;
     color: white;
 }
 

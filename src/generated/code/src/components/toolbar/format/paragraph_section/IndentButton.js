@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Button } from 'antd';
-import { RightOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
 import SelectionService from '../../../../services/Selection_service/SelectionService';
 import DialogService from '../../../../services/dialog_service/DialogService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
+import { MdFormatIndentIncrease  } from "react-icons/md";
 
 /**
  * IndentButton component
@@ -33,11 +33,14 @@ class IndentButton extends React.Component {
   render() {
     const { theme } = this.state;
     return (
-      <Button
-        className={`indent-button ${theme}`}
-        icon={<RightOutlined />}
-        onClick={this.handleClick}
+      <Tooltip title="Indent">
+        <Button
+          className={`indent-button ${theme}`}
+          icon={<MdFormatIndentIncrease />}
+          onClick={this.handleClick}
       />
+      </Tooltip>
+      
     );
   }
 }

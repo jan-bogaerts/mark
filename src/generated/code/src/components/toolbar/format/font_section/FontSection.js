@@ -1,15 +1,11 @@
-
 import React, { Component } from 'react';
-import { Button } from 'antd';
+import { Button, Tooltip } from 'antd';
 import { BoldOutlined, ItalicOutlined, UnderlineOutlined, StrikethroughOutlined } from '@ant-design/icons';
 import SelectionService from '../../../../services/Selection_service/SelectionService';
+import PositionTrackingService from '../../../../services/position-tracking_service/PositionTrackingService';
 import DialogService from '../../../../services/dialog_service/DialogService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
 
-/**
- * FontSection component
- * Contains actions related to the markup used in the text for applying markdown formatting.
- */
 class FontSection extends Component {
   constructor(props) {
     super(props);
@@ -20,11 +16,17 @@ class FontSection extends Component {
 
   componentDidMount() {
     SelectionService.subscribe(this.updateButtonState);
+    PositionTrackingService.eventTarget.addEventListener('pos-changed', this.updateButtonState);
+  }
+
+  componentWillUnmount() {
+    SelectionService.unsubscribe(this.updateButtonState);
+    PositionTrackingService.eventTarget.removeEventListener('pos-changed', this.updateButtonState);
   }
 
   updateButtonState = () => {
     try {
-      const currentStyle = SelectionService.getCurrentStyle();
+      const currentStyle = SelectionService.getBlockStyles();
       this.setState({ currentStyle });
     } catch (error) {
       DialogService.showErrorDialog('Error while updating button state', error);
@@ -35,7 +37,7 @@ class FontSection extends Component {
     try {
       const newStyle = { ...this.state.currentStyle };
       newStyle[styleKey] = !newStyle[styleKey];
-      SelectionService.setStyle(newStyle);
+      SelectionService.setBlockStyle(newStyle);
       this.setState({ currentStyle: newStyle });
     } catch (error) {
       DialogService.showErrorDialog('Error while toggling style', error);
@@ -48,26 +50,34 @@ class FontSection extends Component {
 
     return (
       <div className={`font-section ${theme}`}>
-        <Button
-          className={`toggle-btn ${currentStyle.bold ? 'active' : ''}`}
-          icon={<BoldOutlined />}
-          onClick={() => this.toggleStyle('bold')}
-        />
-        <Button
-          className={`toggle-btn ${currentStyle.italic ? 'active' : ''}`}
-          icon={<ItalicOutlined />}
-          onClick={() => this.toggleStyle('italic')}
-        />
-        <Button
-          className={`toggle-btn ${currentStyle.underline ? 'active' : ''}`}
-          icon={<UnderlineOutlined />}
-          onClick={() => this.toggleStyle('underline')}
-        />
-        <Button
-          className={`toggle-btn ${currentStyle.strikethrough ? 'active' : ''}`}
-          icon={<StrikethroughOutlined />}
-          onClick={() => this.toggleStyle('strikethrough')}
-        />
+        <Tooltip title="Toggle bold formatting">
+          <Button
+            className={`toggle-btn ${currentStyle.bold ? `selected-${theme}` : ''}`}
+            icon={<BoldOutlined />}
+            onClick={() => this.toggleStyle('bold')}
+          />
+        </Tooltip>
+        <Tooltip title="Toggle italic formatting">
+          <Button
+            className={`toggle-btn ${currentStyle.italic ? `selected-${theme}` : ''}`}
+            icon={<ItalicOutlined />}
+            onClick={() => this.toggleStyle('italic')}
+          />
+        </Tooltip>
+        <Tooltip title="Toggle underline formatting">
+          <Button
+            className={`toggle-btn ${currentStyle.underline ? `selected-${theme}` : ''}`}
+            icon={<UnderlineOutlined />}
+            onClick={() => this.toggleStyle('underline')}
+          />
+        </Tooltip>
+        <Tooltip title="Toggle strikethrough formatting">
+          <Button
+            className={`toggle-btn ${currentStyle.strikethrough ? `selected-${theme}` : ''}`}
+            icon={<StrikethroughOutlined />}
+            onClick={() => this.toggleStyle('strikethrough')}
+          />
+        </Tooltip>
       </div>
     );
   }

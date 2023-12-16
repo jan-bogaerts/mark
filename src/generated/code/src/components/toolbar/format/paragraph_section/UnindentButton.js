@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Button } from 'antd';
-import { UnorderedListOutlined } from '@ant-design/icons';
+import { Button, Tooltip  } from 'antd';
 import SelectionService from '../../../../services/Selection_service/SelectionService';
 import DialogService from '../../../../services/dialog_service/DialogService';
 import ThemeService from '../../../../services/Theme_service/ThemeService';
+import { MdOutlineFormatIndentDecrease } from "react-icons/md"
+
 
 /**
  * UnindentButton component
@@ -33,11 +34,14 @@ class UnindentButton extends React.Component {
   render() {
     const { theme } = this.state;
     return (
-      <Button
-        className={`unindent-button ${theme}`}
-        icon={<UnorderedListOutlined />}
-        onClick={this.handleClick}
-      />
+      <Tooltip title="Outdent">
+        <Button
+          className={`unindent-button ${theme}`}
+          icon={<MdOutlineFormatIndentDecrease />}
+          onClick={this.handleClick}
+        />
+      </Tooltip>
+      
     );
   }
 }
