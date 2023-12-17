@@ -5,9 +5,9 @@
 <!-- Title: Diagram Pages: 1 -->
 
 <svg
-   width="548pt"
-   height="472pt"
-   viewBox="0.00 0.00 547.50 471.77"
+   width="505.53525pt"
+   height="247.36177pt"
+   viewBox="0 0 505.07399 247.24123"
    version="1.1"
    id="svg846"
    sodipodi:docname="colored_filled_diagram.svg"
@@ -30,8 +30,8 @@
      inkscape:document-units="pt"
      showgrid="false"
      inkscape:zoom="1.3172669"
-     inkscape:cx="244.06594"
-     inkscape:cy="314.28709"
+     inkscape:cx="200.41497"
+     inkscape:cy="137.40571"
      inkscape:window-width="2560"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
@@ -43,20 +43,20 @@
      stroke="#008000"
      points="389,-463.77 389,-457.77 "
      id="polyline788"
-     transform="translate(-87.05332,611.17898)" />
+     transform="translate(-119.84508,478.40024)" />
   <polyline
      fill="none"
      stroke="#008000"
      points="395,-457.77 389,-457.77 "
      id="polyline790"
-     transform="translate(-87.05332,611.17898)" />
+     transform="translate(-119.84508,478.40024)" />
   <g
      id="g1669"
-     transform="translate(-88.207905,-8.5362487)">
+     transform="translate(-120.99967,-141.31499)">
     <polygon
        fill="#40ff40"
        stroke="#008000"
-       points="389,-463.77 120,-463.77 120,-427.77 395,-427.77 395,-457.77 "
+       points="120,-427.77 395,-427.77 395,-457.77 389,-463.77 120,-463.77 "
        id="polygon786"
        transform="matrix(0.34478338,0,0,3.2013963,79.673168,1631.7621)"
        style="stroke-width:0.951361;stroke-dasharray:none" />
@@ -82,7 +82,7 @@
   </g>
   <g
      id="g897"
-     transform="translate(2.8454163,-53.493825)"
+     transform="translate(-29.946345,-186.27256)"
      style="stroke-width:0.999513;stroke-dasharray:none">
     <circle
        fill="#ff8080"
@@ -112,25 +112,25 @@
   <path
      fill="none"
      stroke="#000000"
-     d="m 265.48358,267.9798 c 0,9.13924 0,19.15077 0,29.85616"
+     d="m 232.69182,135.20106 c 0,9.13924 0,19.15077 0,29.85616"
      id="path804"
      style="stroke-width:1.40801" />
   <polygon
      fill="#000000"
      stroke="#000000"
-     points="261,-417.43 254,-417.43 257.5,-427.43 "
+     points="257.5,-427.43 261,-417.43 254,-417.43 "
      id="polygon806"
-     transform="translate(7.9835828,685.1598)" />
+     transform="translate(-24.808179,552.38106)" />
   <polygon
      fill="#000000"
      stroke="#000000"
-     points="261,-402.04 257.5,-392.04 254,-402.04 "
+     points="254,-402.04 261,-402.04 257.5,-392.04 "
      id="polygon808"
-     transform="translate(7.9835828,699.38688)" />
+     transform="translate(-24.808179,566.60814)" />
   <g
      id="g1644"
      style="stroke-width:0.999513;stroke-dasharray:none"
-     transform="translate(-54.062909,-11.381665)">
+     transform="translate(-86.85467,-144.1604)">
     <path
        fill="#8080ff"
        stroke="#0000ff"
@@ -167,7 +167,7 @@
   <g
      id="edge2"
      class="edge"
-     transform="rotate(56.702229,-87.499433,79.536588)">
+     transform="rotate(56.702229,19.140048,-17.238265)">
     <title
        id="title820">B-&gt;C</title>
     <path
@@ -178,18 +178,18 @@
     <polygon
        fill="#000000"
        stroke="#000000"
-       points="167.7,-87.62 161.85,-91.46 170.26,-97.9 "
+       points="170.26,-97.9 167.7,-87.62 161.85,-91.46 "
        id="polygon824" />
     <polygon
        fill="#000000"
        stroke="#000000"
-       points="132.3,-46.42 138.15,-42.58 129.74,-36.14 "
+       points="129.74,-36.14 132.3,-46.42 138.15,-42.58 "
        id="polygon826" />
   </g>
   <g
      id="edge2-4"
      class="edge"
-     transform="rotate(56.702229,15.129003,261.90494)">
+     transform="rotate(56.702229,121.76848,165.13009)">
     <title
        id="title820-3">B-&gt;C</title>
     <path
@@ -200,21 +200,21 @@
     <polygon
        fill="#000000"
        stroke="#000000"
-       points="170.26,-97.9 167.7,-87.62 161.85,-91.46 "
+       points="161.85,-91.46 170.26,-97.9 167.7,-87.62 "
        id="polygon824-0" />
     <polygon
        fill="#000000"
        stroke="#000000"
-       points="129.74,-36.14 132.3,-46.42 138.15,-42.58 "
+       points="138.15,-42.58 129.74,-36.14 132.3,-46.42 "
        id="polygon826-7" />
   </g>
   <g
      id="g1662"
-     transform="translate(-101.8659,-23.901497)">
+     transform="translate(-134.65766,-156.68024)">
     <polygon
        fill="#ffff80"
        stroke="#ffff00"
-       points="539.5,-36 255.5,-36 255.5,0 539.5,0 "
+       points="255.5,0 539.5,0 539.5,-36 255.5,-36 "
        id="polygon831"
        transform="matrix(0.47655053,0,0,2.4708991,382.5116,262.6293)"
        style="stroke-width:0.921099;stroke-dasharray:none" />
