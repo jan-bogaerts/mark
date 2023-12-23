@@ -54,7 +54,7 @@ function createWindow () {
   mainWindow.loadURL(urlWithParams);
   // Automatically open Chrome's DevTools in development mode.
   if (!app.isPackaged) {
-    mainWindow.webContents.openDevTools();
+    //mainWindow.webContents.openDevTools();
   }
   mainRemote.enable(mainWindow.webContents);
 
@@ -87,6 +87,14 @@ function createWindow () {
     }
   });
   mainWindow.on('focus', () => { mainWindow.webContents.send('focused') });
+  mainWindow.webContents.on('devtools-opened', () => { 
+    mainWindow.webContents.send('debugger-visibility', true) 
+  });
+  mainWindow.webContents.on('devtools-closed', () => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('debugger-visibility', false) 
+    }
+  });
 }
 
 function createPluginWindow (path) {
@@ -128,13 +136,16 @@ function createLogWindow() {
     logWindow.loadURL(urlWithParams);
     // Automatically open Chrome's DevTools in development mode.
     if (!app.isPackaged) {
-      logWindow.webContents.openDevTools();
+      // logWindow.webContents.openDevTools();
     }
     mainRemote.enable(logWindow.webContents);
 
     // Emitted when the window is closed.
     logWindow.on('closed', function () {
       logWindow = null;
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('log-window-visibility', false);
+      }
       resolve();
     });
   });
@@ -186,7 +197,7 @@ ipcMain.handle('openPluginEditor', async (event, path) => {
     return true;
   }
   catch (error) {
-    dialog.showErrorDialog(error.message);
+    dialog.showErrorBox('error', error.message);
     return false;
   }
 });
@@ -207,12 +218,28 @@ ipcMain.handle('show-log-window', async (event, value) => {
   try {
     if (value) {
       await createLogWindow();
+      // when we get here, the application may have been closed, so check
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('log-window-visibility', true);
+      }
     } else {
       if (logWindow) {
         logWindow.close();
       }
     }
   } catch (error) {
-    dialog.showErrorDialog(error.message);
+    dialog.showErrorBox('error', error.message);
+  }
+});
+
+ipcMain.handle('show-debugger', async (event, value) => {
+  try {
+    if (value) {
+      mainWindow.webContents.openDevTools();
+    } else {
+      mainWindow.webContents.closeDevTools();
+    }
+  } catch (error) {
+    dialog.showErrorBox('error', error.message);
   }
 });

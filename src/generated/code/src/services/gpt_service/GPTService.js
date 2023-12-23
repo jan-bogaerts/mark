@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { encodingForModel } from "js-tiktoken";
 import DialogService from '../dialog_service/DialogService';
 import LogService from '../log_service/LogService';
+import BuildService from '../build_service/BuildService';
 
 class GPTService {
   constructor() {
@@ -90,6 +91,7 @@ class GPTService {
       maxRetries: 3,
     };
     const logMsg = LogService.beginMsg(transformer.name, fragmentKey, inputData);
+    await BuildService.tryPause();
     let response = await this.openai.chat.completions.create(inputData, config);
     let reply;
     if (response) {
@@ -101,8 +103,9 @@ class GPTService {
           DialogService.error('Invalid JSON response from OpenAI API', e.message);
         }
       }
-      LogService.logMsgResponse(logMsg, reply);
     }
+    LogService.logMsgResponse(logMsg, reply);
+    await BuildService.tryPause();
     return reply;
   }
 

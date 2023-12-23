@@ -30,7 +30,7 @@ class PluginRendererService extends TransformerBaseService {
       fs.mkdirSync(rootFolder);
     }
     const location = KeyService.calculateLocation(fragment);
-    const fileName = location.replace(" > ", "_").replace(" ", "_");
+    const fileName = location.replaceAll(" > ", "_").replaceAll(" ", "_");
     const filePath = path.join(rootFolder, fileName + ".js");
     fs.writeFileSync(filePath, content);
     return filePath;
@@ -62,7 +62,7 @@ class PluginRendererService extends TransformerBaseService {
   async renderResult(fragment) {
     const location = KeyService.calculateLocation(fragment);
     const hasShared = ProjectService.textFragments.some(f => f.title === 'shared');
-    const [message,] = await this.buildMessage(fragment, location.includes('shared >'), hasShared);
+    const [message,] = await this.buildMessage(fragment, location.endsWith('> shared'), hasShared);
     if (!message) {
       return null;
     }

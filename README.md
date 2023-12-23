@@ -1,21 +1,40 @@
 # MarkdownCode
 
-MarkdownCode is an ideation and software building tool driven by machine learning. It allows users to enter text in markdown of any length, which is automatically analyzed for various parameters and which can automatically be converted into various stages of software code.
+MarkdownCode is an ideation and corpus building/manipulation tool driven by machine learning. It allows users to enter text in markdown of any length, which can be transformed (and reverted) into something else. This is done using transformers that are completely customizable.
+
+Some use cases:
+- convert specs to code and keep the specs in sync with the code.
+- convert an angular application into a react version.
+- render test cases and UI driven tests based on specs and rendered code
+- extract and regroup feature definitions (find common features spread out over many code files)
+- ...
+
 
 ## The problem(s) it's trying to solve
 - Large language models have a limited size: even though models are getting bigger and bigger, you can't just throw any large text to it and have it render any possible code size, for the time being, they still have limits. Some models can handle more tokens than others, but no matter the size of the model, there is a hard limit that determines how much can go in and out in 1 go.
 To solve this, the prompt engine splits up the markdown text into smaller chunks and perform the conversions on each of these chunks (text fragment).
-- You don't always want to regenerate the entire code base, but instead only a couple of features at a time, which is an other great reason to split up the input prompt and use tools to track which parts have become out of date and for which prompts.
+- You don't always want to regenerate the entire result / code base, but instead only a couple of features at a time, which is an other great reason to split up the input prompt and use tools to track which parts have become out of date and for which prompts.
 - When you are chaining transformers (use the output of a prompt as the input of another prompt), it happens that at some point in the chain, the output of the transformers no longer changes cause the input hasn't changed. In order to prevent unneeded calls to the llm, some more advanced caching and prompt generation is needed. 
-- translating an application description to code takes a bit of time and requires a lot of calls to the llm. Some models are cheaper and faster but less accurate. Some prompts and text fragments are simple and can be handled by a simpler, faster model. Others need the big guns. In order to optimize speed and cost, you want to be able to determine which model is used by each prompt, and even for each text fragment.
-- not all applications or environments have the same structure (backend web servers usually don't have much use of UI components), so not all application descriptions can be processed with the same prompts, flexibility in the translation process is needed.
-- I am a software developer, so I want some control and debug ability over the entire conversion process. This is why the output of every step can be examined and manually overwritten.
+- Transforming large corpora (like the full specs of an app) takes a bit of time and requires a lot of calls to the llm. Some models are cheaper and faster but less accurate. Some prompts and text fragments are simple and can be handled by a simpler, faster model. Others need the big guns. In order to optimize speed and cost, you want to be able to determine which model is used by each prompt, and even for each text fragment.
+- not all input has the same structure (backend web servers usually don't have much use of UI components), so flexibility in the translation process is needed and you should be able to declare your own prompts.
+- For the same reason, some feedback is also useful for tracking what is up-to-date, out-of-date, currently being built or paused for inspection.
+- In any large conversion project, errors will occur, so some control and debug ability over the entire conversion process is needed. This is why the output of every step can be examined and manually overwritten and there is full access to the chrome debugger for the custom transformers.
 
 ## how it works
+When a project is loaded, the markdown is first split up into text fragments. A fragment basically is a header and the text below that header. If the project contains any custom transformers, these are also loaded, otherwise only the default/built-in set of transformers is available.
+Next, you select a transformer to be run and the scope (only the currently selected fragment or the entire project). 
+Transformers are (shortish) javascript modules that usually call upon an LLM to somehow transform the input. This input can consist out of 1 or more of these fragments, and or the results of other transformers and or any other external data source you can think of.
+A transformer will only update it's result if the input it uses to calculate the result, has changed. To accomplish this, each transformer stores all of it's results in a database and monitors changes in the project and all the other transformers it depends on to compare the new input, triggered by a change somewhere else, with the previous input, stored in the database.
+Because transformers are just javascript modules, they can do lots of other stuff like writing results to a file, monitor file changes, integrate with selenium or write back to the markdown file.
 ![diagram](./colored_filled_diagram.svg)
 
+## transformer libraries
+This is a list of transformer-sets that you can use in your own projects as-is or as a starting point for your own libraries:
+- built-in: this is the set of transformers that is built into the application and which are used when you open the plugin window to edit your own transformers. The main purpose of this set is to create transformer plugins that can be used for other projects.
+- react-client: a set of transformers that can be used for creating/maintaining javascript based front-end apps. This can be for the web or electron. Currently tested for react apps, though I suspect other libraries might also work, except for angular which will probably need some more.
+
 ## an example
-Take a look at the [definition of the markdown-code editor & compiler](https://github.com/jan-bogaerts/markdownCode/blob/main/src/markdownCode.md). A pretty strong use-case.
+Take a look at the [definition of the markdown-code editor & compiler](https://github.com/jan-bogaerts/markdownCode/blob/main/src/markdownCode.md).
 
 ## Supported Languages
 

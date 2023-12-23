@@ -139,14 +139,14 @@ class LineParserHelpers {
    * @param {number} index - The index of the line.
    */
   static handleTitleLine(service, line, index) {
-    if (service.fragmentsIndex.length === 0 || service.fragmentsIndex.length < index || service.fragmentsIndex[index] === null) {
+    const [fragment, fragmentStart] = this.getFragmentAt(service, index);
+    if ((service.fragmentsIndex.length === 0 || service.fragmentsIndex.length < index || service.fragmentsIndex[index] === null) && (!fragment || !this.isInCode(fragment))) {
       const toAdd = service.createTextFragment(line, ProjectService.textFragments.length);
       while (service.fragmentsIndex.length <= index) {
         service.fragmentsIndex.push(null);
       }
       service.fragmentsIndex[index] = toAdd;
     } else {
-      const [fragment, fragmentStart] = this.getFragmentAt(service, index);
       if (!fragment) {
         throw new Error('internal error: no fragment found in non empty index table');
       }

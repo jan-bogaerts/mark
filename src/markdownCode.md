@@ -195,17 +195,26 @@ the following tabs are available:
     - disabled when `!positionTrackingService.activeFragment || !positionTrackingService.activeTransformer || positionTrackingService.activeTransformer.isFullRender || buildService.isBuilding`
     - calls `build-service.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer)`
   - separator (type='vertical', height='24px')
-  - show log: a button, when pressed, call  `window.electron.showLogWindow(true)`
+  - show log: a toggle button, when pressed, asks the log-service to update the showLogWindow state.
+    - the toggle button's state follows that of the log-service's showLogWindow state. 
+  - show debugger: a toggle button, when pressed, asks the build-service to update the showDebugger state.
+    - the toggle button's state follows that of the build-service's showDebugger state. 
+  - separator (type='vertical', height='24px')
   - debug: a toggle button, when pressed, asks the build-service to update the debug state.
     - the toggle button's state follows that of the build-service's debug state. 
   - run next: a button that will continue rendering to the next transformer
-    - disabled when `!debug && !buildService.isBuilding`
+    - disabled when `!debug || !isBuilding || !isPaused`
+  - stop run: a button that calls  `buildService.stopRun()`
+    - use the icon TbPlayerStop (from react-icons/tb)
+    - disabled when `!debug || !isBuilding || !isPaused`
+  - `isPaused = !!buildService.debugResolver`
 - Store the disabled value of all the buttons in the state so that they can be updated from the event handlers.
 - initialize the button states when loaded
 - register event handlers to monitor for changes with:
   - project-service (field: eventTarget, event: fragment-out-of-date): update disabled state of the buttons
   - position-tracking service (field: eventTarget, event: change): update disabled state of the buttons
-  - build-service (field eventTarget, event: is-building): update disabled state of the buttons
+  - build-service (field eventTarget, events: is-building, is-pausing, has-resumed, show-debugger): update disabled state of the buttons
+  - log-service (field eventTarget, event: log-window-visibility): update the disabled state of show-log.
 - unregister the event handlers when unloaded.
 
 #### format
@@ -428,7 +437,7 @@ Remember that each button needs it's own appropriate icon.
   - ...
   - 6 or more: LuHeading6
 - selecting the icon needs to happen in the render function so that no object or function needs to be kept in the state
-- if `fragment?.isBuilding` show a spin component (from the antd lib) instead of an icon. 
+- if `fragment?.isBuilding && buildService.isBuilding` show a spin component (from the antd lib) instead of an icon. 
 - the LuHeading1, LuHeading2, LuHeading3, LuHeading4, LuHeading5, LuHeading6 icons are imported from the 'react-icons/lu' library.
 - select which icon to use in the render function. Use the state 'depth' to select which icon to use.
 - the component shows a tooltip (from the antd library) which shows the status of the component. 
@@ -448,6 +457,8 @@ Remember that each button needs it's own appropriate icon.
     - if `e.detail?.fragment?.key === fragment?.key` then set the icon to null, so that the spinner is shown instead
   - `fragment-up-to-date`:
     - if `e.detail === fragment?.key` then refresh the icon, tooltip and the color. Do the full recalculation cause this event indicates that the fragment is only up to date for a single transformer, it could still be out-of-date for other transformers.
+- upon construction register an event handler with the build-service (prop: eventTarget) to handle the following events (Unregister when unloading):
+  - `is-building`: if `!e.detail.isBuilding` then hide the spinner and show the icon again.
 - load tooltip, depth & color from prop.fragment when component is loaded
 
 #### results view
@@ -473,17 +484,19 @@ Remember that each button needs it's own appropriate icon.
   - `change`: handles changes to the currently selected text-fragment:
     - refresh the status
 - upon construction register an event handler with the project-service (field: eventTarget) to handle the following events (Unregister when unloading):
-  - `fragment-out-of-date`: 
-    - refresh the status
-  - `fragment-building`:
-    - refresh the status
-  - `fragment-up-to-date`:
-    - refresh the status
-  
+  - `fragment-out-of-date`:  refresh the status
+  - `fragment-building`: refresh the status
+  - `fragment-up-to-date`: refresh the status
+- upon construction register an event handler with the build-service (field: eventTarget) to handle the following events (Unregister when unloading):
+  - `is-pausing`: refresh the status
+  - `has-resumed`: refresh the status
 - The different states to show:
   - building: 
     - shows a spin component (from the antd lib)
-    - when `positionTrackingService.activeFragment && buildStackService.isRunning(this.props.transformer, positionTrackingService.activeFragment)`
+    - when `positionTrackingService.activeFragment && buildStackService.isRunning(this.props.transformer, positionTrackingService.activeFragment) && !buildService.isPaused`
+  - paused:
+    - shows a pause icon
+    - when `positionTrackingService.activeFragment && buildStackService.isRunning(this.props.transformer, positionTrackingService.activeFragment) && buildService.isPaused`
   - overwritten:
     - use the LuType icon (from react-icons)
     - when `transformer.cache.isOverwritten(positionTrackingService.activeFragment?.key)`
@@ -616,12 +629,18 @@ Remember that each button needs it's own appropriate icon.
     - addTextFragment(fragment, index): if index is at end of the text-fragments list, add to list, otherwise insert the fragment at the specified position in the text-fragments list. raise the fragment-inserted event.
     - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date, param = fragment.key
     - markUpToDate(fragment, transformer): called when a transformer has updated the result for the fragment. do:
-      - fragment.isBuilding = false,
+      - decrement fragment.buildCount
+      - fragment.isBuilding = fragment.buildcount <= 0,
       - if not fragment.outOfDateTransformers?.length > 0: [...CybertronService.transformers]
       - fragment.outOfDateTransformers.remove(transformer)
-      - if fragment.outOfDateTransformers.length = 0: fragment.isOutOfDate = false
-      - raise the event fragment-up-to-date, param = fragment.key
-    - markIsBuilding(fragment, transformer): called to indicate that a fragment is being built. do: fragment.isBuilding = true, raise the event 'fragment-building, param {fragment: fragment, transformer: transformer}
+      - if fragment.outOfDateTransformers.length = 0:
+        - fragment.isOutOfDate = false
+        - raise the event fragment-up-to-date, param = fragment.key
+      - otherwise, raise the event 'fragment-building', params: fragment & transformer cause the state has changed for transformers, let them update
+    - markIsBuilding(fragment, transformer): called to indicate that a fragment is being built. do: 
+      - fragment.isBuilding = true
+      - fragment.buildCount = (fragment.buildCount || 0) + 1
+      - raise the event 'fragment-building, param {fragment: fragment, transformer: transformer}
     - getFragment(key): search for the text-fragment with the specified key and return it: `return this.textFragments.find(t => t.key == key)`
     - tryAddToOutOfDate(key, transformer):
       ```python
@@ -1068,13 +1087,13 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 
 
       def handleTitleLine(service, line, index):
-        if fragmentsIndex.length == 0 or fragmentsIndex.length < index or fragmentsIndex[index] == null:
+        fragment, fragmentStart = getFragmentAt(service, index)
+        if (fragmentsIndex.length == 0 or fragmentsIndex.length < index or fragmentsIndex[index] == null) and (not fragment or not isInCode(fragment)):
           toAdd = service.createTextFragment(line, projectService.textFragments.length)
           while service.fragmentsIndex.length <= index:
              service.fragmentsIndex.push(null)
           service.fragmentsIndex[index] = toAdd
         else:
-          fragment, fragmentStart = getFragmentAt(service, index)
           if not fragment:
             raise Exception('internal error: no fragment found in non empty index table')
           fragmentPrjIndex = projectService.textFragments.indexOf(fragment)
@@ -1165,14 +1184,27 @@ The module 'LineParserHelpers' contains the following helper functions used by t
   
 ### log service
 - the log service is a global singleton that is responsible for keeping track of messages that should be shown to the user.
+- fields:
+  - eventTarget: a field used to dispatch events.
+- properties:
+  - showLogWindow: when set:
+    - call  `window.electron.showLogWindow(value)`
+    - trigger the `log-window-visibility` event through the 'eventTarget' field
 - functions:
   - beginMsg(transformerName, fragmentKey, inputData): 
     - creates a gpt msg log item, 
-    - convert the fragmentKey to a location using `keyService.calculateLocation(ProjectService.getFragmentByKey(fragmentKey))`
+    - convert the fragmentKey to a location using `keyService.calculateLocation(ProjectService.getFragment(fragmentKey))`
     - store all the data and assigns a UUID to the log object. 
+    - if in debug mode (buildService.debug), then make certain that the log window is open
     - This log object is then serialized to a string (pretty print) and send to the log window using the global function `window.electron.logMsg`. 
     - Finally returns the log object.
-  - logMsgResponse(logObj, response): creates an object containing the response and the UUID field of the logObj, serializes this object and sends it to the log window using `window.electron.logMsg`
+  - logMsgResponse(logObj, response): creates an object containing the response and the UUID field of the logObj, serializes this object and sends it to the log window using `window.electron.logMsg`. If in debug mode (buildService.debug), then make certain that the log window is open
+  - setLogWindowVisibility: a function that 
+    - should be registered as a callback with `window.electron.onLogWindowVisibility`, unregistered using `window.electron.removeOnLogWindowVisibility`
+    - when called:
+      - don't call `window.electron.showLogWindow(value)` cause the window is reporting it's new state
+      - update the internal state of showLogWindow
+      - trigger the `log-window-visibility` event through the 'eventTarget' field
 
 ### gpt service
 - the GPT service is a global singleton that is responsible for communicating with the open-ai api backend. It is primarily used by transformers that perform more specific tasks.
@@ -1229,6 +1261,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
       maxRetries: 3,
     }
     logMsg = logService.beginMsg(transformer.name, fragmentKey, inputData)
+    await BuildService.tryPause()
     response = await this.openai.chat.completions.create(inputData, config)
     reply = None
     if response:
@@ -1239,6 +1272,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         except(err):
           dialogService.showError('Failed to convert result to json', err)
     await logService.logMsgResponse(logMsg, reply)      
+    await BuildService.tryPause()
     return reply
   ```
 - getModelForRequest: search for the model to use in the modelsMap dictionary:
@@ -1462,6 +1496,9 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 ### build service
 - the build service is a global singleton that processes all the text-fragments of the project-service. It uses a set of transformers to iteratively generate conversions on the different text-fragments.
 - eventTarget: a field used to dispatch events.
+- showDebugger: a property, when set:
+  - call `window.electron.showDebugger(value)`
+  - trigger the `show-debugger` event through the 'eventTarget' field
 - async buildAll: to build the project, do:
   - if `CybertronService.activeEntryPoint.isFullRender` exists
     - call `await CybertronService.activeEntryPoint.getResults()`
@@ -1474,7 +1511,27 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - debug: a property to indicate if the build service is currently in debug mode or not. Load the value from local storage upon creation. When the value is updated, save to local storage
 - isBuilding: a property to indicate if one of the build functions (buildAll, runTransformer, buildFragment) is currently running or not. These functions set isBuilding to true at the start and use a try-finally to make certain that the isBuilding flag is also turned to false at the end.
   - set isBuilding: trigger the 'is-building' event through the 'eventTarget' field
-  
+- isPaused: a property that gets wether currently paused or not. `!!this.debugResolver;`
+- tryPause: a method to pause execution until user presses continue or stop button, if in debug mode.
+  ```python
+    def tryPause():
+    if this.debug:
+      pause = new Promise((resolve, reject) => {
+        this.debugResolver = resolve
+        this.debugRejector = reject
+      })
+      this.eventTarget.dispatchEvent(new CustomEvent('is-pausing'))
+      await pause
+      this.eventTarget.dispatchEvent(new CustomEvent('has-resumed'))
+  ```
+- runNext: raise the debugResolver (if assigned) and reset to null    
+- stopRun: raise the debugRejector (if assigned) and reset to null
+- setDebuggerVisibility: a function that 
+    - should be registered as a callback with `window.electron.onDebuggerVisibility`, unregistered using `window.electron.removeOnDebuggerVisibility`
+    - when called:
+      - don't call `window.electron.showDebugger(value)` cause the window is reporting it's new state
+      - update the internal state of showDebugger
+      - trigger the `show-debugger` event through the 'eventTarget' field
 
 ### build-stack service
 - the build-stack service is used during the build process to make certain that there are no circular references in the process. This occurs when a transformer depends on the result of another transformer that (eventually) again relies on the result of the first transformer, which can't be rendered yet.
@@ -1617,7 +1674,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       if not keyedMessage: 
         return None
       message, keys = keyedMessage
-      return JSON.stringify(message) == JSON.stringify(prompt) # structure and everything must remain the same
+      return JSON.stringify(message) != JSON.stringify(prompt) # structure and everything must remain the same
     finally:
       buildStackService.mode = 'normal'
   ```
@@ -1715,7 +1772,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - collect-response: add a quote to the list of quotes
   ```python
     def collectResponse(toAdd, end, lines, title, count, quotes):
-      key = title.replace(' > ', '_').replace(' ', '_').replace('-', '_').strip()
+      key = title.replaceAll(' > ', '_').replaceAll(' ', '_').replaceAll('-', '_').strip()
       toAdd['end'] = line_nr
       toAdd['lines'] = lines
       toAdd['name'] = '{0}_{1}'.format(key, count)
@@ -1732,10 +1789,15 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     ```python (pseudo)
     async def getResult(fragment):
       quotes = []
-      if not this.cache.isOutOfDate(fragment.key):
+      if BuildStackService.mode === 'validating' or not this.cache.isOutOfDate(fragment.key):
         quotes = this.cache.getFragmentResults(fragment.key)
       else:
-        quotes = await this.renderResult(fragment)
+        if not BuildStackService.tryRegister(this, fragment):
+          return
+        try:
+          quotes = await this.renderResult(fragment)
+        finally:
+          BuildStackService.unRegister(this, fragment)
       if not quotes or len(quotes) == 0:
         return fragment.lines.join('\n')
       else:
@@ -1888,7 +1950,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       if not fs.existsSync(rootFolder):
         fs.mkdirSync(rootFolder)
       location = KeyService.calculateLocation(fragment)        
-      fileName = location.replace(" > ", "_").replace(" ", "_")
+      fileName = location.replaceAll(" > ", "_").replaceAll(" ", "_")
       file_path = path.join(rootPath, fileName + ".js")
       with open(file_path, "w") as writer:
         writer.write(content)
@@ -1909,7 +1971,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     ```python
       location = keyService.calculateLocation(fragment)
       haShared = ProjectService.textFragments.some(f => f.title === 'shared')
-      message, = await this.buildMessage(fragment, location.contains('shared >'), hasShared)
+      message, = await this.buildMessage(fragment, location.endsWith('> shared'), hasShared)
       if not message:
         return None
       if not len(fragment.lines):

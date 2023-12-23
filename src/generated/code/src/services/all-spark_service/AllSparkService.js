@@ -57,6 +57,7 @@ class AllSparkService {
       return plugin;
     }
     catch(error){
+      console.log(error);
       DialogService.showErrorDialog(`Error loading plugin ${definition}`, error);
     }
   }

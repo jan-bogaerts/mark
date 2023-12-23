@@ -1,23 +1,33 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import keyService from '../key_service/KeyService';
 import ProjectService from '../project_service/ProjectService';
+import BuildService from '../build_service/BuildService';
 
-/**
- * LogService class
- * This class is responsible for keeping track of messages that should be shown to the user.
- */
 class LogService {
-  /**
-   * beginMsg function
-   * This function creates a gpt msg log item, stores all the data and assigns a UUID to the log object.
-   * This log object is then serialized to a string and sent to the log window using the global function `window.electron.logMsg`.
-   * @param {string} transformerName - The name of the transformer.
-   * @param {string} fragmentKey - The key of the fragment.
-   * @param {object} inputData - The input data.
-   * @returns {object} The log object.
-   */
+  constructor() {
+    this.eventTarget = new EventTarget();
+    this._showLogWindow = false;
+
+    // Register the callback for log window visibility changes
+    window.electron.onLogWindowVisibility(this.setLogWindowVisibility.bind(this));
+  }
+
+  // Getter and setter for showLogWindow
+  get showLogWindow() {
+    return this._showLogWindow;
+  }
+
+  set showLogWindow(value) {
+    if (this._showLogWindow === value) return;
+    this._showLogWindow = value;
+    window.electron.showLogWindow(value);
+    this.eventTarget.dispatchEvent(new CustomEvent('log-window-visibility', { detail: value }));
+  }
+
   beginMsg(transformerName, fragmentKey, inputData) {
+    if (BuildService.debug) {
+      this.showLogWindow = true;
+    }
     const logObj = {
       uuid: uuidv4(),
       transformerName,
@@ -25,20 +35,14 @@ class LogService {
       location: keyService.calculateLocation(ProjectService.getFragment(fragmentKey)),
       inputData,
     };
-
     window.electron.logMsg(JSON.stringify(logObj, null, 2));
-
     return logObj;
   }
 
-  /**
-   * logMsgResponse function
-   * This function creates an object containing the response and the UUID field of the logObj,
-   * serializes this object and sends it to the log window using `window.electron.logMsgResponse`.
-   * @param {object} logObj - The log object.
-   * @param {object} response - The response object.
-   */
   logMsgResponse(logObj, response) {
+    if (BuildService.debug) {
+      this.showLogWindow = true;
+    }
     const responseObj = {
       uuid: logObj.uuid,
       response,
@@ -46,7 +50,19 @@ class LogService {
 
     window.electron.logMsg(JSON.stringify(responseObj));
   }
+
+  setLogWindowVisibility(ev, value) {
+    // Update internal state and trigger event, but don't call showLogWindow as the window is reporting its new state
+    this._showLogWindow = value;
+    this.eventTarget.dispatchEvent(new CustomEvent('log-window-visibility', { detail: value }));
+  }
+
+  // Ensure to clean up when the service is no longer needed
+  dispose() {
+    window.electron.removeOnLogWindowVisibility(this.setLogWindowVisibility.bind(this));
+  }
 }
 
 // Exporting the singleton instance of the LogService class
-export default new LogService();
+const logServiceInstance = new LogService();
+export default logServiceInstance;

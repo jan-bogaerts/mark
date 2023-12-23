@@ -16,7 +16,7 @@ class App extends Component {
   handleOpen = async () => {
     if (isLoaded) return;
     isLoaded = true;
-    allSpark.load();
+    await allSpark.load();
     if (window.electron.fileToOpen) {
       let canOpen = true;
       if (!fs.existsSync(window.electron.fileToOpen)) {
@@ -39,7 +39,10 @@ class App extends Component {
   };
 
   componentDidMount() {
-    setTimeout(this.handleOpen, 100); // add a small timeout. in debug mode, this could cause problems related to 'access problems' when load the plugins
+    if (!window.electron.isLogMode) {
+      setTimeout(this.handleOpen, 500); // add a small timeout. in debug mode, this could cause problems related to 'access problems' when load the pluginsOutput
+    }
+    //this.handleOpen();
   }
 
   render() {

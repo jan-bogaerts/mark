@@ -69,19 +69,24 @@ class ProjectService {
   }
 
   markUpToDate(fragment, transformer) {
-    fragment.isBuilding = false;
+    fragment.buildCount--;
+    fragment.isBuilding = fragment.buildCount >= 0;
     if (!fragment.outOfDateTransformers?.length > 0) {
       fragment.outOfDateTransformers = [...CybertronService.transformers];
     }
     fragment.outOfDateTransformers = fragment.outOfDateTransformers.filter(t => t !== transformer);
     if (fragment.outOfDateTransformers.length === 0) {
       fragment.isOutOfDate = false;
+      this.dispatchEvent('fragment-up-to-date', fragment.key);
+    } else {
+      // the state has changed for transformers, let them update
+      this.dispatchEvent('fragment-building', { fragment: fragment, transformer: transformer });
     }
-    this.dispatchEvent('fragment-up-to-date', fragment.key);
   }
 
   markIsBuilding(fragment, transformer) {
     fragment.isBuilding = true;
+    fragment.buildCount = (fragment.buildCount || 0) + 1;
     this.dispatchEvent('fragment-building', { fragment: fragment, transformer: transformer });
   }
 

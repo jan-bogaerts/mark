@@ -63,7 +63,7 @@ class TransformerBaseService {
         return false;
       }
       const [message] = keyedMessage;
-      return JSON.stringify(message) === JSON.stringify(prompt);
+      return JSON.stringify(message) !== JSON.stringify(prompt);
     } finally {
       BuildStackService.mode = 'normal';
     }

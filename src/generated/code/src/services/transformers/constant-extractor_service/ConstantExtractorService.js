@@ -1,5 +1,6 @@
 
 import TransformerBaseService from '../../transformer-base_service/TransformerBaseService';
+import BuildStackService from '../../build-stack_service/BuildStackService';
 
 /**
  * ConstantExtractorService class
@@ -63,7 +64,7 @@ class ConstantExtractorService extends TransformerBaseService {
    */
   collectResponse(toAdd, end, lines, key, count, quotes) {
     // key = title.split('# ')[-1].replace(' > ', '_').replace(' ', '_').strip()
-    key = key.replace(' > ', '_').replace(' ', '_').replace('-', '_').trim();
+    key = key.replaceAll(' > ', '_').replaceAll(' ', '_').replaceAll('-', '_').trim();
     toAdd['end'] = end;
     toAdd['lines'] = lines;
     toAdd['name'] = `${key}_${count}`;
@@ -88,10 +89,17 @@ class ConstantExtractorService extends TransformerBaseService {
    */
   async getResult(fragment) {
     let quotes = [];
-    if (!this.cache.isOutOfDate(fragment.key)) {
+    if (BuildStackService.mode === 'validating' || !this.cache.isOutOfDate(fragment.key)) {
       quotes = this.cache.getFragmentResults(fragment.key);
     } else {
-      quotes = await this.renderResult(fragment);
+      if (!BuildStackService.tryRegister(this, fragment)) {
+        return;
+      }
+      try {
+        quotes = await this.renderResult(fragment);
+      } finally {
+        BuildStackService.unRegister(this, fragment);
+      }
     }
 
     if (!quotes || quotes.length === 0) {
