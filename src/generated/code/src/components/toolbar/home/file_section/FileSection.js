@@ -120,7 +120,7 @@ class FileSection extends Component {
           <Button icon={<SaveOutlined />} onClick={this.saveProject} disabled={!this.state.isDirty || !this.state.filename} />
         </Tooltip>
         <Tooltip title="Save Project As">
-          <Button icon={<SaveFilled />} onClick={this.saveProjectAs} disabled={!this.state.isDirty} />
+          <Button icon={<SaveFilled />} onClick={this.saveProjectAs} />
         </Tooltip>
         <Tooltip title="Toggle Auto Save">
           <Button icon={<SyncOutlined />} onClick={this.toggleAutoSave} type={this.state.autoSave ? 'primary' : 'default'} />

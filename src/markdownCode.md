@@ -1,5 +1,5 @@
-# MarkdownCode
-MarkdownCode is an ideation and software building tool driven by machine learning. It allows users to enter text in markdown which is automatically analyzed for various parameters and which can be converted into executable software code.
+# Mark
+Mark is an ideation and software building tool driven by machine learning. It allows users to enter text in markdown which is automatically analyzed for various parameters and which can be converted into executable software code.
 
 ## development stack
 - developed in javascript (ES6)
@@ -93,7 +93,6 @@ the following tabs are available:
       - call storage-service save without param.
     - wrap in an error handler and show the error
   - save as: a button to save the current project to a new location.
-    - enabled when `projectService.isDirty = True`
     - show a save-as dialog `dialogResult = await dialogService.showSaveDialog()`
     - if not dialogResult.canceled and dialogResult.filePath, ask the storage-service to save the project to the new location.
     - wrap in an exceptions handler and show the error
@@ -167,7 +166,7 @@ the following tabs are available:
 - The transformers-configuration section contains actions that are related to the transformers that are available in the application.
 - all buttons are wrapped in a tooltip (from the antd library) containing a description of the action.
 - it contains the following actions:
-  - edit transformers: a button that which will open a new window of the markdownCode editor in plugin-mode, using the project at the specified path.
+  - edit transformers: a button that which will open a new window of the Mark editor in plugin-mode, using the project at the specified path.
     - disabled when `window.electron.isPluginMode == true`
     - icon: MdRebaseEdit
     - do:
@@ -185,12 +184,9 @@ the following tabs are available:
 - all buttons use an appropriate icon as content, no text.
 - all buttons are wrapped in a tooltip (from the antd library) containing an extensive description of the action.
 - it contains the following actions:
-  - all: a button to start rendering the currently selected entry point for the entire project.
-    - disabled when project-service.isAnyFragmentOutOfDate() == false or when buildService.isBuilding
+  - all: a button to start rendering the currently active transformer for the entire project.
+    - disabled when project-service.isAnyFragmentOutOfDate() == false or when buildService.isBuilding or !positionTrackingService.activeTransformer
     - calls `build-service.buildAll()`
-  - code for active fragment: a button to start rendering the currently selected entry point for the currently active fragment.
-    - disabled when `!positionTrackingService.activeFragment?.isOutOfDate || CybertronService.activeEntryPoint?.isFullRender || buildService.isBuilding`
-    - calls `build-service.buildFragment(positionTrackingService.activeFragment)`
   - active fragment with active transformer: a button to start rendering the result for the currently active fragment and transformer.
     - disabled when `!positionTrackingService.activeFragment || !positionTrackingService.activeTransformer || positionTrackingService.activeTransformer.isFullRender || buildService.isBuilding`
     - calls `build-service.runTransformer(positionTrackingService.activeFragment, positionTrackingService.activeTransformer)`
@@ -509,7 +505,7 @@ Remember that each button needs it's own appropriate icon.
     - use the LuArrowDownToDot icon
     - when `!transformer.cache.getResult(positionTrackingService.activeFragment?.key)`
     - show in orange
-- the component shows a tooltip (from the antd library) which shows the status of the component. 
+- the component shows a tooltip (from the antd library) which shows the status of the component. If the fragment is out-of-date, include this in the tooltip 
 
 
 ##### results view tab
@@ -630,7 +626,7 @@ Remember that each button needs it's own appropriate icon.
     - markOutOfDate(fragment): fragment.isOutOfDate = true, raise the event fragment-out-of-date, param = fragment.key
     - markUpToDate(fragment, transformer): called when a transformer has updated the result for the fragment. do:
       - decrement fragment.buildCount
-      - fragment.isBuilding = fragment.buildcount <= 0,
+      - fragment.isBuilding = fragment.buildcount > 0,
       - if not fragment.outOfDateTransformers?.length > 0: [...CybertronService.transformers]
       - fragment.outOfDateTransformers.remove(transformer)
       - if fragment.outOfDateTransformers.length = 0:
@@ -1499,15 +1495,15 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - showDebugger: a property, when set:
   - call `window.electron.showDebugger(value)`
   - trigger the `show-debugger` event through the 'eventTarget' field
-- async buildAll: to build the project, do:
-  - if `CybertronService.activeEntryPoint.isFullRender` exists
-    - call `await CybertronService.activeEntryPoint.getResults()`
+- async buildAll(transformer): to build the project, do:
+  - if `transformer.isFullRender` exists
+    - call `await transformer.getResults(ProjectService.textFragments)`
   - otherwise: for each fragment in project-service.textFragments: 
-     - `await CybertronService.activeEntryPoint.getResult(fragment)`
-- async buildFragment(fragment): 
-    - ask `CybertronService.activeEntryPoint` to get it's result (`getResult(fragment)`) (async)
+     - `await transformer.getResult(fragment)`
+  - on error: `DialogService.showErrorDialog(error)`
 - async runTransformer(fragment, transformer):
   - ask the transformer to get it's result (`getResult(fragment)`) (async)
+  - on error: `DialogService.showErrorDialog(error)`
 - debug: a property to indicate if the build service is currently in debug mode or not. Load the value from local storage upon creation. When the value is updated, save to local storage
 - isBuilding: a property to indicate if one of the build functions (buildAll, runTransformer, buildFragment) is currently running or not. These functions set isBuilding to true at the start and use a try-finally to make certain that the isBuilding flag is also turned to false at the end.
   - set isBuilding: trigger the 'is-building' event through the 'eventTarget' field
@@ -1545,14 +1541,16 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     if toSearch in this.running:
       return False
     this.running[toSearch] = True
-    ProjectService.markIsBuilding(fragment, transformer) # do here cause all transformers need to pass the stack
+    if fragment:
+      ProjectService.markIsBuilding(fragment, transformer) # do here cause all transformers need to pass the stack
     return True
     ```
   - unRegister(transformer, fragment):
     ```python
     toSearch = fragment?.key + '-' + transformer?.name
     delete this.running[toSearch]
-    ProjectService.markUpToDate(fragment, transformer) # do here cause all transformers need to pass the stack
+    if fragment:
+      ProjectService.markUpToDate(fragment, transformer) # do here cause all transformers need to pass the stack
     ```
   - isRunning(transformer, fragment):
     ```python
@@ -1647,7 +1645,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     - transformer = this
     - dependencies = this.dependencies
 - functions:
-  - renderResults(): for transformers that require the entire project as input. throws a not-implemented error since inheritors need to supply this function.
+  - renderResults(fragments): for transformers that require the entire project as input. throws a not-implemented error since inheritors need to supply this function.
   - renderResult(textFragment): do a full rerender for the fragment
     ```python (pseudo)
     def renderResult(textFragment):
@@ -1739,7 +1737,9 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - functions:
   - extract-quotes: extract all the locations in the text that contain quotes
   ```python (pseudo)
-    def extractQuotes(key, lines):
+    def extractQuotes(fragment):
+      key = fragment.key
+      lines = fragment.lines
       quotes = []
       current_quote = None
       cur_lines = []
@@ -1760,28 +1760,29 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
                       current_quote = {'start': line_nr}
           elif not line and current_quote: # empty line so we need to close the quote
               count += 1
-              collectResponse(current_quote, line_nr, cur_lines, key, count, quotes)
+              collectResponse(current_quote, line_nr, cur_lines, fragment, count, quotes)
               current_quote = None
               cur_lines = []
           line_nr += 1
       if current_quote:
           count += 1
-          collectResponse(current_quote, line_nr, cur_lines, key, count, quotes)
+          collectResponse(current_quote, line_nr, cur_lines, fragment, count, quotes)
       return quotes
   ```
   - collect-response: add a quote to the list of quotes
   ```python
-    def collectResponse(toAdd, end, lines, title, count, quotes):
-      key = title.replaceAll(' > ', '_').replaceAll(' ', '_').replaceAll('-', '_').strip()
+    def collectResponse(toAdd, end, lines, fragment, count, quotes):
+      title = keyService.calculateLocation(fragment)
+      title = 'res_' + title.replaceAll(' > ', '_').replaceAll(' ', '_').replaceAll('-', '_').strip()
       toAdd['end'] = line_nr
       toAdd['lines'] = lines
-      toAdd['name'] = '{0}_{1}'.format(key, count)
+      toAdd['name'] = '{0}_{1}'.format(title, count)
       quotes.append(current_quote)
   ```
   - render-result(pseudo):
     ```python (pseudo)
     def renderResult(textFragment):
-      result = this.extractQuotes(textFragment.key, textFragment.lines)
+      result = this.extractQuotes(textFragment)
       this.cache.setResult(textFragment.key, result, [*textFragment.lines]) # duplicate lines so that the cache has a local copy that doesn't change if the lines in the text fragment change
       return result
     ```
@@ -1984,6 +1985,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       return filename
     ```
   - buildMessage(fragment, asShared, hasShared):
+    - count the nr of non-empty lines in fragment.lines. When 0, return null
     - if asShared:
       - result (json array):
         - role: system, content:
@@ -2020,7 +2022,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
           >   - description: (optional) a string that describes what the transformer does
           > - buildMessage(fragment): (required) a function that builds and returns the prompt that should be used for the transformer and text-fragment. Note: if there is an iterator function, the argument list may be different and must match the argument list of the callback parameter of the iterator.
           > - renderResult(fragment): (optional) a function that renders the result for the specified fragment.
-          > - renderResults(): (optional) a function that renders a result which requires all the fragments in the project.
+          > - renderResults(fragments): (optional) a function that renders a result which requires all the fragments in the project.
           > - calculateMaxTokens(inputTokenCount): (optional) a function that calculates and returns the expected maximum token count used for the transformer's prompt
           > - iterator(fragment, callback, result) (optional): a function that iterates over 1 or more values and calls the callback function for each set of values that needs to be processed. the parameters of the callback function are passed on to the buildMessage function. 
           > - cleanResponse(response) (optional): cleans or modifies the response that was produced by the llm before saving it.
@@ -2043,7 +2045,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
           >   var result = [
           >       {
           >         role: 'system',
-          >         content: resources.MarkdownCode_services_transformers_compress_service_0,
+          >         content: resources.mark_services_transformers_compress_service_0,
           >       },
           >       {
           >         role: 'user',

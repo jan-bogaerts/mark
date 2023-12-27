@@ -98,15 +98,20 @@ class TransformerBaseService {
     }
   }
 
-  async getResults() {
-    if (!BuildStackService.tryRegister(this)) {
-      return;
+  async getResults(fragments) {
+    for (const fragment of fragments) {
+      if (!BuildStackService.tryRegister(this, fragment)) {
+        return;
+      }
     }
     try {
-      const result = await this.renderResults();
+      const result = await this.renderResults(fragments);
       return result;
     } finally {
-      BuildStackService.unRegister(this);
+      for (const fragment of fragments) {
+        BuildStackService.unRegister(this, fragment);
+      }
+      
     }
   }
 

@@ -1,4 +1,6 @@
+import Store from 'electron-store';
 
+const store = new Store();
 
 /**
  * ThemeService class
@@ -6,9 +8,9 @@
  */
 class ThemeService {
   constructor() {
-    this.theme = localStorage.getItem('theme') || 'light';
-    this.font = localStorage.getItem('font') || 'Arial';
-    this.fontSize = localStorage.getItem('fontSize') || 14;
+    this.theme = store.get('theme') || 'light';
+    this.font = store.get('font') || 'Arial';
+    this.fontSize = store.get('fontSize') || 14;
     this.subscribers = [];
   }
 
@@ -55,7 +57,7 @@ class ThemeService {
    */
   setCurrentTheme(theme) {
     this.theme = theme;
-    localStorage.setItem('theme', theme);
+    store.set('theme', theme);
     this.notifySubscribers();
   }
 
@@ -65,7 +67,7 @@ class ThemeService {
    */
   setCurrentFont(font) {
     this.font = font;
-    localStorage.setItem('font', font);
+    store.set('font', font);
     this.notifySubscribers();
   }
 
@@ -75,7 +77,7 @@ class ThemeService {
    */
   setCurrentFontSize(fontSize) {
     this.fontSize = fontSize;
-    localStorage.setItem('fontSize', fontSize);
+    store.set('fontSize', fontSize);
     this.notifySubscribers();
   }
 
@@ -87,4 +89,4 @@ class ThemeService {
   }
 }
 
-module.exports = new ThemeService();
+export default new ThemeService();

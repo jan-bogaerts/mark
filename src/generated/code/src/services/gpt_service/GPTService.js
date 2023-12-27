@@ -111,9 +111,11 @@ class GPTService {
 
   async getModels() {
     if (!this.models) {
-      if (!this.apiKey && !this.errorShown) {
-        DialogService.error('Please provide a valid OpenAI API key');
-        this.errorShown = true;
+      if (!this.apiKey) {
+        if (!this.errorShown) {
+          DialogService.error('configuration error', 'Please provide a valid OpenAI API key');
+          this.errorShown = true;
+        }
         return [];
       }
       this.models = (await this.openai.models.list())?.data?.map((model) => model.id) ?? [];

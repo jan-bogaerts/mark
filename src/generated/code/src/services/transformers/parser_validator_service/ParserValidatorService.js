@@ -27,6 +27,10 @@ class ParserValidatorService extends TransformerBaseService {
     this.cache.setResult(fragment.key, result, [...fragment.lines]);
     return result;
   }
+  
+  buildMessage(fragment) {
+    return [fragment.lines.join('\n'), []];
+  }
 }
 
 export default ParserValidatorService;

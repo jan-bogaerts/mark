@@ -3,23 +3,29 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const isDev = require("electron-is-dev");
+const Store = require('electron-store');
 require('@electron/remote/main').initialize(); // initialize remote module
 const mainRemote = require("@electron/remote/main");
 
+const store = new Store();
 let mainWindow;
 let pluginsWindow;
 let logWindow;
 let canCloseResolver = null; // a callback to resolve the promise, that is set when the can-close event is sent and main is waiting for a response
+
+
+const style = store.get('theme') || 'light';
+const titleBarOverlay = style === 'light' ? true : {
+  color: '#323233',
+  symbolColor: '#e9e9e9',
+};
 
 const windowConfig = {
   width: 800,
   height: 600,
   autoHideMenuBar: true,
   titleBarStyle: 'hidden',
-  titleBarOverlay: true,
-  // for these to work, there also needs to be a div in the header with css style `-webkit-app-region: drag;` to make the window draggable
-  // titleBarStyle: 'hidden',
-  // titleBarOverlay: true,
+  titleBarOverlay: titleBarOverlay,
   webPreferences: {
     nodeIntegration: true,
     contextIsolation: false,
@@ -42,7 +48,6 @@ if (isDev) {
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow(windowConfig);
-  console.log(process.argv);
   const fileIdx = app.isPackaged ? 2 : 5;
   let urlWithParams;
   if (process.argv.length > fileIdx) {
@@ -54,7 +59,7 @@ function createWindow () {
   mainWindow.loadURL(urlWithParams);
   // Automatically open Chrome's DevTools in development mode.
   if (!app.isPackaged) {
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
   }
   mainRemote.enable(mainWindow.webContents);
 

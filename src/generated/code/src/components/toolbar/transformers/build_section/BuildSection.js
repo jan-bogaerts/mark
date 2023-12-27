@@ -16,7 +16,6 @@ class BuildSection extends Component {
     super(props);
     this.state = {
       allDisabled: true,
-      fragmentDisabled: true,
       transformerDisabled: true,
       showLog: logService.showLogWindow,
       showDebugger: buildService.showDebugger,
@@ -50,14 +49,12 @@ class BuildSection extends Component {
   updateButtonStates = () => {
     const activeFragment = positionTrackingService.activeFragment;
     const activeTransformer = positionTrackingService.activeTransformer;
-    const activeEntryPoint = CybertronService.activeEntryPoint;
     const isBuilding = buildService.isBuilding;
     const debug = buildService.debug;
     const isPaused = buildService.isPaused;
 
     this.setState({
-      allDisabled: !projectService.isAnyFragmentOutOfDate() || isBuilding,
-      fragmentDisabled: !(activeFragment?.isOutOfDate && !activeEntryPoint?.isFullRender) || isBuilding,
+      allDisabled: !projectService.isAnyFragmentOutOfDate() || isBuilding || !activeTransformer,
       transformerDisabled: !activeFragment || !activeTransformer || activeTransformer.isFullRender || isBuilding,
       showLog: logService.showLogWindow,
       showDebugger: buildService.showDebugger,
@@ -75,19 +72,12 @@ class BuildSection extends Component {
 
   handleAllClick = () => {
     try {
-      buildService.buildAll();
+      buildService.buildAll(positionTrackingService.activeTransformer);
     } catch (error) {
       dialogService.showErrorDialog(error.message);
     }
   }
 
-  handleFragmentClick = () => {
-    try {
-      buildService.buildFragment(positionTrackingService.activeFragment);
-    } catch (error) {
-      dialogService.showErrorDialog(error.message);
-    }
-  }
 
   handleTransformerClick = () => {
     try {
@@ -132,11 +122,8 @@ class BuildSection extends Component {
     const theme = themeService.getCurrentTheme();
     return (
       <div className={`build-section ${theme}`}>
-        <Tooltip title="Start rendering the currently selected entry point for the entire project">
+        <Tooltip title="Start rendering the currently active transformer for the entire project">
           <Button icon={<BuildOutlined />} onClick={this.handleAllClick} disabled={this.state.allDisabled} />
-        </Tooltip>
-        <Tooltip title="Start rendering the currently selected entry point for the currently active fragment">
-          <Button icon={<CodeOutlined />} onClick={this.handleFragmentClick} disabled={this.state.fragmentDisabled} />
         </Tooltip>
         <Tooltip title="Start rendering the result for the currently active fragment and transformer">
           <Button icon={<PlayCircleOutlined />} onClick={this.handleTransformerClick} disabled={this.state.transformerDisabled} />

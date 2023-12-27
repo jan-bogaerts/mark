@@ -30,9 +30,9 @@
 - getPath(services, fragment): calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
   ```python
     fullTitle = services.keyService.calculateLocation(fragment)
-    titleToPath = fullTitle.replace(":", "").replace('?', '').replace('!', '')
+    titleToPath = fullTitle.replaceAll(":", "").replaceAll('?', '').replaceAll('!', '')
     pathItems = titleToPath.split(" > ")
-    pathItems = [part.replace(" ", "_") for part in pathItems]
+    pathItems = [part.replaceAll(" ", "_") for part in pathItems]
     pathItems[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
     return os.path.join(services.folderService.output, *pathItems)
   ```
@@ -53,7 +53,10 @@
      > Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
      > compress the following text:
 
-    - role: user, content: `await deps.constants.getResult(text-fragment)`.
+    - role: user, content: 
+      ```python 
+        content: await deps.constants.getResult(fragment)
+      ```
   - return result, [ ]
   
   
@@ -70,7 +73,7 @@
       
      > condense the following text as much as possible, without loosing any meaning:
 
-    - role: user, content: `await deps.compress.getResult(text-fragment)`.
+    - role: user, content: await deps.compress.getResult(fragment)
   - return result, [ ]
 
 
@@ -87,7 +90,7 @@
       
      > condense the following text to 1 sentence:
 
-    - role: user, content: `await deps['double compress'].getResult(text-fragment)`.
+    - role: user, content: await deps['double compress'].getResult(text-fragment)
   - return result, [ ]
 
 ### component-lister service
@@ -160,9 +163,9 @@
       > {{dev_stack_title}}
       > {{dev_stack_content}}
       
-      replace:
-      - {{dev_stack_title}}: `services.projectService.textFragments[1]?.title`
-      - {{dev_stack_content}}: `services.projectService.textFragments[1]?.lines.join('\n')`
+        replace:
+        - {{dev_stack_title}}: `services.projectService.textFragments[1]?.title`
+        - {{dev_stack_content}}: `services.projectService.textFragments[1]?.lines.join('\n')`
 
     - role: user, content:
 
@@ -203,13 +206,13 @@
       >     "y"
       > ]
        
-          - return:
-            ```python
-            if len(services.projectService.textFragments) >= 1:
-              return result, [ services.projectService.textFragments[1].key ]
-            else:
-              result, [  ]
-           ```
+  - return:
+    ```python
+    if len(services.projectService.textFragments) >= 1:
+      return result, [ services.projectService.textFragments[1].key ]
+    else:
+      result, [  ]
+   ```
 
 
 ### primary-component service
@@ -917,7 +920,7 @@
       declaredIn = services.keyService.calculateLocation(declaredIn.key) 
       declared_in_parts = declaredIn.split(" > ")
       declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-      path = os.path.join(*declared_in_parts, filename.replace(" ", "_").replace('-', '_') )
+      path = os.path.join(*declared_in_parts, filename.replaceAll(" ", "_").replaceAll('-', '_') )
       return path
     ```
   - getServiceImports(fragment):
@@ -933,23 +936,23 @@
               service_loc = rec['source']
               cur_path_parts = service_loc.split(" > ")
               # replace all spaces with underscores
-              cur_path_parts = [part.replace(" ", "_") for part in cur_path_parts]
+              cur_path_parts = [part.replaceAll(" ", "_") for part in cur_path_parts]
               cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
               if not service in imported:
                   imported[service] = True
-                  service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
+                  service_path = os.path.join(*cur_path_parts, service.replaceAll(" ", "_"))
                   results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
       for fragment in services.projectService.textFragments:
           globalFeatures = await deps['global component features'].getResult(fragment)
           if globalFeatures:
             cur_path_parts = fragment.key.split(" > ")
             # replace all spaces with underscores
-            cur_path_parts = [part.replace(" ", "_").replace('-', '_') for part in cur_path_parts]
+            cur_path_parts = [part.replaceAll(" ", "_").replaceAll('-', '_') for part in cur_path_parts]
             cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
             for service, features in globalFeatures.items():
                 if not service in imported:
                     imported[service] = True
-                    service_path = os.path.join(*cur_path_parts, service.replace(" ", "_").replace('-', '_')).strip()
+                    service_path = os.path.join(*cur_path_parts, service.replaceAll(" ", "_").replaceAll('-', '_')).strip()
                     results.append({'service': service, 'path': service_path, 'service_loc': fragment.full_title})
       return results  
     ```     
@@ -959,7 +962,7 @@
       if not declared_in:
           raise new Error(f"can't find import location for component {component} used in {fragment.key}")
       else:
-          declaredInFragment = services.projectService.getFragment(declared_in.replace("'", "").replace('"', '')) # remove quotes cause gpr sometimes adds them
+          declaredInFragment = services.projectService.getFragment(declared_in.replaceAll("'", "").replaceAll('"', '')) # remove quotes cause gpr sometimes adds them
           if not declaredInFragment:
             raise new Error(f'component declared in {declared_in}, but fragment cant be found at specified index')
           components = await deps.components.getResult(declaredInFragment)
@@ -1049,7 +1052,7 @@
       declaredIn = services.keyService.calculateLocation(declaredIn.key) 
       declared_in_parts = declaredIn.split(" > ")
       declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-      path = os.path.join(*declared_in_parts, filename.replace(" ", "_").replace('-', '_') )
+      path = os.path.join(*declared_in_parts, filename.replaceAll(" ", "_").replaceAll('-', '_') )
       return path
     ```
   - getServiceImports(fragment):
@@ -1065,11 +1068,11 @@
               service_loc = rec['source']
               cur_path_parts = service_loc.split(" > ")
               # replace all spaces with underscores
-              cur_path_parts = [part.replace(" ", "_") for part in cur_path_parts]
+              cur_path_parts = [part.replaceAll(" ", "_") for part in cur_path_parts]
               cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
               if not service in imported:
                   imported[service] = True
-                  service_path = os.path.join(*cur_path_parts, service.replace(" ", "_"))
+                  service_path = os.path.join(*cur_path_parts, service.replaceAll(" ", "_"))
                   results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
       return results  
     ```     
@@ -1079,7 +1082,7 @@
       if not declared_in:
           raise new Error(f"can't find import location for component {item} used in {fragment.key}")
       else:
-          declaredInFragment = services.projectService.getFragment(declared_in.replace("'", "").replace('"', '')) # remove quotes cause gpr sometimes adds them
+          declaredInFragment = services.projectService.getFragment(declared_in.replaceAll("'", "").replaceAll('"', '')) # remove quotes cause gpr sometimes adds them
           if not declaredInFragment:
             raise new Error(f'component declared in {declared_in}, but fragment cant be found at specified index')
           classes = await deps.classes.getResult(declaredInFragment)

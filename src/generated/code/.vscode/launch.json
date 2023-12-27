@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "command": "npx electronmon .",
+            "name": "Run elctron renderer",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+      {
+        "name": "Debug Main Process",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+        "windows": {
+          "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+        },
+        "args" : ["."],
+        "outputCapture": "std"
+      },
+      {
+        "name": "Debug Renderer Process",
+        "type": "chrome",
+        "request": "launch",
+        "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+        "windows": {
+          "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
+        },
+        "runtimeArgs": [
+          "${workspaceRoot}/public/electron.js",
+          "--remote-debugging-port=3000"
+        ],
+        "webRoot": "${workspaceRoot}"
+      },
+
+
+    ]
+  }

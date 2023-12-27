@@ -61,7 +61,7 @@ class ViewSection extends React.Component {
         </Select>
         <Select value={this.state.font} onChange={this.handleFontChange} className="font-select">
           {FONTS.map((font) => (
-            <Option key={font} value={font}>
+            <Option key={font} value={font} style={{fontFamily: font}}>
               {font}
             </Option>
           ))}

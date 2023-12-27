@@ -1,4 +1,5 @@
 import CybertronService from '../cybertron_service/CybertronService';
+import DialogService from '../dialog_service/DialogService';
 import ProjectService from '../project_service/ProjectService';
 
 /**
@@ -51,34 +52,30 @@ class BuildService {
     return this._isBuilding;
   }
 
-  async buildAll() {
+  async buildAll(transformer) {
     this.isBuilding = true;
     try {
-      if (CybertronService.activeEntryPoint.isFullRender) {
-        await CybertronService.activeEntryPoint.getResults();
+      if (transformer.isFullRender) {
+        await transformer.getResults(ProjectService.textFragments);
       } else {
         for (let fragment of ProjectService.textFragments) {
-          await CybertronService.activeEntryPoint.getResult(fragment);
+          await transformer.getResult(fragment);
         }
       }
+    } catch (error) {
+      if (error !== 'stopped') DialogService.showErrorDialog(error);
     } finally {
       this.isBuilding = false;
     }
   }
 
-  async buildFragment(fragment) {
-    this.isBuilding = true;
-    try {
-      await CybertronService.activeEntryPoint.getResult(fragment);
-    } finally {
-      this.isBuilding = false;
-    }
-  }
 
   async runTransformer(fragment, transformer) {
     this.isBuilding = true;
     try {
       await transformer.getResult(fragment);
+    } catch (error) {
+      if (error !== 'stopped') DialogService.showErrorDialog(error);
     } finally {
       this.isBuilding = false;
     }
@@ -106,7 +103,7 @@ class BuildService {
 
   stopRun() {
     if (this.debugRejector) {
-      this.debugRejector();
+      this.debugRejector('stopped');
       this.debugResolver = null;
       this.debugRejector = null;
     }

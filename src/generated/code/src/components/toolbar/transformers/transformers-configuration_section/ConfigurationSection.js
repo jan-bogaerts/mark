@@ -56,7 +56,7 @@ const ConfigurationSection = () => {
           <MdRebaseEdit />
         </Button>
       </Tooltip>
-      <Tooltip title="Active Entry Point">
+      {/* <Tooltip title="Active Entry Point">
         <Select 
           value={activeEntryPoint} 
           onChange={handleEntryPointChange} 
@@ -68,7 +68,7 @@ const ConfigurationSection = () => {
             </Select.Option>
           ))}
         </Select>
-      </Tooltip>
+      </Tooltip> */}
     </div>
   );
 };

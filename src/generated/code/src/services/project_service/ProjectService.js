@@ -70,7 +70,7 @@ class ProjectService {
 
   markUpToDate(fragment, transformer) {
     fragment.buildCount--;
-    fragment.isBuilding = fragment.buildCount >= 0;
+    fragment.isBuilding = fragment.buildCount > 0;
     if (!fragment.outOfDateTransformers?.length > 0) {
       fragment.outOfDateTransformers = [...CybertronService.transformers];
     }

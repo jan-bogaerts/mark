@@ -52,6 +52,10 @@ class ConstantsResourceRenderer extends TransformerBaseService {
     }
     this.saveFile(items);
   }
+
+  buildMessage(fragment) {
+    return ['', []];
+  }
 }
 
 export default ConstantsResourceRenderer;

@@ -42,6 +42,7 @@ class Editor extends Component {
       selectOnLineNumbers: true,
       roundedSelection: false,
       readOnly: false,
+      tabSize: 2,
     });
   }
 
@@ -113,6 +114,7 @@ class Editor extends Component {
           selectOnLineNumbers: true,
           roundedSelection: false,
           readOnly: false,
+          tabSize: 2,
         }}
         editorDidMount={this.editorDidMount.bind(this)}
         className="editor"

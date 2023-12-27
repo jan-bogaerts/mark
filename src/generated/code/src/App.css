@@ -150,3 +150,7 @@ div {
 .active-entry-point-dropdown {
     min-width: 200px;
 }
+
+.font-select {
+    min-width: 120px;
+}

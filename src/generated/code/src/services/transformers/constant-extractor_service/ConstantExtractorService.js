@@ -1,6 +1,7 @@
 
 import TransformerBaseService from '../../transformer-base_service/TransformerBaseService';
 import BuildStackService from '../../build-stack_service/BuildStackService';
+import keyService from '../../key_service/KeyService';
 
 /**
  * ConstantExtractorService class
@@ -18,7 +19,8 @@ class ConstantExtractorService extends TransformerBaseService {
    * @param {Array} lines - The lines of the text fragment
    * @returns {Array} quotes - The list of quotes
    */
-  extractQuotes(key, lines) {
+  extractQuotes(fragment) {
+    const { key, lines } = fragment;
     let quotes = [];
     let current_quote = null;
     let cur_lines = [];
@@ -38,7 +40,7 @@ class ConstantExtractorService extends TransformerBaseService {
         }
       } else if (!line && current_quote) {
         count += 1;
-        this.collectResponse(current_quote, line_nr, cur_lines, key, count, quotes);
+        this.collectResponse(current_quote, line_nr, cur_lines, fragment, count, quotes);
         current_quote = null;
         cur_lines = [];
       }
@@ -47,7 +49,7 @@ class ConstantExtractorService extends TransformerBaseService {
 
     if (current_quote) {
       count += 1;
-      this.collectResponse(current_quote, line_nr, cur_lines, key, count, quotes);
+      this.collectResponse(current_quote, line_nr, cur_lines, fragment, count, quotes);
     }
 
     return quotes;
@@ -58,16 +60,16 @@ class ConstantExtractorService extends TransformerBaseService {
    * @param {Object} toAdd - The quote to add
    * @param {number} end - The end line of the quote
    * @param {Array} lines - The lines of the quote
-   * @param {string} key - The key of the text fragment
+   * @param {object} fragment - The text fragment
    * @param {number} count - The count of the quote
    * @param {Array} quotes - The list of quotes
    */
-  collectResponse(toAdd, end, lines, key, count, quotes) {
-    // key = title.split('# ')[-1].replace(' > ', '_').replace(' ', '_').strip()
-    key = key.replaceAll(' > ', '_').replaceAll(' ', '_').replaceAll('-', '_').trim();
+  collectResponse(toAdd, end, lines, fragment, count, quotes) {
+    let title = keyService.calculateLocation(fragment);
+    title = 'res_' + title.replaceAll(' > ', '_').replaceAll(' ', '_').replaceAll('-', '_').trim();
     toAdd['end'] = end;
     toAdd['lines'] = lines;
-    toAdd['name'] = `${key}_${count}`;
+    toAdd['name'] = `${title}_${count}`;
     quotes.push(toAdd);
   }
 
@@ -77,7 +79,7 @@ class ConstantExtractorService extends TransformerBaseService {
    * @returns {Array} result - The result of the extraction
    */
   renderResult(textFragment) {
-    const result = this.extractQuotes(textFragment.key, textFragment.lines);
+    const result = this.extractQuotes(textFragment);
     this.cache.setResult(textFragment.key, result, [...textFragment.lines]);
     return result;
   }

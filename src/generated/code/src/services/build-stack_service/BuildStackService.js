@@ -26,7 +26,9 @@ class BuildStackService {
       return false;
     }
     this.running[toSearch] = true;
-    ProjectService.markIsBuilding(fragment, transformer); // do here cause all transformers need to pass the stack
+    if (fragment) {
+      ProjectService.markIsBuilding(fragment, transformer); // do here cause all transformers need to pass the stack
+    }
     return true;
   }
 
@@ -39,7 +41,9 @@ class BuildStackService {
   unRegister(transformer, fragment) {
     const toSearch = `${fragment?.key}-${transformer?.name}`;
     delete this.running[toSearch];
-    ProjectService.markUpToDate(fragment, transformer); // do here cause all transformers need to pass the stack
+    if (fragment) {
+      ProjectService.markUpToDate(fragment, transformer); // do here cause all transformers need to pass the stack
+    }
   }
 
   isRunning(transformer, fragment) {

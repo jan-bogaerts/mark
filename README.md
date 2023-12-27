@@ -1,6 +1,6 @@
-# MarkdownCode
+# Mark
 
-MarkdownCode is an ideation and corpus building/manipulation tool driven by machine learning. It allows users to enter text in markdown of any length, which can be transformed (and reverted) into something else. This is done using transformers that are completely customizable.
+Mark is an ideation and corpus building/manipulation tool driven by machine learning. It allows users to enter text in markdown of any length, which can be transformed (and reverted) into something else. This is done using transformers that are completely customizable.
 
 Some use cases:
 - convert specs to code and keep the specs in sync with the code.
@@ -34,11 +34,11 @@ This is a list of transformer-sets that you can use in your own projects as-is o
 - react-client: a set of transformers that can be used for creating/maintaining javascript based front-end apps. This can be for the web or electron. Currently tested for react apps, though I suspect other libraries might also work, except for angular which will probably need some more.
 
 ## an example
-Take a look at the [definition of the markdown-code editor & compiler](https://github.com/jan-bogaerts/markdownCode/blob/main/src/markdownCode.md).
+Take a look at the [definition of the markdown-code editor & compiler](https://github.com/jan-bogaerts/mark/blob/main/src/mark.md).
 
 ## Supported Languages
 
-MarkdownCode is currently tested on JavaScript, but it should work with most other programming languages as well, especially with custom prompt pipeline configurations.
+Mark is currently tested on JavaScript, but it should work with most other programming languages as well, especially with custom prompt pipeline configurations.
 
 ## Prerequisites
 
@@ -62,7 +62,7 @@ That said, in general it is presumed:
 
 ## Code Conversion Customization
 
-The application only knows a limited set of hardcoded transformers. These are primarily used for building other transformers. Most of the transformers that you will use are loaded as plugins and can very easily be changed/created by you. Here's the [default set of plugins](https://github.com/jan-bogaerts/markdownCode/blob/main/src/plugins.md) which is also used for building the markdown application itself.
+The application only knows a limited set of hardcoded transformers. These are primarily used for building other transformers. Most of the transformers that you will use are loaded as plugins and can very easily be changed/created by you. Here's the [default set of plugins](https://github.com/jan-bogaerts/mark/blob/main/src/plugins.md) which is also used for building the markdown application itself.
 
 ## Installation and Usage
 
@@ -80,5 +80,5 @@ As this is an active project, new limitations or issues may be discovered. We ap
 
 ## Contribution Guidelines
 
-Contributions are welcome! If you'd like to contribute to the MarkdownCode project, please make a Pull Request (PR) and send it for review.
+Contributions are welcome! If you'd like to contribute to the Mark project, please make a Pull Request (PR) and send it for review.
 
