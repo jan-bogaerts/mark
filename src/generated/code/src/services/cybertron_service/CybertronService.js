@@ -24,6 +24,13 @@ class CybertronService {
   }
 
   /**
+   * Load all transformers
+   */
+  load() {
+    this.transformers.forEach(t => t.load());
+  }
+
+  /**
    * Unregister a transformer
    * @param {Object} transformer - The transformer to unregister
    */

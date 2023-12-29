@@ -110,19 +110,19 @@ class FileSection extends Component {
     const theme = themeService.getCurrentTheme();
     return (
       <div className={`file-section ${theme}`}>
-        <Tooltip title="New Project">
+        <Tooltip title="New Project" placement='bottom'>
           <Button icon={<FileOutlined />} onClick={this.newProject} disabled={window.electron.isPluginMode} />
         </Tooltip>
-        <Tooltip title="Open Project">
+        <Tooltip title="Open Project" placement='bottom'>
           <Button icon={<FolderOpenOutlined />} onClick={this.openProject} disabled={window.electron.isPluginMode} />
         </Tooltip>
-        <Tooltip title="Save Project">
+        <Tooltip title="Save Project" placement='bottom'>
           <Button icon={<SaveOutlined />} onClick={this.saveProject} disabled={!this.state.isDirty || !this.state.filename} />
         </Tooltip>
-        <Tooltip title="Save Project As">
+        <Tooltip title="Save Project As" placement='bottom'>
           <Button icon={<SaveFilled />} onClick={this.saveProjectAs} />
         </Tooltip>
-        <Tooltip title="Toggle Auto Save">
+        <Tooltip title="Toggle Auto Save" placement='bottom'> 
           <Button icon={<SyncOutlined />} onClick={this.toggleAutoSave} type={this.state.autoSave ? 'primary' : 'default'} />
         </Tooltip>
       </div>

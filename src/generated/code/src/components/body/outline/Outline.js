@@ -42,7 +42,12 @@ class Outline extends Component {
     const key = e.detail?.key;
     if (!key) return;
     if (this.isMoving) return;
-    this.setState({ selectedKeys: [key], expandedKeys: [...this.state.expandedKeys, key] });
+    const parent = projectService.getParent(key);
+    if (parent) {
+      this.setState({ selectedKeys: [key], expandedKeys: [...this.state.expandedKeys, parent.key] });
+    } else {
+      this.setState({ selectedKeys: [key] });
+    }
   };
 
   convertToTreeData = (data) => {
@@ -100,9 +105,9 @@ class Outline extends Component {
       try {
         this.isMoving = true;
         positionTrackingService.setActiveFragment(fragment);
-        if (this.state.expandedKeys.indexOf(selectedKeys[0]) === -1) {
+        /* if (this.state.expandedKeys.indexOf(selectedKeys[0]) === -1) {
           this.setState({ expandedKeys: [...this.state.expandedKeys, selectedKeys[0]] });
-        }
+        } */
         this.setState({ selectedKeys });
       } finally {
         this.isMoving = false;
@@ -110,7 +115,11 @@ class Outline extends Component {
     }
   };
 
-  onExpand = (expandedKeys) => {
+  onExpand = (expandedKeys, details) => {
+    if (!details.expanded) {
+      this.setState({ expandedKeys });
+      return;
+    }
     this.setState({ expandedKeys });
   }
 

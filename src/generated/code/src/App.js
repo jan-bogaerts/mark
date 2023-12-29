@@ -16,25 +16,29 @@ class App extends Component {
   handleOpen = async () => {
     if (isLoaded) return;
     isLoaded = true;
-    await allSpark.load();
-    if (window.electron.fileToOpen) {
-      let canOpen = true;
-      if (!fs.existsSync(window.electron.fileToOpen)) {
-        if (window.electron.isPluginMode) {
-          // copy the template file to the new location
-          const userDataPath = window.electron.resourcesPath;
-          const templatePath = path.join(userDataPath, 'templates', 'plugins.md');
-          fs.copyFileSync(templatePath, window.electron.fileToOpen);
-        } else {
-          DialogService.showErrorDialog(`File ${window.electron.fileToOpen} does not exist`);
-          canOpen = false;
+    try {
+      await allSpark.load();
+      if (window.electron.fileToOpen) {
+        let canOpen = true;
+        if (!fs.existsSync(window.electron.fileToOpen)) {
+          if (window.electron.isPluginMode) {
+            // copy the template file to the new location
+            const userDataPath = window.electron.resourcesPath;
+            const templatePath = path.join(userDataPath, 'templates', 'plugins.md');
+            fs.copyFileSync(templatePath, window.electron.fileToOpen);
+          } else {
+            DialogService.showErrorDialog(`File ${window.electron.fileToOpen} does not exist`);
+            canOpen = false;
+          }
         }
+        if (canOpen) {
+          StorageService.open(window.electron.fileToOpen);
+        }
+      } else {
+        await StorageService.new(); // initiate to new project
       }
-      if (canOpen) {
-        StorageService.open(window.electron.fileToOpen);
-      }
-    } else {
-      await StorageService.new(); // initiate to new project
+    } catch (err) {
+      DialogService.showErrorDialog(err);
     }
   };
 

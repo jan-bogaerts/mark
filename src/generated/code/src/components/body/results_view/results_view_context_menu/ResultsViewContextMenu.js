@@ -10,21 +10,24 @@ import ProjectService from '../../../../services/project_service/ProjectService'
  * ResultsViewContextMenu component
  * @param {Object} props - properties for the component
  * @param {string} props.transformer - transformer name
- * @param {string} props.key - key name
+ * @param {string} props.fragmentKey - key name
  */
-const ResultsViewContextMenu = ({ transformer, key }) => {
+const ResultsViewContextMenu = ({ transformer, fragmentKey }) => {
   const [models, setModels] = useState([]);
   const [currentModel, setCurrentModel] = useState(null);
   const [currentFragmentModel, setCurrentFragmentModel] = useState(null);
   const theme = ThemeService.getCurrentTheme();
 
   useEffect(() => {
-    fetchModels();
     ProjectService.eventTarget.addEventListener('content-changed', fetchModels);
     return () => {
       ProjectService.eventTarget.removeEventListener('content-changed', fetchModels);
     };
   }, []);
+
+  useEffect(() => {
+    fetchModels();
+  }, [transformer, fragmentKey]);
 
   const fetchModels = async () => {
     try {
@@ -32,7 +35,7 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
       setModels(models);
       const model = gptService.getModelForTransformer(transformer);
       setCurrentModel(model);
-      const fragmentModel = gptService.getModelForFragment(transformer, key);
+      const fragmentModel = gptService.getModelForFragment(transformer, fragmentKey);
       setCurrentFragmentModel(fragmentModel);
     } catch (error) {
       DialogService.showErrorDialog(error);
@@ -42,7 +45,7 @@ const ResultsViewContextMenu = ({ transformer, key }) => {
   const handleModelChange = async (model, forFragment = false) => {
     try {
       if (forFragment) {
-        await gptService.setModelForFragment(model, transformer, key);
+        await gptService.setModelForFragment(model, transformer, fragmentKey);
         setCurrentFragmentModel(model);
       } else {
         await gptService.setModelForTransformer(model, transformer);

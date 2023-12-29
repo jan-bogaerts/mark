@@ -34,7 +34,7 @@ class UnindentButton extends React.Component {
   render() {
     const { theme } = this.state;
     return (
-      <Tooltip title="Outdent">
+      <Tooltip title="Outdent" placement='bottom'>
         <Button
           className={`unindent-button ${theme}`}
           icon={<MdOutlineFormatIndentDecrease />}

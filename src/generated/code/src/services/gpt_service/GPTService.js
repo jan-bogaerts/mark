@@ -1,4 +1,6 @@
 import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
 import { encodingForModel } from "js-tiktoken";
 import DialogService from '../dialog_service/DialogService';
 import LogService from '../log_service/LogService';
@@ -13,6 +15,12 @@ class GPTService {
     this.onMarkDirty = null;
     if (this.apiKey) {
       this.openai = new OpenAI({ apiKey: this.apiKey, dangerouslyAllowBrowser: true });
+    }
+
+    const resourcesPath = window.electron.resourcesPath;
+    const filePath = path.join(resourcesPath, 'modelinfo', 'modelMaxSize.json');
+    if (fs.existsSync(filePath)) {
+      this.modelMaxSize = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     }
   }
 
@@ -67,24 +75,44 @@ class GPTService {
   }
 
   calculateTokens(messages, model) {
-    let result = {};
+    let result = { total: 0 };
     let encoding = encodingForModel(model);
     for (let message of messages) {
       result[message.role] = encoding.encode(message.content).length;
+      result.total += result[message.role];
     }
     return result;
   }
+
+  getModelOptions(model) {
+    const result = {
+      maxTokens: 4096,
+    }
+    if (this.modelMaxSize) {
+      result.maxTokens = this.modelMaxSize[model] ?? result.maxTokens;
+    }
+    return result;
+  }
+
+  removeJSONBlockWrapper(str) {
+    if (str.startsWith('```json') && str.endsWith('```')) {
+      return str.substring('```json'.length, str.length - '```'.length);
+    }
+    return str;
+  }
+
 
   async sendRequest(transformer, fragmentKey, messages) {
     if (!this.openai) {
       return;
     }
     let model = this.getModelForRequest(transformer.name, fragmentKey);
+    const modelOptions = this.getModelOptions(model);
     let tokens = this.calculateTokens(messages, model);
     let inputData = {
       model: model,
       messages: messages,
-      max_tokens: transformer.calculateMaxTokens(tokens),
+      max_tokens: Math.round(transformer.calculateMaxTokens(tokens, modelOptions)),
       temperature: transformer.temperature || 0
     };
     let config = {
@@ -94,17 +122,19 @@ class GPTService {
     await BuildService.tryPause();
     let response = await this.openai.chat.completions.create(inputData, config);
     let reply;
+    let replyStr;
     if (response) {
       reply = response.choices[0]?.message?.content;
+      replyStr = reply;
       if (transformer.isJson) {
         try {
-          reply = JSON.parse(reply);
+          reply = JSON.parse(this.removeJSONBlockWrapper(reply));
         } catch (e) {
           DialogService.error('Invalid JSON response from OpenAI API', e.message);
         }
       }
     }
-    LogService.logMsgResponse(logMsg, reply);
+    LogService.logMsgResponse(logMsg, replyStr);
     await BuildService.tryPause();
     return reply;
   }

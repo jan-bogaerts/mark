@@ -1,5 +1,5 @@
-import CybertronService from '../cybertron_service/CybertronService';
 import DialogService from '../dialog_service/DialogService';
+import FolderService from '../folder_service/FolderService';
 import ProjectService from '../project_service/ProjectService';
 
 /**
@@ -55,6 +55,7 @@ class BuildService {
   async buildAll(transformer) {
     this.isBuilding = true;
     try {
+      FolderService.init(); // make certain that folders exist when building
       if (transformer.isFullRender) {
         await transformer.getResults(ProjectService.textFragments);
       } else {
@@ -73,6 +74,7 @@ class BuildService {
   async runTransformer(fragment, transformer) {
     this.isBuilding = true;
     try {
+      FolderService.init(); // make certain that folders exist when building
       await transformer.getResult(fragment);
     } catch (error) {
       if (error !== 'stopped') DialogService.showErrorDialog(error);

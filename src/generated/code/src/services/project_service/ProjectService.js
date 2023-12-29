@@ -94,6 +94,17 @@ class ProjectService {
     return this.textFragments.find(t => t.key == key);
   }
 
+  getParent(key) {
+    const fragment = this.getFragment(key);
+    if (!fragment || fragment.depth === 1) return null;
+    const index = this.textFragments.indexOf(fragment);
+    if (index === 0) return null;
+    for (let i = index - 1; i >= 0; i--) {
+      if (this.textFragments[i].depth < fragment.depth) return this.textFragments[i];
+    }
+    return null;
+  }
+
   tryAddToOutOfDate(key, transformer) {
     const fragment = this.getFragment(key);
     if (!fragment) {

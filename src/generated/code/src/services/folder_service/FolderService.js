@@ -27,13 +27,23 @@ class FolderService {
   }
 
   clear() {
-    this.folder = fs.mkdtempSync(path.join(os.tmpdir(), 'project-'));
+    this.folder = null;
     this.projectName = 'new project';
+  }
+
+  init() {
+    if (!this.folder) {
+      this.folder = fs.mkdtempSync(path.join(os.tmpdir(), 'project-'))
+    }
     this.cache = path.join(this.folder, 'cache');
     this.output = path.join(this.folder, 'output');
     this.plugins = path.join(this.folder, 'plugins');
-    fs.mkdirSync(this.cache);
-    fs.mkdirSync(this.output);
+    if (!fs.existsSync(this.cache)) {
+      fs.mkdirSync(this.cache);
+    }
+    if (!fs.existsSync(this.output)) {
+      fs.mkdirSync(this.output);
+    }
   }
 
   moveTo(newProjectFile) {
@@ -124,9 +134,7 @@ class FolderService {
   setLocation(location) {
     this.folder = path.dirname(location);
     this.projectName = path.basename(location, '.md');
-    this.cache = path.join(this.folder, 'cache');
-    this.plugins = path.join(this.folder, 'plugins');
-    this.output = path.join(this.folder, 'output');
+    this.init();
   }
 }
 

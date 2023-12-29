@@ -91,14 +91,16 @@ class ConstantExtractorService extends TransformerBaseService {
    */
   async getResult(fragment) {
     let quotes = [];
-    if (BuildStackService.mode === 'validating' || !this.cache.isOutOfDate(fragment.key)) {
+    if (!this.cache.isOutOfDate(fragment.key)) {
       quotes = this.cache.getFragmentResults(fragment.key);
+    } else if (BuildStackService.mode === 'validating') {
+      quotes = this.extractQuotes(fragment); // also render result when in validation mode, cause the result is retrieved by other transformers, if the text without quotes hasnt changed, the other transformer gets the same as previously
     } else {
       if (!BuildStackService.tryRegister(this, fragment)) {
         return;
       }
       try {
-        quotes = await this.renderResult(fragment);
+        quotes = await this.renderResult(fragment); 
       } finally {
         BuildStackService.unRegister(this, fragment);
       }

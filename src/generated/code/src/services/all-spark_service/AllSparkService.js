@@ -82,18 +82,19 @@ class AllSparkService {
     CybertronService.register(new ParserValidatorService(), false);
 
     await this.loadPlugins();
+    CybertronService.load();
+    this.eventTarget.dispatchEvent(new Event('transformers-loaded'));
   }
 
   async loadPlugins() {
     if (window.electron.isPluginMode === true || window.electron.isLogMode === true) return;
-    /*const pluginDefs = this.getPlugins();
+    const pluginDefs = this.getPlugins();
     for (const pluginDef of pluginDefs) {
       const pluginObj = await this.loadPlugin(pluginDef);
       const pluginTransformer = new PluginTransformerService(pluginObj);
       this.transformers[pluginDef] = pluginTransformer;
       CybertronService.register(pluginTransformer, pluginTransformer.isEntryPoint);
-    }*/
-    this.eventTarget.dispatchEvent(new Event('transformers-loaded'));
+    }
   }
 }
 

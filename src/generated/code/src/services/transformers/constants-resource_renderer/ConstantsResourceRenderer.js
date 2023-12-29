@@ -15,8 +15,12 @@ class ConstantsResourceRenderer extends TransformerBaseService {
    */
   constructor() {
     super('constants resource renderer', ['constants'], true);
-    this.constantsService = this.dependencies[0];
     this.isFullRender = true;
+  }
+
+  load() {
+    super.load();
+    this.constantsService = this.dependencies[0];
   }
 
   /**

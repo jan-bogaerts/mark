@@ -15,6 +15,10 @@ import KeyService from '../../key_service/KeyService';
 class PluginRendererService extends TransformerBaseService {
   constructor() {
     super('plugin renderer', ['constants'], false, true);
+  }
+
+  load() {
+    super.load();
     this.constantsService = this.dependencies[0];
   }
 
@@ -30,7 +34,7 @@ class PluginRendererService extends TransformerBaseService {
       fs.mkdirSync(rootFolder);
     }
     const location = KeyService.calculateLocation(fragment);
-    const fileName = location.replaceAll(" > ", "_").replaceAll(" ", "_");
+    const fileName = location.replaceAll(" > ", "_").replaceAll(" ", "_").replaceAll("-", "_");
     const filePath = path.join(rootFolder, fileName + ".js");
     fs.writeFileSync(filePath, content);
     return filePath;

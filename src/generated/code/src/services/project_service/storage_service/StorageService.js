@@ -122,10 +122,12 @@ class StorageService {
   }
 
   async save(file) {
-    if (!projectService.filename) {
+    if (!projectService.filename && folderService.folder) {
       folderService.moveTo(file);
-    } else if (projectService.filename !== file) {
+    } else if (projectService.filename && projectService.filename !== file) {
       folderService.copyTo(file);
+    } else if (!folderService.folder) {
+      folderService.init();
     }
     await fs.promises.writeFile(file, projectService.content, 'utf8');
     for (const transformer of cybertronService.transformers) {

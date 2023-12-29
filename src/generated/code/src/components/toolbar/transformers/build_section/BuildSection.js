@@ -122,27 +122,27 @@ class BuildSection extends Component {
     const theme = themeService.getCurrentTheme();
     return (
       <div className={`build-section ${theme}`}>
-        <Tooltip title="Start rendering the currently active transformer for the entire project">
+        <Tooltip title="Start rendering the currently active transformer for the entire project" placement='bottom'>
           <Button icon={<BuildOutlined />} onClick={this.handleAllClick} disabled={this.state.allDisabled} />
         </Tooltip>
-        <Tooltip title="Start rendering the result for the currently active fragment and transformer">
+        <Tooltip title="Start rendering the result for the currently active fragment and transformer" placement='bottom'>
           <Button icon={<PlayCircleOutlined />} onClick={this.handleTransformerClick} disabled={this.state.transformerDisabled} />
         </Tooltip>
         <Divider type="vertical" style={{ height: '24px' }} />
-        <Tooltip title="Show log window">
+        <Tooltip title="Show log window" placement='bottom'>
           <Button icon={<FileTextOutlined />} onClick={this.handleShowLogClick} type={this.state.showLog ? 'primary' : 'default'} />
         </Tooltip>
-        <Tooltip title="Toggle debugger window">
+        <Tooltip title="Toggle debugger window" placement='bottom'>
           <Button icon={<BugOutlined />} onClick={this.handleShowDebuggerClick} type={this.state.showDebugger ? 'primary' : 'default'} />
         </Tooltip>
         <Divider type="vertical" style={{ height: '24px' }} />
-        <Tooltip title="Toggle debug mode">
+        <Tooltip title="Toggle debug mode" placement='bottom'>
           <Button icon={<VscDebugLineByLine />} onClick={this.handleDebugClick} type={this.state.debug ? 'primary' : 'default'} />
         </Tooltip>
-        <Tooltip title="Continue rendering the next stop">
+        <Tooltip title="Continue rendering the next stop" placement='bottom'>
           <Button icon={<StepForwardOutlined />} onClick={this.handleNextClick} disabled={this.state.nextDisabled} />
         </Tooltip>
-        <Tooltip title="Stop rendering">
+        <Tooltip title="Stop rendering" placement='bottom'>
           <Button icon={<TbPlayerStop />} onClick={this.handleStopClick} disabled={this.state.stopDisabled} />
         </Tooltip>
       </div>

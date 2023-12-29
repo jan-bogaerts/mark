@@ -50,28 +50,28 @@ class FontSection extends Component {
 
     return (
       <div className={`font-section ${theme}`}>
-        <Tooltip title="Toggle bold formatting">
+        <Tooltip title="Toggle bold formatting" placement='bottom'>
           <Button
             className={`toggle-btn ${currentStyle.bold ? `selected-${theme}` : ''}`}
             icon={<BoldOutlined />}
             onClick={() => this.toggleStyle('bold')}
           />
         </Tooltip>
-        <Tooltip title="Toggle italic formatting">
+        <Tooltip title="Toggle italic formatting" placement='bottom'>
           <Button
             className={`toggle-btn ${currentStyle.italic ? `selected-${theme}` : ''}`}
             icon={<ItalicOutlined />}
             onClick={() => this.toggleStyle('italic')}
           />
         </Tooltip>
-        <Tooltip title="Toggle underline formatting">
+        <Tooltip title="Toggle underline formatting" placement='bottom'>
           <Button
             className={`toggle-btn ${currentStyle.underline ? `selected-${theme}` : ''}`}
             icon={<UnderlineOutlined />}
             onClick={() => this.toggleStyle('underline')}
           />
         </Tooltip>
-        <Tooltip title="Toggle strikethrough formatting">
+        <Tooltip title="Toggle strikethrough formatting" placement='bottom'>
           <Button
             className={`toggle-btn ${currentStyle.strikethrough ? `selected-${theme}` : ''}`}
             icon={<StrikethroughOutlined />}

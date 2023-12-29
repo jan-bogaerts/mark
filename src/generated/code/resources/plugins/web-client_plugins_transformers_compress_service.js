@@ -16,7 +16,7 @@ async function buildMessage(fragment) {
   var result = [
     {
       role: 'system',
-      content: resources.compress_service_1,
+      content: resources.res_web_client_plugins_transformers_compress_service_1,
     },
     {
       role: 'user',
@@ -24,7 +24,11 @@ async function buildMessage(fragment) {
     },
   ];
 
-  return [result, [fragment.key]];
+  return [result, [ ]];
 }
 
-module.exports = { getDescription, buildMessage, services, deps };
+function calculateMaxTokens(inputTokenCount) {
+  return inputTokenCount.total;
+}
+
+module.exports = { getDescription, buildMessage, calculateMaxTokens, services, deps };

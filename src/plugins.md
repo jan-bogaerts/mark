@@ -2,19 +2,42 @@
 
 ## shared
 
-- getIsDeclared(deps, fragment, component): get the result of the declare-or-use transformer and see if the specified component is declared or not. 
+- getIsDeclared(deps, transformerName, fragment, item): get the result of the declare-or-use transformer and see if the specified item is declared or not. 
   Do case insensitive search.
-    ```python
-      name = component.lower()
-      result = await deps['declare or use component'].getResult(fragment)
-      temp_items = {k.lower(): v for k, v in result.items()}
-      if name in temp_items:
-        return temp_items[name] == 'declare'
-      else:
-        return False
-    ```
+  ```python
+    name = item.lower()
+    result = await deps[transformerName].getResult(fragment)
+    temp_items = {k.lower(): v for k, v in result.items()}
+    if name in temp_items:
+      return temp_items[name] == 'declare'
+    else:
+      return False
+  ```
+- getAllDeclared(deps, transformerName, fragment):
+  ```python
+    data = await deps[transformerName].getResult(fragment)
+    return [name for name in data if data[name] == 'declare']
+  ```
+- buildPath(services, declaredIn, filename):
+  ```python
+    declaredIn = services.keyService.calculateLocation(declaredIn.key) 
+    declared_in_parts = declaredIn.split(" > ")
+    declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
+    path = os.path.join(*declared_in_parts, filename.replaceAll(" ", "_").replaceAll('-', '_') )
+    return path
+  ```
+- getDeclaredIn(deps, transformerName, fragment, item): Returns the key of the text fragment where the item is declared. 
+  Do case insensitive search.
+  ```python
+    item = item.lower()
+    result = await deps[transformerName].getResult(fragment)
+    temp_items = {k.lower(): v for k, v in result.items()}
+    if item in temp_items:
+      return temp_items[item]
+    return None
+  ```
 - getToRenderAndUsed(deps, fragment, components): splits up the list of components into a list of components that are declared in the fragment and a list of components that are only used by the declared components in this fragment
-```python
+  ```python
     to_render = []
     used = []
     classifications = await deps['declare or use component'].getResult(fragment)
@@ -26,7 +49,7 @@
       else:
           used.append(component)
     return to_render, used
-```
+  ```
 - getPath(services, fragment): calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
   ```python
     fullTitle = services.keyService.calculateLocation(fragment)
@@ -37,6 +60,67 @@
     return os.path.join(services.folderService.output, *pathItems)
   ```
 - readFile(filePath): read the contents of the specified file and return as a string.
+- getExternalDescription(deps, fragment, item): get how other code has used the class
+    ```python
+        results = {}
+        found = False
+        all = (await deps['usage-extractor'].getResult(fragment))?.[item]
+        if all:
+          for key, value in all.items():
+            for service, usage in value:
+              for feature, desc in usage:
+                if not feature in results:
+                results[feature] = desc
+                found = True
+        if found:
+          toJoin = []
+          for key, value in results.items():
+            toJoin.append(f'{key}: {value}')
+          return f'\nMake certain that {item} has:\n- ' + '\n- '.join(toJoin) + '\n'
+        return ''
+    ```
+- getOtherInterfaces(deps, fragment, item): get the interface definitions of other classes that are used by this class. Only include parts of the interface that are actually used in the code that needs to be rendered.
+    ```python
+        interfaceTxt = ''
+        all = (await deps['consumed interfaces class'].getResult(fragment))?.[item]
+        if all:
+          for key, value in all.items():
+            found = False
+            results = {}
+            for service, usage in value:
+              interfaceTxt += f'\n{service} has the following interface:\n' + JSON.stringify(usage) + '\n'
+        return interfaceTxt
+    ```  
+- getAllImports(deps, depName, fragment, item, renderToPath): build the text that defines which modules should be imported
+   ```python
+      importsTxt = None
+      constants = deps.constants.cache.getFragmentResults(fragment.key)
+      if constants:
+        resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
+        relPath = os.path.relpath(resourcesPath, renderToPath)
+        relPath = relPath.replaceAll('\\', '/')
+        importsTxt += f"The const 'resources' can be imported from {relPath}\n"
+      imports = await deps[depName].getResult(fragment)?.[item]
+      if imports:
+        for importDef in imports:
+          importsTxt += await getImportServiceLine(importDef, renderToPath)
+      if importsTxt:
+        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
+      return importsTxt
+    ```   
+- getImportServiceLine(importDef, renderToPath):
+    ```python
+        service = importDef['service']
+        servicePath = importDef['path']
+        servicePath = os.path.relpath(servicePath, renderToPath)
+        isGlobal = (await deps['is service singleton'].getResult(importDef['key']))?.[service]
+        if isGlobal:
+            serviceTxt = "global object"
+            service = service.lower()
+        else:
+            serviceTxt = "service"
+        return f"The {serviceTxt} {service} can be imported from {servicePath} (exported as default)\n"
+    ```      
 ## transformers
 
 ### compress service
@@ -882,46 +966,12 @@
     ```python
       components = await deps.components.getResult(fragment)
       for component in components:
-        isDeclare = await getIsDeclared(fragment, component) 
+        isDeclare = await shared.getIsDeclared(deps, 'declare or use component', fragment, component) 
         if isDeclare:
             imports = await getServiceImports(fragment)
             results[component] = imports
         else:
             await resolveComponentImports(fragment, component, callback, results)
-    ```
-  - getIsDeclared(fragment, component): get the result of the declare-or-use transformer and see if the specified component is declared or not. 
-  Do case insensitive search.
-    ```python
-      component = component.lower()
-      result = await deps['declare or use component'].getResult(fragment)
-      temp_items = {k.lower(): v for k, v in result.items()}
-      if name in temp_items:
-        return temp_items[name] == 'declare'
-      else:
-        return False
-    ```
-  - getAllDeclared(fragment):
-    ```python
-      data = await deps['declare or use component'].getResult(fragment)
-      return [name for name in data if data[name] == 'declare']
-    ```
-  - getDeclaredIn(fragment, component): Returns the key of the text fragment where the item is declared. 
-  Do case insensitive search.
-    ```python
-      component = component.lower()
-      result = await deps['declare or use component'].getResult(fragment)
-      temp_items = {k.lower(): v for k, v in result.items()}
-      if component in temp_items:
-        return temp_items[component]
-      return None
-    ```
-  - buildPath(declaredIn, filename):
-    ```python
-      declaredIn = services.keyService.calculateLocation(declaredIn.key) 
-      declared_in_parts = declaredIn.split(" > ")
-      declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-      path = os.path.join(*declared_in_parts, filename.replaceAll(" ", "_").replaceAll('-', '_') )
-      return path
     ```
   - getServiceImports(fragment):
     ```python
@@ -958,7 +1008,7 @@
     ```     
   - resolveComponentImports(fragment, component, callback, results):
     ```python
-      declared_in = await getDeclaredIn(fragment, component)
+      declared_in = await shared.getDeclaredIn(deps, 'declare or use component', fragment, component)
       if not declared_in:
           raise new Error(f"can't find import location for component {component} used in {fragment.key}")
       else:
@@ -967,18 +1017,18 @@
             raise new Error(f'component declared in {declared_in}, but fragment cant be found at specified index')
           components = await deps.components.getResult(declaredInFragment)
           if component in components:
-              path = buildPath(declaredInFragment, component)
+              path = shared.buildPath(services, declaredInFragment, component)
               results[component] = path
           else:
               # if there is only 1 component declared in the fragment, we can presume that's the one we need
-              declared_comps = await getAllDeclared(declaredInFragment)
+              declared_comps = await shared.getAllDeclared(deps, 'declare or use component', declaredInFragment)
               if len(declared_comps) == 1:
-                  path = buildPath(declaredInFragment, declared_comps[0])
+                  path = shared.buildPath(services, declaredInFragment, declared_comps[0])
                   results[component] = path
               else:
                   iterator(fragment, component, declared_comps, declaredInFragment) # declaredInFragment is needed for cleanresponse
     ```
-  - cleanResponse(response, fragment, component, declared_comps, declaredInFragment): `return buildPath(declaredInFragment, response)` 
+  - cleanResponse(response, fragment, component, declared_comps, declaredInFragment): `return shared.buildPath(services, declaredInFragment, response)` 
   - buildMessage(fragment, component, declared_comps):
     - description = await deps['component description'].getResult(fragment)
       if not description return null
@@ -1014,46 +1064,12 @@
     ```python
       classes = await deps.classes.getResult(fragment)
       for item in classes:
-        isDeclare = await getIsDeclared(fragment, item) 
+        isDeclare = await getIsDeclared(deps, 'declare or use class', fragment, item) 
         if isDeclare:
             imports = await getServiceImports(fragment)
             results[item] = imports
         else:
             await resolveClassImports(fragment, item, callback, results)
-    ```
-  - getIsDeclared(fragment, item): get the result of the declare-or-use transformer and see if the specified component is declared or not. 
-  Do case insensitive search.
-    ```python
-      item = item.lower()
-      result = await deps['declare or use class'].getResult(fragment)
-      temp_items = {k.lower(): v for k, v in result.items()}
-      if item in temp_items:
-        return temp_items[item] == 'declare'
-      else:
-        return False
-    ```
-  - getAllDeclared(fragment):
-    ```python
-      data = await deps['declare or use class'].getResult(fragment)
-      return [name for name in data if data[name] == 'declare']
-    ```
-  - getDeclaredIn(fragment, item): Returns the key of the text fragment where the item is declared. 
-  Do case insensitive search.
-    ```python
-      item = item.lower()
-      result = await deps['declare or use class'].getResult(fragment)
-      temp_items = {k.lower(): v for k, v in result.items()}
-      if item in temp_items:
-        return temp_items[item]
-      return None
-    ```
-  - buildPath(declaredIn, filename):
-    ```python
-      declaredIn = services.keyService.calculateLocation(declaredIn.key) 
-      declared_in_parts = declaredIn.split(" > ")
-      declared_in_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
-      path = os.path.join(*declared_in_parts, filename.replaceAll(" ", "_").replaceAll('-', '_') )
-      return path
     ```
   - getServiceImports(fragment):
     ```python
@@ -1078,7 +1094,7 @@
     ```     
   - resolveClassImports(fragment, item, callback, results):
     ```python
-      declared_in = await getDeclaredIn(fragment, item)
+      declared_in = await shared.getDeclaredIn(deps, 'declare or use class', fragment, item)
       if not declared_in:
           raise new Error(f"can't find import location for component {item} used in {fragment.key}")
       else:
@@ -1087,18 +1103,18 @@
             raise new Error(f'component declared in {declared_in}, but fragment cant be found at specified index')
           classes = await deps.classes.getResult(declaredInFragment)
           if item in classes:
-              path = buildPath(declaredInFragment, item)
+              path = shared.buildPath(services, declaredInFragment, item)
               results[item] = path
           else:
               # if there is only 1 item declared in the fragment, we can presume that's the one we need
-              declaredClasses = await getAllDeclared(declaredInFragment)
+              declaredClasses = await shared.getAllDeclared(deps, 'declare or use class', declaredInFragment)
               if len(declaredClasses) == 1:
-                  path = buildPath(declaredInFragment, declaredClasses[0])
+                  path = shared.buildPath(services, declaredInFragment, declaredClasses[0])
                   results[item] = path
               else:
                   iterator(fragment, item, declaredClasses, declaredInFragment) # declaredInFragment is needed for cleanresponse
     ```
-  - cleanResponse(response, fragment, item, declaredClasses, declaredInFragment): `return buildPath(declaredInFragment, response)` 
+  - cleanResponse(response, fragment, item, declaredClasses, declaredInFragment): `return shared.buildPath(services, declaredInFragment, response)` 
   - buildMessage(fragment, item, declaredClasses):
     - description = await deps['class description'].getResult(fragment)
       if not description return null
@@ -1344,7 +1360,7 @@
 - name: 'component renderer'
 - dependencies: ['components', 'declare or use component', 'is service singleton', 'component imports', 'primary component', 'consumed interfaces component', 'usage-extractor']
 - isJson: false
-- functions:
+- functions: 
   - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
   - iterator(fragment, callback, result): 
     ```python
@@ -1373,67 +1389,6 @@
           writer.write(response)
       return filePath
     ```    
-  - getExternalDescription(fragment, component): get how other code has used the component
-    ```python
-      results = {}
-      found = False
-      all = (await deps['usage-extractor'].getResult(fragment))?.[component]
-      if all:
-        for key, value in all.items():
-          for service, usage in value:
-            for feature, desc in usage:
-              if not feature in results:
-                results[feature] = desc
-                found = True
-      if found:
-        toJoin = []
-        for key, value in results.items():
-          toJoin.append(f'{key}: {value}')
-        return f'\nMake certain that {component} has:\n- ' + '\n- '.join(toJoin) + '\n'
-      return ''
-    ```
-  - getOtherInterfaces(fragment, component): get the interface definitions of other components & classes that are used by this component. Only include parts of the interface that are actually used in the code that needs to be rendered.
-    ```python
-      interfaceTxt = ''
-      all = (await deps['consumed interfaces component'].getResult(fragment))?.[component]
-      if all:
-        for key, value in all.items():
-          found = False
-          results = {}
-          for service, usage in value:
-            interfaceTxt += f'\n{service} has the following interface:\n' + JSON.stringify(usage) + '\n'
-      return interfaceTxt
-    ```    
-  - getAllImports(fragment, component): build the text that defines which modules should be imported
-    ```python
-      importsTxt = None
-      constants = deps.constants.cache.getFragmentResults(fragment.key)
-      if constants:
-        resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
-        relPath = os.path.relpath(resourcesPath, renderToPath)
-        relPath = relPath.replaceAll('\\', '/')
-        importsTxt += f"The const 'resources' can be imported from {relPath}\n"
-      imports = await deps['component imports'].getResult(fragment)?.[item]
-      if imports:
-        for importDef in imports:
-          importsTxt += await getImportServiceLine(importDef, renderToPath)
-      if importsTxt:
-        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
-      return importsTxt
-    ```
-  - getImportServiceLine(importDef, renderToPath):
-    ```python
-      service = importDef['service']
-      servicePath = importDef['path']
-      servicePath = os.path.relpath(servicePath, renderToPath)
-      isGlobal = (await deps['is service singleton'].getResult(importDef['key']))?.[service]
-      if isGlobal:
-          serviceTxt = "global object"
-          service = service.lower()
-      else:
-          serviceTxt = "service"
-      return f"The {serviceTxt} {service} can be imported from {servicePath} (exported as default)\n"
-    ```          
   - buildMessage(fragment, component, components, renderToPath):
     - result (json array):
       - role: system, content:
@@ -1457,11 +1412,12 @@
         replace:
         - {{name}}: `component`
         - {{ownDescription}}: `if len(components) > 1: await deps['component exact description'].getResult(fragment) else: '\n'.join(fragment.lines)`
-        - {{externalDescription}}:  `await getExternalDescription(fragment, component)`
-        - {{otherInterfaces}}: `await getOtherInterfaces(fragment, component)`
-        - {{importsToAdd}}: `await getAllImports(fragment, component, renderToPath)`
+        - {{externalDescription}}:  `await getExternalDescription(deps, fragment, component)`
+        - {{otherInterfaces}}: `await getOtherInterfaces(deps, fragment, component)`
+        - {{importsToAdd}}: `await getAllImports(deps, 'component imports', fragment, component, renderToPath)`
 
     - return: `result, [ component ]`
+
 
 ### class-renderer service
 - the class-renderer service is responsible for generating all the code for the services in the form of classes.
@@ -1497,67 +1453,6 @@
           writer.write(response)
       return filePath
     ```    
-  - getExternalDescription(fragment, item): get how other code has used the class
-    ```python
-      results = {}
-      found = False
-      all = (await deps['usage-extractor'].getResult(fragment))?.[item]
-      if all:
-        for key, value in all.items():
-          for service, usage in value:
-            for feature, desc in usage:
-              if not feature in results:
-                results[feature] = desc
-                found = True
-      if found:
-        toJoin = []
-        for key, value in results.items():
-          toJoin.append(f'{key}: {value}')
-        return f'\nMake certain that {item} has:\n- ' + '\n- '.join(toJoin) + '\n'
-      return ''
-    ```
-  - getOtherInterfaces(fragment, item): get the interface definitions of other classes that are used by this class. Only include parts of the interface that are actually used in the code that needs to be rendered.
-    ```python
-      interfaceTxt = ''
-      all = (await deps['consumed interfaces class'].getResult(fragment))?.[item]
-      if all:
-        for key, value in all.items():
-          found = False
-          results = {}
-          for service, usage in value:
-            interfaceTxt += f'\n{service} has the following interface:\n' + JSON.stringify(usage) + '\n'
-      return interfaceTxt
-    ```  
-  - getAllImports(fragment, item, renderToPath): build the text that defines which modules should be imported
-    ```python
-      importsTxt = None
-      constants = deps.constants.cache.getFragmentResults(fragment.key)
-      if constants:
-        resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
-        relPath = os.path.relpath(resourcesPath, renderToPath)
-        relPath = relPath.replaceAll('\\', '/')
-        importsTxt += f"The const 'resources' can be imported from {relPath}\n"
-      imports = await deps['class imports'].getResult(fragment)?.[item]
-      if imports:
-        for importDef in imports:
-          importsTxt += await getImportServiceLine(importDef, renderToPath)
-      if importsTxt:
-        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
-      return importsTxt
-    ```    
-  - getImportServiceLine(importDef, renderToPath):
-    ```python
-      service = importDef['service']
-      servicePath = importDef['path']
-      servicePath = os.path.relpath(servicePath, renderToPath)
-      isGlobal = (await deps['is service singleton'].getResult(importDef['key']))?.[service]
-      if isGlobal:
-          serviceTxt = "global object"
-          service = service.lower()
-      else:
-          serviceTxt = "service"
-      return f"The {serviceTxt} {service} can be imported from {servicePath} (exported as default)\n"
-    ```      
   - buildMessage(fragment, item, classes, renderToPath):
     - result (json array):
       - role: system, content:
@@ -1581,9 +1476,9 @@
         replace:
         - {{name}}: `item`
         - {{ownDescription}}: `if len(classes) > 1: await deps['class exact description'].getResult(fragment) else: '\n'.join(fragment.lines)`
-        - {{externalDescription}}:  `await getExternalDescription(fragment, item)`
-        - {{otherInterfaces}}: `await getOtherInterfaces(fragment, item)`
-        - {{importsToAdd}}: `await getAllImports(fragment, item, renderToPath)`
+        - {{externalDescription}}:  `await getExternalDescription(deps, fragment, item)`
+        - {{otherInterfaces}}: `await getOtherInterfaces(deps, fragment, item)`
+        - {{importsToAdd}}: `await getAllImports(deps, 'class imports', fragment, item, renderToPath)`
 
     - return: `result, [ item ]`
 
@@ -1645,8 +1540,8 @@
       > 
       > {{specs}}
 
-      replace:
-        - {{code}}: `code`
-        - {{specs}}: `await deps.constants.getResult(fragment)`
+        replace:
+            - {{code}}: `code`
+            - {{specs}}: `await deps.constants.getResult(fragment)`
 
   - return result, [ ]

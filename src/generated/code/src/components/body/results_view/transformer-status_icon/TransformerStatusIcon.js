@@ -53,7 +53,7 @@ class TransformerStatusIcon extends Component {
       this.setState({ status: 'paused' });
     } else if (this.props.transformer.cache.isOverwritten(activeFragmentKey)) {
       this.setState({ status: 'overwritten' });
-    } else if (!this.props.transformer.cache.getResult(activeFragmentKey)) {
+    } else if (!this.props.transformer.cache.getFragmentResults(activeFragmentKey)) {
       this.setState({ status: 'notYetRendered' });
     } else {
       this.setState({ status: 'rendered' });
@@ -85,8 +85,12 @@ class TransformerStatusIcon extends Component {
         icon = null;
     }
 
+    let tooltip = this.state.status;
+    if (color === 'red') {
+      tooltip += ' (out of date)';
+    }
     return (
-      <Tooltip title={this.state.status}>
+      <Tooltip title={tooltip}>
         <div className={`transformer-status-icon ${theme}`}>
           {icon}
         </div>

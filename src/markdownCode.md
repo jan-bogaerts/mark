@@ -780,10 +780,12 @@ Remember that each button needs it's own appropriate icon.
   - save(file): saves the project to disk
     ```python (pseudo)
     async def save(file):
-      if not projectService.filename:
+      if not projectService.filename and folderService.folder: # not yet saved, but did some building, so temp files
         folderService.moveTo(file)
-      elif projectService.filename != file:
+      elif projectService.filename and projectService.filename != file:
         folderService.copyTo(file)
+      elif not folderService.folder:
+        folderService.init()
       await fs.writeFileASync(file, projectService.content, 'utf8')
       for transformer in cybertronService.transformers:
         await transformer.cache.saveCache()
@@ -855,10 +857,12 @@ Remember that each button needs it's own appropriate icon.
   - output: sub-folder of the root folder = folder + '\output'. This folder does not have to exist
 - it can:
   - clear: called when a new project is created and the location & name is not yet known.
-    - create a temp folder, set value as 'folder'
+    - reset folder to null
     - create a temp name, set as project name
-    - create the cache folder
-    - create the output folder
+  - init: called when the project folders need to be initialized.
+    - if this.folder is null: create a temp folder and assign to this.folder
+    - create the cache folder if  it doesn't exist yet
+    - create the output folder if  it doesn't exist yet
     - calculate the value for 'plugins', but don't try to create the folder
   - move to (new project file): moves the current project and related files to the new location
     - split 'new project file' into new-folder and new-project name (remove extension .md)
@@ -890,11 +894,9 @@ Remember that each button needs it's own appropriate icon.
     - store the new folder and project name
   - set location (location)
     - store the new folder and project name
-      - this.folder = path.dirname(location, '.md')
-      - this.cache = path.join(this.folder, 'cache')
-      - this.plugins = path.join(this.folder, 'plugins')
-      - this.output = path.join(this.folder, 'output')
+      - this.folder = path.dirname(location)
       - this.projectName = path.basename(location)
+      - this.init()
 
 ### Selection service
 - The selection service is a global singleton object that keeps track of the currently selected text.
@@ -1329,11 +1331,12 @@ The module 'LineParserHelpers' contains the following helper functions used by t
 - When the result-cache-service is created, it:
   - initializes the 'is-dirty' flag to false
   - initialize eventTarget `this.eventTarget = new EventTarget()`
+- load(inputServices): a function that is called after construction to load the cache from file and register all the event handlers:
   - registers the event handler 'handleFragmentDeleted' with the project service to monitor when a fragment is deleted
     - register using pseudo: `projectService.eventTarget.addEventListener('fragment-deleted', handleFragmentDeleted)`
   - registers an event handler with the project service to monitor when text fragments have changed
     - register using pseudo: `projectService.eventTarget.addEventListener('fragment-out-of-date', handleTextFragmentChanged)`
-  - and registers the same event handler for the `result-changed` event with each object that the parent transformer uses as input (provided in the constructor as a list of transformer services, each service has a field 'cache')
+  - and registers the same event handler for the `result-changed` event with each of the inputServices (each service has a field 'cache')
   - whenever the event handler is triggered (event.detail = fragment-key), the cache service checks in the secondary dictionary if there are any entries for that key. This allows the system to react to changes in single text-fragments, even though there were multiple input text-fragments (and so the keys in the primary dictionary are a concatenation of multiple titles).
     - for each key in the list:
       - search in the primary dictionary, if this contains an item for the key, store a reference to the item
@@ -1496,12 +1499,14 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - call `window.electron.showDebugger(value)`
   - trigger the `show-debugger` event through the 'eventTarget' field
 - async buildAll(transformer): to build the project, do:
+  - make certain that the folder service is initialized
   - if `transformer.isFullRender` exists
     - call `await transformer.getResults(ProjectService.textFragments)`
   - otherwise: for each fragment in project-service.textFragments: 
      - `await transformer.getResult(fragment)`
   - on error: `DialogService.showErrorDialog(error)`
 - async runTransformer(fragment, transformer):
+  - make certain that the folder service is initialized
   - ask the transformer to get it's result (`getResult(fragment)`) (async)
   - on error: `DialogService.showErrorDialog(error)`
 - debug: a property to indicate if the build service is currently in debug mode or not. Load the value from local storage upon creation. When the value is updated, save to local storage
@@ -1565,6 +1570,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - Transformers can be registered. this adds them to the list. A second parameter indicates if the transformer should also be added as an entry-point. If the field 'activeEntryPoint' is still empty and the transformer being registered, is an entrypoint, set it as the activeEntryPoint.
 - Transformers can also be unregistered. this will remove them from the list of available transformers and the list of entry-points.
 - getTransformer(name): search for the transformer with the specified name in this.transformers and return the result
+- load(): loads all the transformers
 
 
 ### all-spark service
@@ -1635,7 +1641,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
 - The transformer-base service acts as a base class for transformers: it provides a common interface and functionality
 - constructor:
   - name: the name of the transformer
-  - dependencies: a list of names of transformers. Replace every name in the list with the object found in the cybertron-service's list of transformers. If a name can not be found, raise an exception with the necessary info. Store the list of objects as 'dependencies'
+  - dependencies: a list of names of transformers.
   - isJson: when true, the result values should be treated as json structures, otherwise as regular text.
   - language: in which language the result data should be shown. if not provided, defaults to 'markdown'
   - temperature: temp to use for the llm requests. defaults to 0
@@ -1645,6 +1651,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
     - transformer = this
     - dependencies = this.dependencies
 - functions:
+  - load(): load the dependencies (the list of names of transformers) and create the cache. Replace every name in the list with the object found in the cybertron-service's list of transformers. If a name can not be found, raise an exception with the necessary info. Store the list of objects as 'dependencies'. Ask the Cybertron service and the cache object to load as well.
   - renderResults(fragments): for transformers that require the entire project as input. throws a not-implemented error since inheritors need to supply this function.
   - renderResult(textFragment): do a full rerender for the fragment
     ```python (pseudo)
@@ -1735,6 +1742,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - dependencies: []
   - isJson: true
 - functions:
+  - load: ask super to load and set the field `constantsService = this.dependencies[0]`
   - extract-quotes: extract all the locations in the text that contain quotes
   ```python (pseudo)
     def extractQuotes(fragment):
@@ -1839,14 +1847,20 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       raise Exception('Invalid plugin: no description provided')
     super(description.name, description.dependencies, description.isJson, description.language, description.temperature or 0, description.isFullRender)
     this.description = description
-    for const dep in this.dependencies:
-      this.plugin.deps[dep.name] = dep
     plugin.services.projectService = projectService
     plugin.services.folderService = folderService
     plugin.services.gptService = gptService
     plugin.services.cybertronService = cybertronService
     plugin.services.keyService = keyService
     plugin.services.cache = this.cache
+  ```
+- load:
+  ```python
+    super.load()
+    for const dep in this.dependencies:
+      this.plugin.deps[dep.name] = dep
+    if this.plugin.load:
+      this.plugin.load()
   ```
 - calculateMaxTokens(inputTokens)
   ```python
@@ -1943,15 +1957,15 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - dependencies: ['constants']
   - isJson: false
   - isFullRender: true
-- set during construction: `this.constantsService = this.dependencies[0]`
 - functions:
+  - load: ask super to load and set the field `constantsService = this.dependencies[0]`
   - saveFile(fragment, content):
     ```python
       rootFolder = folderService.output
       if not fs.existsSync(rootFolder):
         fs.mkdirSync(rootFolder)
       location = KeyService.calculateLocation(fragment)        
-      fileName = location.replaceAll(" > ", "_").replaceAll(" ", "_")
+      fileName = location.replaceAll(" > ", "_").replaceAll(" ", "_").replaceAll("-", "_")
       file_path = path.join(rootPath, fileName + ".js")
       with open(file_path, "w") as writer:
         writer.write(content)
@@ -1960,7 +1974,6 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - cleanResult(content):
     ```python
       if content:
-        # remove the code block markdown
         content = content.strip() # need to remove the newline at the end
         if content.startswith("```javascript"):
           content = content[len("```javascript"):]
@@ -2083,8 +2096,9 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
   - name: 'plugin-list renderer'
   - dependencies: ['plugin renderer']
   - isJson: true
-- set during construction: `this.pluginRendererService = this.dependencies[0]; this.isFullRender = true;`
+- set during construction: `this.isFullRender = true;`
 - functions:
+  - load: ask super to load and set the field `this.pluginRendererService = this.dependencies[0]`
   - saveFile(items): saves the array to file
     ```python
       rootFolder = folderService.output
@@ -2100,7 +2114,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       outPath = folderService.output
       for fragment in fragments:
         item = await this.pluginRendererService.getResult(fragment)
-        if item:
+        if item and not item.endsWith('shared.js'):
           item = path.relative(output, item)
           items.append(item)
         this.cache.setResult(fragment.key, item, item) # set the cache so the rest of the system know this transformer is up to date for the fragment

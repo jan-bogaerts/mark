@@ -24,17 +24,23 @@ class PluginTransformerService extends TransformerBaseService {
     super(description.name, description.dependencies, description.isJson, description.language, description.temperature || 0, description.isFullRender);
     this.plugin = plugin;
     this.description = description;
+    
+    plugin.services.projectService = projectService;
+    plugin.services.folderService = folderService;
+    plugin.services.gptService = gptService;
+    plugin.services.cybertronService = cybertronService;
+    plugin.services.keyService = keyService;
+    plugin.services.cache = this.cache;
+  }
+
+  load() { 
+    super.load();
     for (const dep of this.dependencies) {
       this.plugin.deps[dep.name] = dep;
     }
-    plugin.services = {
-      projectService: projectService,
-      folderService: folderService,
-      gptService: gptService,
-      cybertronService: cybertronService,
-      keyService: keyService,
-      cache: this.cache
-    };
+    if (this.plugin.load) {
+      this.plugin.load();
+    }
   }
 
   calculateMaxTokens(inputTokens) {
@@ -59,21 +65,29 @@ class PluginTransformerService extends TransformerBaseService {
     }
     if (this.plugin.iterator) {
       const result = {};
+      const resultSetter = (keys, itemResult) => {
+        const key = keys.join(' | ');
+        this.cache.setResult(key, itemResult, null);
+        result[keys[keys.length - 1]] = itemResult;
+      };
       const iteratorStepHandler = async (...args) => {
-        const [message, keys] = await this.plugin.buildMessage(...args);
+        let [message, keys] = await this.plugin.buildMessage(...args);
         if (!message) {
           return;
         }
-        let itemResult = await gptService.sendRequest(this.description.name, fragment.key, message);
+        let itemResult = await gptService.sendRequest(this, fragment.key, message);
         if (this.plugin.cleanResponse) {
           itemResult = this.plugin.cleanResponse(itemResult, ...args);
         }
-        const key = keys.join(' | ');
-        this.cache.setResult(key, itemResult, message);
-        result[keys[keys.length - 1]] = itemResult;
+        if (keys) {
+          keys.unshift(fragment.key);
+        } else {
+          keys = [fragment.key];
+        }
+        resultSetter(keys, itemResult);
       };
       this.cache.deleteResultsFor(fragment.key);
-      await this.plugin.iterator(fragment, iteratorStepHandler);
+      await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
       return result;
     } else {
       return super.renderResult(fragment);
@@ -86,22 +100,11 @@ class PluginTransformerService extends TransformerBaseService {
     }
     if (this.plugin.iterator) {
       const result = {};
-      const oldResultKeys = this.cache.secondaryCache(fragment.key).filter(x => x.startsWith(fragment.key));
-      const iteratorStepHandler = async (...args) => {
-        const [message, keys] = await this.plugin.buildMessage(...args);
-        if (!message) {
-          return;
-        }
+      const oldResultKeys = this.cache.secondaryCache[fragment.key]?.filter(x => x.startsWith(fragment.key)) || [];
+      const resultSetter = (keys, itemResult, fromCache = false) => {
         const key = keys.join(' | ');
-        let itemResult;
-        if (this.cache.isOutOfDate(key)) {
-          itemResult = await gptService.sendRequest(this.description.name, fragment.key, message);
-          if (this.plugin.cleanResponse) {
-            itemResult = this.plugin.cleanResponse(itemResult, ...args);
-          }
-          this.cache.setResult(key, itemResult, message);
-        } else {
-          itemResult = this.cache.getResult(key);
+        if (!fromCache) {
+          this.cache.setResult(key, itemResult, null);
         }
         result[keys[keys.length - 1]] = itemResult;
         const index = oldResultKeys.indexOf(key);
@@ -109,7 +112,31 @@ class PluginTransformerService extends TransformerBaseService {
           oldResultKeys.splice(index, 1);
         }
       };
-      await this.plugin.iterator(fragment, iteratorStepHandler);
+      const iteratorStepHandler = async (...args) => {
+        let [message, keys] = await this.plugin.buildMessage(...args);
+        if (!message) {
+          return;
+        }
+        if (keys) {
+          keys.unshift(fragment.key);
+        } else {
+          keys = [fragment.key];
+        }
+        const key = keys.join(' | ');
+        let itemResult;
+        let isFromCache = false;
+        if (this.cache.isOutOfDate(key)) {
+          itemResult = await gptService.sendRequest(this, fragment.key, message);
+          if (this.plugin.cleanResponse) {
+            itemResult = this.plugin.cleanResponse(itemResult, ...args);
+          }
+        } else {
+          isFromCache = true;
+          itemResult = this.cache.getResult(key);
+        }
+        resultSetter(keys, itemResult, isFromCache);
+      };
+      await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
       this.cache.deleteAfterUpdate(fragment.key, oldResultKeys);
       return result;
     } else {
@@ -125,13 +152,28 @@ class PluginTransformerService extends TransformerBaseService {
     if (this.plugin.iterator) {
       BuildStackService.mode = 'validating';
       try {
-        await this.plugin.iterator({ key, prompt }, async (...args) => {
-          const [message, keys] = await this.plugin.buildMessage(...args);
+        const fragment = this.keyToMessageParams(key.split(' | '))[0]; // first item in the compound key is always the key of the fragment
+        const resultSetter = (keys, itemResult) => {
+          // get the result from the cache and compare both, if they are different, the prompt has changed
+          const key = keys.join(' | ');
+          const oldResult = this.cache.getResult(key);
+          if (JSON.stringify(oldResult) !== JSON.stringify(itemResult)) {
+            isChanged = true;
+          }
+        }
+        const iteratorStepHandler = async (...args) => {
+          let [message, keys] = await this.plugin.buildMessage(...args);
+          if (keys) {
+            keys.unshift(key);
+          } else {
+            keys = [key];
+          }
           const newKey = keys.join(' | ');
           if (newKey === key && !isChanged) {
             isChanged = JSON.stringify(message) !== JSON.stringify(prompt);
           }
-        });
+        }
+        await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
       } finally {
         BuildStackService.mode = 'normal';
       }

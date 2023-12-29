@@ -5,7 +5,7 @@ import ProjectService from '../project_service/ProjectService';
 import StorageService from '../project_service/storage_service/StorageService';
 
 class ResultCacheService {
-  constructor(transformer, inputServices) {
+  constructor(transformer) {
     this.transformer = transformer;
     this.cache = {};
     this.secondaryCache = {};
@@ -14,6 +14,10 @@ class ResultCacheService {
     this.lastSaveDate = null;
     this.eventTarget = new EventTarget();
 
+    
+  }
+
+  load(inputServices) {
     this.loadCache();
 
     ProjectService.eventTarget.addEventListener('fragment-deleted', this.handleFragmentDeleted.bind(this));
@@ -95,21 +99,41 @@ class ResultCacheService {
     }
   }
 
-  setResult(key, result, prompt) {
+  addSecondaryKeys(resultKey, additionalKeys) {
+    if (!additionalKeys) return;
+    for (const key of additionalKeys) {
+      if (!this.secondaryCache[key]) {
+        this.secondaryCache[key] = [resultKey];
+      } else {
+        this.secondaryCache[key].push(resultKey);
+      }
+    }
+  }
+
+  removeSecondaryKeys(resultKey, additionalKeys) {
+    if (!additionalKeys) return;
+    for (const key of additionalKeys) {
+      const index = this.secondaryCache[key].indexOf(resultKey);
+      if (index !== -1) {
+        this.secondaryCache[key].splice(index, 1);
+      }
+    }
+  }
+
+
+  setResult(key, result, prompt, additionalKeys) {
     let isModified = true;
     if (!this.cache[key]) {
-      this.cache[key] = { result, prompt, state: 'still-valid' };
+      this.cache[key] = { result, prompt, state: 'still-valid', additionalKeys };
       const keyParts = key.split(' | ');
-      for (const part of keyParts) {
-        if (!this.secondaryCache[part]) {
-          this.secondaryCache[part] = [key];
-        } else {
-          this.secondaryCache[part].push(key);
-        }
-      }
+      this.addSecondaryKeys(key, keyParts);
+      this.addSecondaryKeys(key, additionalKeys);
     } else if (this.cache[key].result !== result || JSON.stringify(this.cache[key].prompt) !== JSON.stringify(prompt)) {
+      this.removeSecondaryKeys(key, this.cache[key].additionalKeys);
+      this.addSecondaryKeys(key, additionalKeys);
       this.cache[key].result = result;
       this.cache[key].prompt = prompt;
+      this.cache[key].additionalKeys = additionalKeys;
       this.cache[key].state = 'still-valid';
     } else if (this.cache[key].state !== 'still-valid') {
       this.cache[key].state = 'still-valid';
@@ -159,13 +183,13 @@ class ResultCacheService {
         const cacheValue = this.getResult(key);
         const keyParts = key.split(' | ');
         let addTo = null;
-        if (keyParts.length > 1) {
+        if (keyParts.length > 1) { 
           result = result || {};
           addTo = result;
-        }
-        for (const part of keyParts.slice(0, -1)) {
-          addTo[part] = addTo[part] || {};
-          addTo = addTo[part];
+          for (const part of keyParts.slice(1, -1)) {
+            addTo[part] = addTo[part] || {};
+            addTo = addTo[part];
+          }
         }
         if (addTo) {
           addTo[keyParts[keyParts.length - 1]] = cacheValue;

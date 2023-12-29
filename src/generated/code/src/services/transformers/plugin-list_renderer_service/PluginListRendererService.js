@@ -16,8 +16,12 @@ class PluginListRendererService extends TransformerBaseService {
    */
   constructor() {
     super('plugin-list renderer', ['plugin renderer'], true);
-    this.pluginRendererService = this.dependencies[0];
     this.isFullRender = true;
+  }
+
+  load() {
+    super.load();
+    this.pluginRendererService = this.dependencies[0];
   }
 
   /**
@@ -42,11 +46,13 @@ class PluginListRendererService extends TransformerBaseService {
     const output = folderService.output;
     for (const fragment of fragments) {
       let item = await this.pluginRendererService.getResult(fragment);
-      if (item) {
+      if (item && !item.endsWith('shared.js')) {
         item = path.relative(output, item);
         items.push(item);
+        this.cache.setResult(fragment.key, item, item);
+      } else {
+        this.cache.setResult(fragment.key, "", "");
       }
-      this.cache.setResult(fragment.key, item, item);
     }
     this.saveFile(items);
   }

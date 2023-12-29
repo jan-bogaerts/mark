@@ -33,7 +33,7 @@ class IndentButton extends React.Component {
   render() {
     const { theme } = this.state;
     return (
-      <Tooltip title="Indent">
+      <Tooltip title="Indent" placement='bottom'>
         <Button
           className={`indent-button ${theme}`}
           icon={<MdFormatIndentIncrease />}

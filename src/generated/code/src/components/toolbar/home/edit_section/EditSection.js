@@ -82,22 +82,22 @@ function EditSection() {
 
   return (
     <div className={`edit-section ${ThemeService.getCurrentTheme()}`}>
-      <Tooltip title="Cut">
+      <Tooltip title="Cut" placement='bottom'>
         <Button icon={<ScissorOutlined />} onClick={handleCut} disabled={!selectionExists} />
       </Tooltip>
-      <Tooltip title="Copy">
+      <Tooltip title="Copy" placement='bottom'>
         <Button icon={<CopyOutlined />} onClick={handleCopy} disabled={!selectionExists} />
       </Tooltip>
-      <Tooltip title="Paste">
+      <Tooltip title="Paste" placement='bottom'>
         <Button icon={<BiPaste />} onClick={handlePaste} disabled={!clipboardHasText || !SelectionService.getEditor()} />
       </Tooltip>
-      <Tooltip title="Delete">
+      <Tooltip title="Delete" placement='bottom'>
         <Button icon={<DeleteOutlined />} onClick={handleDelete} disabled={!selectionExists} />
       </Tooltip>
-      <Tooltip title="Select All">
+      <Tooltip title="Select All" placement='bottom'>
         <Button icon={<MdSelectAll />} onClick={handleSelectAll} />
       </Tooltip>
-      <Tooltip title="Clear Selection">
+      <Tooltip title="Clear Selection" placement='bottom'>
         <Button icon={<MdOutlineDeselect />} onClick={handleClearSelection} disabled={!selectionExists} />
       </Tooltip>
     </div>

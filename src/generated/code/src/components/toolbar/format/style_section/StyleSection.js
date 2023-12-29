@@ -68,7 +68,7 @@ class StyleSection extends Component {
     return (
       <div className={`style-section ${theme}`}>
         {styles.map((style) => (
-          <Tooltip title={style} key={style}>
+          <Tooltip title={style} key={style} placement='bottom'>
             <Button
               type={currentStyle === style ? 'primary' : 'default'}
               icon={styleIcons[style]}

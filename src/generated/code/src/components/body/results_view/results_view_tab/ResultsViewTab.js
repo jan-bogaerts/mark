@@ -12,7 +12,7 @@ class ResultsViewTab extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      editorKey: null,
+      fragmentKey: null,
       editorValue: '',
       editorOptions: {
         theme: ThemeService.getCurrentTheme() === 'light' ? 'vs-light' : 'vs-dark',
@@ -26,6 +26,7 @@ class ResultsViewTab extends Component {
       isOutdated: false,
       isDeleted: false,
       isOverwritten: false,
+      isJson: false,
     };
   }
 
@@ -74,24 +75,25 @@ class ResultsViewTab extends Component {
   }
 
   updateEditorValue = () => {
-    const editorKey = PositionTrackingService.activeFragment?.key;
-    if (editorKey) {
-      let editorValue = this.props.transformer.cache.getFragmentResults(editorKey);
-      if (this.props.transformer.isJson) {
+    const fragmentKey = PositionTrackingService.activeFragment?.key;
+    if (fragmentKey) {
+      let editorValue = this.props.transformer.cache.getFragmentResults(fragmentKey);
+      this.isJson = typeof editorValue === 'object';
+      if (this.isJson) {
         editorValue = JSON.stringify(editorValue, null, 2);
       }
-      const isOutdated = this.props.transformer.cache.isOutOfDate(editorKey);
-      const isDeleted = false;//this.props.transformer.cache.isDeleted(editorKey); 
-      const isOverwritten = this.props.transformer.cache.isOverwritten(editorKey);
-      this.setState({ editorKey, editorValue, isOutdated, isDeleted, isOverwritten });
+      const isOutdated = this.props.transformer.cache.isOutOfDate(fragmentKey);
+      const isDeleted = false;//this.props.transformer.cache.isDeleted(fragmentKey); 
+      const isOverwritten = this.props.transformer.cache.isOverwritten(fragmentKey);
+      this.setState({ fragmentKey, editorValue, isOutdated, isDeleted, isOverwritten });
     } else {
-      this.setState({ editorKey: null, editorValue: '', isOutdated: false, isDeleted: false, isOverwritten: false });
+      this.setState({ fragmentKey: null, editorValue: '', isOutdated: false, isDeleted: false, isOverwritten: false });
     }
   }
 
   handleEditorChange = (newValue) => {
     let parsedValue = newValue;
-    if (this.props.transformer.isJson) {
+    if (this.isJson) {
       try {
         parsedValue = JSON.parse(newValue);
       } catch (error) {
@@ -99,7 +101,7 @@ class ResultsViewTab extends Component {
         return;
       }
     }
-    this.props.transformer.cache.overwriteResult(this.state.editorKey, parsedValue);
+    this.props.transformer.cache.overwriteResult(this.state.fragmentKey, parsedValue);
     StorageService.markDirty();
     this.setState({ isOverwritten: true });
   }
@@ -123,7 +125,7 @@ class ResultsViewTab extends Component {
   }
 
   render() {
-    const { isOutdated, isDeleted, isOverwritten, editorOptions } = this.state;
+    const { isOutdated, isDeleted, isOverwritten, editorOptions, fragmentKey } = this.state;
     let editorClassName = 'results-view-tab';
     if (isOutdated || isDeleted) {
       editorClassName += ' grayed-out';
@@ -144,7 +146,7 @@ class ResultsViewTab extends Component {
           onChange={this.handleEditorChange}
           editorDidMount={this.handleEditorMount}
         />
-        <ResultsViewContextMenu transformer={this.props.transformer} key={this.state.editorKey} />
+        <ResultsViewContextMenu fragmentKey={fragmentKey} transformer={this.props.transformer} />
       </div>
     );
   }

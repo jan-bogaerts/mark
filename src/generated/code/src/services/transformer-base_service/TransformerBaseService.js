@@ -23,14 +23,23 @@ class TransformerBaseService {
     this.language = language;
     this.temperature = temperature;
     this.isFullRender = isFullRender;
-    this.dependencies = dependencies.map(dependency => {
+    this.dependencies = dependencies;
+    this.cache = new ResultCacheService(this);
+  }
+
+  /**
+   * load all dependencies and create the cache
+   * @param {Array<string>} dependencies - A list of names of transformers
+   */
+  load() {
+    this.dependencies = this.dependencies.map(dependency => {
       const transformer = CybertronService.getTransformer(dependency);
       if (!transformer) {
-        throw new Error(`Transformer ${dependency} not found`);
+        throw new Error(`Transformer "${dependency}" not found`);
       }
       return transformer;
     });
-    this.cache = new ResultCacheService(this, this.dependencies);
+    this.cache.load(this.dependencies);
   }
 
   async renderResults() {
@@ -43,14 +52,8 @@ class TransformerBaseService {
       return null;
     }
     let [message, keys] = keyedMessage;
-    const result = await GPTService.sendRequest(this.name, textFragment.key, message);
-    if (keys) {
-      keys.unshift(textFragment.key);
-    } else {
-      keys = [textFragment.key];
-    }
-    const key = keys.join(' | ');
-    this.cache.setResult(key, result, message);
+    const result = await GPTService.sendRequest(this, textFragment.key, message);
+    this.cache.setResult(textFragment.key, result, message, keys);
     return result;
   }
 
