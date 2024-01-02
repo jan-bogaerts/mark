@@ -30,7 +30,7 @@ Because transformers are just javascript modules, they can do lots of other stuf
 
 ## transformer libraries
 This is a list of transformer-sets that you can use in your own projects as-is or as a starting point for your own libraries:
-- [built-in](./src/mark/mark.md#transformers-1): this is the set of transformers that is built into the application and which are used when you open the plugin window to edit your own transformers. The main purpose of this set is to create transformer plugins that can be used for other projects.
+- [built-in](./src/mark/src/mark.md#transformers-1): this is the set of transformers that is built into the application and which are used when you open the plugin window to edit your own transformers. The main purpose of this set is to create transformer plugins that can be used for other projects.
 - [web-client](./src/web_client/web_client.md): a set of transformers that can be used for creating/maintaining javascript based front-end apps. This can be for the web or electron. Currently tested for react apps, though I suspect other libraries might also work, except for angular which will probably need some more.
 
 ## transformer details
