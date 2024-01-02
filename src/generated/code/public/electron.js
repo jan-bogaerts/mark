@@ -2,7 +2,6 @@
 // Importing required modules
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
-const isDev = require("electron-is-dev");
 const Store = require('electron-store');
 require('@electron/remote/main').initialize(); // initialize remote module
 const mainRemote = require("@electron/remote/main");
@@ -14,7 +13,7 @@ let logWindow;
 let canCloseResolver = null; // a callback to resolve the promise, that is set when the can-close event is sent and main is waiting for a response
 
 
-const style = store.get('theme') || 'light';
+const style =  store.get('theme') || 'light';
 const titleBarOverlay = style === 'light' ? true : {
   color: '#323233',
   symbolColor: '#e9e9e9',
@@ -39,7 +38,7 @@ const windowConfig = {
 
 // Load the index.html of the app.
 let url;
-if (isDev) {
+if (!app.isPackaged) {
   url = 'http://localhost:3000';
 } else {
   url = `file://${path.join(__dirname, '../build/index.html')}`;
@@ -56,11 +55,11 @@ function createWindow () {
   } else { 
     urlWithParams = `${url}?isPackaged=${app.isPackaged}`;
   }
-  mainWindow.loadURL(urlWithParams);
   // Automatically open Chrome's DevTools in development mode.
   if (!app.isPackaged) {
     mainWindow.webContents.openDevTools();
   }
+  mainWindow.loadURL(urlWithParams);
   mainRemote.enable(mainWindow.webContents);
 
 

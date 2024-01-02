@@ -1,4 +1,4 @@
-# markdown code plugins
+# web-client plugins
 
 ## shared
 
@@ -61,54 +61,37 @@
   ```
 - readFile(filePath): read the contents of the specified file and return as a string.
 - getExternalDescription(deps, fragment, item): get how other code has used the class
-    ```python
-        results = {}
-        found = False
-        all = (await deps['usage-extractor'].getResult(fragment))?.[item]
-        if all:
-          for key, value in all.items():
-            for service, usage in value:
-              for feature, desc in usage:
-                if not feature in results:
-                results[feature] = desc
-                found = True
-        if found:
-          toJoin = []
-          for key, value in results.items():
-            toJoin.append(f'{key}: {value}')
-          return f'\nMake certain that {item} has:\n- ' + '\n- '.join(toJoin) + '\n'
-        return ''
-    ```
+  ```python
+      results = {}
+      found = False
+      all = (await deps['usage extractor'].getResult(fragment))?.[item]
+      if all:
+        for key, value in all.items():
+          for service, usage in value:
+            for feature, desc in usage:
+              if not feature in results:
+              results[feature] = desc
+              found = True
+      if found:
+        toJoin = []
+        for key, value in results.items():
+          toJoin.append(f'{key}: {value}')
+        return f'\nMake certain that {item} has:\n- ' + '\n- '.join(toJoin) + '\n'
+      return ''
+  ```
 - getOtherInterfaces(deps, fragment, item): get the interface definitions of other classes that are used by this class. Only include parts of the interface that are actually used in the code that needs to be rendered.
-    ```python
-        interfaceTxt = ''
-        all = (await deps['consumed interfaces class'].getResult(fragment))?.[item]
-        if all:
-          for key, value in all.items():
-            found = False
-            results = {}
-            for service, usage in value:
-              interfaceTxt += f'\n{service} has the following interface:\n' + JSON.stringify(usage) + '\n'
-        return interfaceTxt
-    ```  
-- getAllImports(deps, depName, fragment, item, renderToPath): build the text that defines which modules should be imported
-   ```python
-      importsTxt = None
-      constants = deps.constants.cache.getFragmentResults(fragment.key)
-      if constants:
-        resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
-        relPath = os.path.relpath(resourcesPath, renderToPath)
-        relPath = relPath.replaceAll('\\', '/')
-        importsTxt += f"The const 'resources' can be imported from {relPath}\n"
-      imports = await deps[depName].getResult(fragment)?.[item]
-      if imports:
-        for importDef in imports:
-          importsTxt += await getImportServiceLine(importDef, renderToPath)
-      if importsTxt:
-        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
-      return importsTxt
-    ```   
-- getImportServiceLine(importDef, renderToPath):
+  ```python
+      interfaceTxt = ''
+      all = (await deps['consumed interfaces class'].getResult(fragment))?.[item]
+      if all:
+        for key, value in all.items():
+          found = False
+          results = {}
+          for service, usage in value:
+            interfaceTxt += f'\n{service} has the following interface:\n' + JSON.stringify(usage) + '\n'
+      return interfaceTxt
+  ``` 
+- getImportServiceLine(importDef, renderToPath): (note: this function needs to be exported and usable within this module like in getAllImports)
     ```python
         service = importDef['service']
         servicePath = importDef['path']
@@ -121,6 +104,23 @@
             serviceTxt = "service"
         return f"The {serviceTxt} {service} can be imported from {servicePath} (exported as default)\n"
     ```      
+- getAllImports(deps, depName, services, fragment, item, renderToPath): build the text that defines which modules should be imported
+   ```python
+      importsTxt = None
+      constants = deps.constants.cache.getFragmentResults(fragment.key)
+      if constants:
+        resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
+        relPath = os.path.relpath(resourcesPath, renderToPath)
+        relPath = relPath.replaceAll('\\', '/')
+        importsTxt += f"The const 'resources' can be imported from {relPath}\n"
+      imports = await deps[depName].getResult(fragment)?.[item]
+      if imports:
+        for importDef in imports:
+          importsTxt += await getImportServiceLine(deps, importDef, renderToPath)
+      if importsTxt:
+        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
+      return importsTxt
+    ```   
 ## transformers
 
 ### compress service
@@ -129,7 +129,7 @@
 - name: 'compress'
 - dependencies: ['constants']
 - isJson: false
-- calculateMaxTokens(inputTokenCount): return inputTokenCount
+- calculateMaxTokens(inputTokenCount): return inputTokenCount.total
 - build-message(text-fragment):
   - result (json array):
     - role: system, content:
@@ -150,7 +150,7 @@
 - name: 'double compress'
 - dependencies: ['compress']
 - isJson: false
-- calculateMaxTokens(inputTokenCount): return inputTokenCount
+- calculateMaxTokens(inputTokenCount): return inputTokenCount.total
 - build-message(text-fragment):
   - result (json array):
     - role: system, content:
@@ -167,12 +167,12 @@
 - name: 'triple compress'
 - dependencies: ['double compress']
 - isJson: false
-- calculateMaxTokens(inputTokenCount): return inputTokenCount
+- calculateMaxTokens(inputTokenCount): return inputTokenCount.total
 - build-message(text-fragment):
   - result (json array):
     - role: system, content:
       
-     > condense the following text to 1 sentence:
+     > condense the following text to 1 short sentence:
 
     - role: user, content: await deps['double compress'].getResult(text-fragment)
   - return result, [ ]
@@ -183,9 +183,10 @@
 - name: 'components'
 - dependencies: []
 - isJson: true
-- calculateMaxTokens(inputTokenCount): return inputTokenCount / 2
+- calculateMaxTokens(inputTokenCount): return inputTokenCount.total / 2
 - build-message(textFragment):
   - if refs.projectService.textFragments.indexOf(textFragment) < 2: return null
+  - linesStr = textFragment.lines.join('\n'); if (!linesStr.trim()) return null
   - result (json array):
     - role: system, content:
       
@@ -236,20 +237,26 @@
 - name: 'classes'
 - dependencies: ['constants']
 - isJson: true
-- calculateMaxTokens(inputTokenCount): return inputTokenCount / 2
+- calculateMaxTokens(inputTokenCount): return inputTokenCount.total / 2
 - build-message(textFragment):
   - if services.projectService.textFragments.indexOf(textFragment) < 2: return null
+  - linesStr = textFragment.lines.join('\n'); if (!linesStr.trim()) return null
   - result (json array):
     - role: system, content:
       
       > Act as an ai software analyst.
+      > It is your task to find all the classes that are declared in the user text.
       > The following development stack is used:
       > {{dev_stack_title}}
       > {{dev_stack_content}}
+      >
+      > Do not include UI components, but only list the classes that need to be custom built.
+      > return an empty array if you can't detect any classes.
+      > don't include any introduction. Don't include any explanation, just write the list of classes as a json array.
       
-        replace:
-        - {{dev_stack_title}}: `services.projectService.textFragments[1]?.title`
-        - {{dev_stack_content}}: `services.projectService.textFragments[1]?.lines.join('\n')`
+      replace:
+      - {{dev_stack_title}}: `services.projectService.textFragments[1]?.title`
+      - {{dev_stack_content}}: `services.projectService.textFragments[1]?.lines.join('\n')`
 
     - role: user, content:
 
@@ -260,35 +267,6 @@
       replace:
       - {{title}}: `textFragment.title`
       - {{content}}: `await deps.constants.getResult(textFragment)`
-
-    - role: assistant, content:
-
-      > Do not include UI components, but only list the classes that need to be custom built.
-      > return an empty array if you can't detect any classes.
-      > don't include any introduction. Don't include any explanation, just write the list of classes as a
-      > json array.
-      > 
-      > bad:
-      > [
-      >   {
-      >     "file": "x.js",
-      >     "items": [
-      >       "x"
-      >     ]
-      >   },
-      >   {
-      >     "file": "y.js",
-      >     "items": [
-      >       "y"
-      >     ]
-      >   }
-      > ]
-      > 
-      > good:
-      > [
-      >     "x",
-      >     "y"
-      > ]
        
   - return:
     ```python
@@ -296,7 +274,7 @@
       return result, [ services.projectService.textFragments[1].key ]
     else:
       result, [  ]
-   ```
+    ```
 
 
 ### primary-component service
@@ -306,9 +284,16 @@
 - dependencies: ['components']
 - isJson: false
 - functions:
-  - calculateMaxTokens(inputTokenCount): return 120 
-    just return a fixed size cause we only want 1 name coming back, shouldn't be too long
-  - buildMessage(fragment):
+  - calculateMaxTokens(inputTokenCount): return 120 (just return a fixed size cause we only want 1 name coming back, shouldn't be too long)
+  - iterator(fragment, callback, resultSetter):
+      ```python
+        components = await deps.components.getResult(fragment)  
+        if len(components) > 1:
+          await callback(fragment, components)
+        elif len(components) == 1:
+          resultSetter(components[0])
+      ```    
+  - buildMessage(fragment, components):
     - result (json array):
     - role: system, content:
       
@@ -328,7 +313,7 @@
       replace:
       - {{title}}: `fragment.title`
       - {{content}}: `fragment.lines.join('\n')`
-      - {{components}}: `await deps.components.getResult(fragment)`
+      - {{components}}: `JSON.stringify(components)`
 
     - role: assistant, content:
 
@@ -352,7 +337,15 @@
 - functions:
   - calculateMaxTokens(inputTokenCount): return 120 
     just return a fixed size cause we only want 1 name coming back, shouldn't be too long
-  - buildMessage(fragment):
+  - iterator(fragment, callback, resultSetter):
+      ```python
+        classes = await deps.classes.getResult(fragment)  
+        if len(classes) > 1:
+          await callback(fragment, classes)
+        elif len(classes) == 1:
+          resultSetter(classes[0])
+      ```    
+  - buildMessage(fragment, classes):
     - result (json array):
     - role: system, content:
       
@@ -372,7 +365,7 @@
       replace:
       - {{title}}: `fragment.title`
       - {{content}}: `await deps.constants.getResult(fragment)`
-      - {{classes}}: `await deps.classes.getResult(fragment)`
+      - {{classes}}: `JSON.stringify(classes)`
 
     - role: assistant, content:
 
@@ -393,12 +386,12 @@
 - dependencies: ['double compress', 'classes']
 - isJson: false
 - functions:
-  - calculateMaxTokens(inputTokenCount): return inputTokenCount
+  - calculateMaxTokens(inputTokenCount): return inputTokenCount.total
   - iterator(fragment, callback):
     ```python
       classes = await deps.classes.getResult(fragment)  
       for item in classes:
-        callback(fragment, item)
+        await callback(fragment, item)
     ```
   - buildMessage(fragment, item):
     - content = await deps['double compress'].getResult(fragment)
@@ -429,12 +422,12 @@
 - dependencies: ['double compress', 'components']
 - isJson: false
 - functions:
-  - calculateMaxTokens(inputTokenCount): return inputTokenCount
+  - calculateMaxTokens(inputTokenCount): return inputTokenCount.total
   - iterator(fragment, callback):
     ```python
       components = await deps.components.getResult(fragment)
       for item in components:
-        callback(fragment, item)
+        await callback(fragment, item)
     ```
   - buildMessage(fragment, item):
     - content = await debs['double compress'].getResult(fragment)
@@ -465,13 +458,13 @@
 - dependencies: ['compress', 'components', 'primary component']
 - isJson: false
 - functions:
-  - calculateMaxTokens(inputTokenCount): return inputTokenCount
+  - calculateMaxTokens(inputTokenCount): return inputTokenCount.total
   - iterator(fragment, callback):
     ```python
       components = await deps.components.getResult(fragment)
       primary = await deps['primary component'].getResult(fragment)
       for item in components:
-        callback(fragment, components, primary, item)
+        await callback(fragment, components, primary, item)
     ```
 
   - buildMessage(fragment, components, primary, item):
@@ -484,7 +477,7 @@
         > It is your task to build the feature list related to the UI component '{{name}}' using the provided feature list.
         > Only return what is in the feature list about {{name}}{{otherCompText}}. No introduction or explanation.
         
-        replace:
+        replaceAll:
         - {{name}}: `item`
         - {{otherCompText}}: `otherCompText`  
   
@@ -493,8 +486,11 @@
         > the feature list:
         > {{content}}
         
-        replace:
-        - {{content}}: `content`    
+        replaceAll:
+        - {{content}}: `content`
+    
+    - if rememberPrompt, add to result: 
+      - role: assistant, content: rememberPrompt
     - return: `result, [ item ]`
   
   - buildContent(fragment, components, primary, item):
@@ -533,28 +529,28 @@
 - isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount): return 250
-  - iterator(fragment, callback, result):
+  - iterator(fragment, callback, resultSetter):
     ```python
+      description = await deps['component description'].getResult(fragment)
       titles = await getOtherTitles(fragment.key)
       components = await deps.components.getResult(fragment)
       if len(components) > 0:
         primary = await deps['primary component'].getResult(fragment)
         for item in components:
           if item == primary:
-            keys = [fragment.key, item]
-            key = keys.join(' | ')
-            result[key] = 'declare'
+            resultSetter('declare', [fragment.key, item])
           else:
-            callback(fragment, titles, item)
+            await callback(fragment, titles, item, description[item])
     ```
   - getOtherTitles(toExclude): get every short description and fragment-key in the project that currently has components associated with it. 
   ```python
     result = []
     for fragment in services.projectService.textFragments:
+      if fragment.key == toExclude: continue
       components = await deps.components.getResult(fragment)
-      if components and fragment.key != toExclude:
+      if components and len(components) > 0:
         description = await deps['triple compress'].getResult(fragment)
-        value = f'# {services.keyService.calculateLocation(fragment.key)}:\n{description}\n'
+        value = f'${fragment.key}:\n${services.keyService.calculateLocation(fragment)}\n${JSON.stringify(description,0, 2)}\n'
         result.push()
     return result
   ```    
@@ -567,23 +563,26 @@
           response = response[1:]
         if response.endswith("'"):
           response = response[:-1]
+        if response.endswith(':'):
+          response = response[:-1]
       return response
     ```
-  - buildMessage(fragment, item, titles):
-    - description = await deps['component description'].getResult(fragment)
+  - buildMessage(fragment, titles, item, description):
     - if not description return null
     - result (json array):
       - role: system, content:
         
         > Act as an ai software analyst.
-        > It is your task to classify if the component '{{name}}', described as: '{{description}}', is declared in one of the given titles.
-        > Only return 'no' or the title it is declared in, do not include any explanation. Only return 1 title.
+        > It is your task to classify if the component '{{name}}', described as: 
+        > {{description}}
+        > , is declared in one of the given topics.
+        > Only return 'no' or the topic's key it is declared in, do not include any explanation. Only return 1 key.
         > 
         > good response:
         > no
         >
         > bad response:
-        > The component 'X' is not declared in any of the titles.
+        > The component 'X' is not declared in any of the topics.
 
         replace:
         - {{name}}: `item`
@@ -608,19 +607,17 @@
 - isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount): 200
-  - iterator(fragment, callback, result):
+  - iterator(fragment, callback, resultSetter):
     ```python
       titles = await getKeysWithClasses(fragment.key)
       classes = await deps.classes.getResult(fragment)
-      if len(classes) > 0:
+      if len(classes?) > 0:
         primary = await deps['primary class'].getResult(fragment)
         for item in classes:
           if item == primary:
-            keys = [fragment.key, item]
-            key = keys.join(' | ')
-            result[key] = 'declare'
+            resultSetter('declare', [fragment.key, item])
           else:
-            callback(fragment, titles, item)
+            await callback(fragment, titles, item)
     ```
   - cleanResponse(response): if 'no' is returned, convert to 'declare'
     ```python
@@ -648,14 +645,16 @@
       - role: system, content:
         
         > Act as an ai software analyst.
-        > It is your task to classify if the class '{{class}}', described as: '{{description}}', is declared in one of the given titles.
-        > Only return 'no' or the title it is declared in, do not include any explanation. Only return 1 title.
+        > It is your task to classify if the class '{{class}}', described as:
+        > {{description}}
+        > , is declared in one of the given topics.
+        > Only return 'no' or the topic's key it is declared in, do not include any explanation. Only return 1 key.
         > 
         > good response:
         > no
         > 
         > bad response:
-        > The class 'X' is not declared in any of the titles.
+        > The class 'X' is not declared in any of the topics.
 
         replace:
         - {{class}}: `item`
@@ -687,7 +686,7 @@
         classes = await deps['declare or use class'].getResult(toCheck)
         for className, value in classes.items():
           if value == 'declare':
-            callback(fragment, toCheck, className)
+            await callback(fragment, toCheck, className)
     ```
     
   - buildMessage(fragment, checkAgainst, className):
@@ -740,7 +739,7 @@
         classes = await deps['declare or use class'].getResult(fragment)
         for className, value in classes.items():
           if value == 'declare':
-            callback(fragment, className)
+            await callback(fragment, className)
     ```
     
   - buildMessage(fragment, className):
@@ -787,7 +786,7 @@
         components = await deps['declare or use component'].getResult(fragment)
         for compName, value in components.items():
           if value == 'declare':
-            callback(fragment, compName)
+            await callback(fragment, compName)
     ```
   - buildMessage(fragment, compName):
     - description = `await deps['component exact description'].getResult(fragment)`
@@ -822,7 +821,7 @@
         classes = await deps['declare or use class'].getResult(fragment)
         for className, value in classes.items():
           if value == 'declare':
-            callback(fragment, className)
+            await callback(fragment, className)
     ```
     
   - buildMessage(fragment, className):
@@ -873,7 +872,7 @@
             if value == 'declare':
               isUsed = await getIfClassIsUsed(fragment, toCheck, className)
               if isUsed:
-                callback(fragment, className)
+                await callback(fragment, className)
     ```
   - getIfClassIsUsed(fragment, toCheck, className):
     ```python
@@ -933,7 +932,7 @@
         toCheck = await deps['is service for all components'].getResult(fragment)
         for service, value in toCheck.items():
           if value == 'yes':
-            callback(fragment, service)
+            await callback(fragment, service)
     ```
   - buildMessage(fragment, service):
     - description = `await deps.constants.getResult(fragment)`
@@ -960,18 +959,18 @@
 - name: 'component imports'
 - dependencies: ['components', 'declare or use component', 'service usage', 'global component features', 'component description']
 - isJson: false
-- functions:
+- functions: 
   - calculateMaxTokens(inputTokenCount): 200
-  - iterator(fragment, callback, result):
+  - iterator(fragment, callback, resultSetter):
     ```python
       components = await deps.components.getResult(fragment)
       for component in components:
         isDeclare = await shared.getIsDeclared(deps, 'declare or use component', fragment, component) 
         if isDeclare:
             imports = await getServiceImports(fragment)
-            results[component] = imports
+            resultSetter(imports, [fragment.key, component])
         else:
-            await resolveComponentImports(fragment, component, callback, results)
+            await resolveComponentImports(fragment, component, callback, resultSetter)
     ```
   - getServiceImports(fragment):
     ```python
@@ -1006,7 +1005,7 @@
                     results.append({'service': service, 'path': service_path, 'service_loc': fragment.full_title})
       return results  
     ```     
-  - resolveComponentImports(fragment, component, callback, results):
+  - resolveComponentImports(fragment, component, callback, resultSetter):
     ```python
       declared_in = await shared.getDeclaredIn(deps, 'declare or use component', fragment, component)
       if not declared_in:
@@ -1018,15 +1017,15 @@
           components = await deps.components.getResult(declaredInFragment)
           if component in components:
               path = shared.buildPath(services, declaredInFragment, component)
-              results[component] = path
+              resultSetter(path, [fragment.key, component])
           else:
               # if there is only 1 component declared in the fragment, we can presume that's the one we need
               declared_comps = await shared.getAllDeclared(deps, 'declare or use component', declaredInFragment)
               if len(declared_comps) == 1:
                   path = shared.buildPath(services, declaredInFragment, declared_comps[0])
-                  results[component] = path
+                  resultSetter(path, [fragment.key, component])
               else:
-                  iterator(fragment, component, declared_comps, declaredInFragment) # declaredInFragment is needed for cleanresponse
+                  await callback(fragment, component, declared_comps, declaredInFragment) # declaredInFragment is needed for cleanresponse
     ```
   - cleanResponse(response, fragment, component, declared_comps, declaredInFragment): `return shared.buildPath(services, declaredInFragment, response)` 
   - buildMessage(fragment, component, declared_comps):
@@ -1060,16 +1059,16 @@
 - isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount): 200
-  - iterator(fragment, callback, result):
+  - iterator(fragment, callback, resultSetter):
     ```python
       classes = await deps.classes.getResult(fragment)
       for item in classes:
-        isDeclare = await getIsDeclared(deps, 'declare or use class', fragment, item) 
+        isDeclare = await shared.getIsDeclared(deps, 'declare or use class', fragment, item) 
         if isDeclare:
             imports = await getServiceImports(fragment)
-            results[item] = imports
+            resultSetter(path, [fragment.key, item])
         else:
-            await resolveClassImports(fragment, item, callback, results)
+            await resolveClassImports(fragment, item, callback, resultSetter)
     ```
   - getServiceImports(fragment):
     ```python
@@ -1092,7 +1091,7 @@
                   results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
       return results  
     ```     
-  - resolveClassImports(fragment, item, callback, results):
+  - resolveClassImports(fragment, item, callback, resultSetter):
     ```python
       declared_in = await shared.getDeclaredIn(deps, 'declare or use class', fragment, item)
       if not declared_in:
@@ -1104,15 +1103,15 @@
           classes = await deps.classes.getResult(declaredInFragment)
           if item in classes:
               path = shared.buildPath(services, declaredInFragment, item)
-              results[item] = path
+              resultSetter(path, [fragment.key, item])
           else:
               # if there is only 1 item declared in the fragment, we can presume that's the one we need
               declaredClasses = await shared.getAllDeclared(deps, 'declare or use class', declaredInFragment)
               if len(declaredClasses) == 1:
                   path = shared.buildPath(services, declaredInFragment, declaredClasses[0])
-                  results[item] = path
+                  resultSetter(path, [fragment.key, item])
               else:
-                  iterator(fragment, item, declaredClasses, declaredInFragment) # declaredInFragment is needed for cleanresponse
+                  await callback(fragment, item, declaredClasses, declaredInFragment) # declaredInFragment is needed for cleanresponse
     ```
   - cleanResponse(response, fragment, item, declaredClasses, declaredInFragment): `return shared.buildPath(services, declaredInFragment, response)` 
   - buildMessage(fragment, item, declaredClasses):
@@ -1142,23 +1141,25 @@
 - The usage-extractor service is responsible for listing all parts of the interface of a service that are actually used in the code.
 - Used to find the exact definitions that are used in the code so that the same name and parameters can be used everywhere.
 - name: 'usage extractor'
-- dependencies: ['component renderer', 'components', 'component imports', 'declare or use component', 'class renderer', 'classes', 'class imports']
+- dependencies: ['component renderer', 'components', 'component imports', 'declare or use component', 'class renderer', 'classes', 'class imports', 'primary component']
 - isJson: true
 - functions:
   - calculateMaxTokens(inputTokenCount): inputTokenCount / 5
   - iterator(fragment, callback, result):
     ```python
+      allCode = None
+      allImports = None
       components = await deps.components.getResult(fragment)
       primary = await deps['primary component'].getResult(fragment)
-      toRender, used = await getToRenderAndUsed(deps, fragment, components)
+      [toRender, used] = await shared.getToRenderAndUsed(deps, fragment, components)
       # only search for usage in code for components that get rendered by this fragment, so not in the used items list 
       fragmentCode = deps['component renderer'].cache.getFragmentResults(fragment.key)
-      primaryCodeFile = fragmentCode[primary]
+      primaryCodeFile = fragmentCode?.[primary]
       for component in toRender:
         if component != primary and primaryCodeFile:
           # the primary component can also use the other components, so if the primary is already rendered, see how other components are used in primary.
           code = readFile(primaryCodeFile)
-          callback(fragment, component, primary, fragment, code, True)
+          await callback(fragment, component, primary, fragment, code, True)
         for checkAgainst in services.projectService.textFragments:
           # get code files that were rendered from the cache, otherwise we get circular ref.
           # we only want to find out how it is used in the already rendered code, not all
@@ -1170,7 +1171,7 @@
               # only check the code if the fragment we are checking the usage of, was used in the fragment being checked against.
               if fragment.key in imports:
                 code = readFile(value)
-                callback(fragment, component, key, checkAgainst, code, True)
+                await callback(fragment, component, key, checkAgainst, code, True)
       # classes that are found in a fragment, are always declared (due to the way it was asked from the llm)  
       classes = await deps.classes.getResult(fragment)
       for item in classes:
@@ -1185,7 +1186,7 @@
               # only check the code if the fragment we are checking the usage of, was used in the fragment being checked against.
               if fragment.key in imports:
                 code = readFile(value)
-                callback(fragment, component, key, checkAgainst, code, False)
+                await callback(fragment, item, key, checkAgainst, code, False)
           # a class can be used by other classes and by other components, so check both
           allCode = deps['component renderer'].cache.getFragmentResults(checkAgainst.key)
           allImports = deps['component imports'].cache.getFragmentResults(checkAgainst.key)
@@ -1195,7 +1196,7 @@
               # only check the code if the fragment we are checking the usage of, was used in the fragment being checked against.
               if fragment.key in imports:
                 code = readFile(value)
-                callback(fragment, component, key, checkAgainst, code, True)                
+                await callback(fragment, component, key, checkAgainst, code, True)                
     ```
   - buildMessage(fragment, item, service, serviceFragment, code, isComponent):
     - result (json array):
@@ -1233,7 +1234,7 @@
 - The consumed-interfaces-component is responsible for filtering the interface definitions of all imports done by a component to only those items that are used in the description.
 - Used to remove all definitions from the prompt that have no relationship to the current task as to not confuse the llm with lists of unused functions, fields,...
 - name: 'consumed interfaces component'
-- dependencies: ['components', 'component imports', 'found interface parts', 'component exact description', 'global component features']
+- dependencies: ['components', 'component imports', 'usage extractor', 'component exact description', 'global component features']
 - isJson: true
 - functions:
   - calculateMaxTokens(inputTokenCount): inputTokenCount
@@ -1252,7 +1253,7 @@
             serviceFragment = services.projectService.getFragment(serviceLoc)
             if not serviceFragment:
               raise new Error(f'fragment with key {serviceLoc} not found in the project')
-            interfaceDef = (await deps['found interface parts'].getResult(serviceFragment))?.[service]
+            interfaceDef = (await deps['usage extractor'].getResult(serviceFragment))?.[service]
             if interfaceDef:
               fullDescription = componentDesc
               globalInterfaceDef = await deps['global component features'].getResults(serviceFragment)
@@ -1261,7 +1262,7 @@
                   for key, value in globalInterfaceDef.items():
                     fullDescription += f'\n{value}'
               interfaceDef = formatInterface(interfaceDef)
-              callback(fragment, component, service, serviceLoc, interfaceDef, fullDescription)
+              await callback(fragment, component, service, serviceLoc, interfaceDef, fullDescription)
     ```
   - formatInterface(interfaceDef):
     ```python
@@ -1298,7 +1299,7 @@
 - The consumed-interfaces-class is responsible for filtering the interface definitions of all imports done by a class to only those items that are used in the description.
 - Used to remove all definitions from the prompt that have no relationship to the current task as to not confuse the llm.
 - name: 'consumed interfaces class'
-- dependencies: ['classes', 'class imports', 'found interface parts', 'class description']
+- dependencies: ['classes', 'class imports', 'usage extractor', 'class description']
 - isJson: true
 - functions:
   - calculateMaxTokens(inputTokenCount): inputTokenCount
@@ -1317,11 +1318,11 @@
             serviceFragment = services.projectService.getFragment(serviceLoc)
             if not serviceFragment:
               raise new Error(f'fragment with key {serviceLoc} not found in the project')
-            interfaceDef = (await deps['found interface parts'].getResult(serviceFragment))?.[service]
+            interfaceDef = (await deps['usage extractor'].getResult(serviceFragment))?.[service]
             if interfaceDef:
               fullDescription = classDesc
               interfaceDef = formatInterface(interfaceDef)
-              callback(fragment, service, serviceLoc, interfaceDef, fullDescription)
+              await callback(fragment, service, serviceLoc, interfaceDef, fullDescription)
     ```
   - formatInterface(interfaceDef):
     ```python
@@ -1358,22 +1359,22 @@
 - the component-renderer service is responsible for generating all the code related to UI components.
 - used to build UI applications
 - name: 'component renderer'
-- dependencies: ['components', 'declare or use component', 'is service singleton', 'component imports', 'primary component', 'consumed interfaces component', 'usage-extractor']
+- dependencies: ['components', 'declare or use component', 'is service singleton', 'component imports', 'primary component', 'consumed interfaces component', 'usage extractor', 'component exact description', 'consumed interfaces class', 'constants']
 - isJson: false
 - functions: 
   - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
   - iterator(fragment, callback, result): 
     ```python
-      renderToPath = getPath(services, fragment)
+      renderToPath = shared.getPath(services, fragment)
       components = await deps.components.getResult(fragment)
       primary = await deps['primary component'].getResult(fragment)
       if not primary:
         raise Exception('no primary found for ', fragment.title)
-      callback(fragment, primary, components, renderToPath)
-      toRender, used = await getToRenderAndUsed(deps, fragment, components)
+      toRender, used = await shared.getToRenderAndUsed(deps, fragment, components)
+      await callback(fragment, primary, components, renderToPath)
       for component in toRender:
         if component != primary:
-          callback(fragment, component, components, renderToPath) # renderToPath for the cleanup (which saves)
+          await callback(fragment, component, components, renderToPath) # renderToPath for the cleanup (which saves)
     ```
   - cleanResponse(response, fragment, component, components, renderToPath): save to file
     ```python
@@ -1411,10 +1412,10 @@
         
         replace:
         - {{name}}: `component`
-        - {{ownDescription}}: `if len(components) > 1: await deps['component exact description'].getResult(fragment) else: '\n'.join(fragment.lines)`
-        - {{externalDescription}}:  `await getExternalDescription(deps, fragment, component)`
-        - {{otherInterfaces}}: `await getOtherInterfaces(deps, fragment, component)`
-        - {{importsToAdd}}: `await getAllImports(deps, 'component imports', fragment, component, renderToPath)`
+        - {{ownDescription}}: `if len(components) > 1: (await deps['component exact description'].getResult(fragment))?.[component] else: '\n'.join(fragment.lines)`
+        - {{externalDescription}}:  `await shared.getExternalDescription(deps, fragment, component)`
+        - {{otherInterfaces}}: `await shared.getOtherInterfaces(deps, fragment, component)`
+        - {{importsToAdd}}: `await shared.getAllImports(deps, 'component imports', services, fragment, component, renderToPath)`
 
     - return: `result, [ component ]`
 
@@ -1423,21 +1424,21 @@
 - the class-renderer service is responsible for generating all the code for the services in the form of classes.
 - used to build UI applications
 - name: 'class renderer'
-- dependencies: ['classes', 'declare or use class', 'is service singleton', 'class imports', 'primary class', 'consumed interfaces class', 'usage-extractor']
+- dependencies: ['classes', 'declare or use class', 'is service singleton', 'class imports', 'primary class', 'consumed interfaces class', 'usage extractor']
 - isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
   - iterator(fragment, callback, result): 
     ```python
-      renderToPath = getPath(services, fragment)
+      renderToPath = shared.getPath(services, fragment)
       classes = await deps.classes.getResult(fragment)
       primary = await deps['primary class'].getResult(fragment)
       if not primary:
         raise Exception('no primary found for ', fragment.title)
-      callback(fragment, primary, classes, renderToPath)
+      await callback(fragment, primary, classes, renderToPath)
       for item in classes:
         if item != primary:
-          callback(fragment, item, classes, renderToPath) # renderToPath for the cleanup (which saves)
+          await callback(fragment, item, classes, renderToPath) # renderToPath for the cleanup (which saves)
     ```
   - cleanResponse(response, fragment, item, classes, renderToPath): save to file
     ```python
@@ -1476,9 +1477,9 @@
         replace:
         - {{name}}: `item`
         - {{ownDescription}}: `if len(classes) > 1: await deps['class exact description'].getResult(fragment) else: '\n'.join(fragment.lines)`
-        - {{externalDescription}}:  `await getExternalDescription(deps, fragment, item)`
-        - {{otherInterfaces}}: `await getOtherInterfaces(deps, fragment, item)`
-        - {{importsToAdd}}: `await getAllImports(deps, 'class imports', fragment, item, renderToPath)`
+        - {{externalDescription}}:  `await shared.getExternalDescription(deps, fragment, item)`
+        - {{otherInterfaces}}: `await shared.getOtherInterfaces(deps, fragment, item)`
+        - {{importsToAdd}}: `await shared.getAllImports(deps, 'class imports', services, fragment, item, renderToPath)`
 
     - return: `result, [ item ]`
 
@@ -1489,10 +1490,12 @@
 - isEntryPoint: true
 - dependencies: ['class renderer', 'component renderer']
 - functions:
-  - iterator(fragment, callback, result): 
+  - iterator(fragment, callback, resultSetter): 
     ```python
-      result['components'] = await deps['component renderer'].getResult(fragment)
-      result['classes'] = await deps['class renderer'].getResult(fragment)
+      comps = await deps['component renderer'].getResult(fragment)
+      resultSetter(comps, [fragment.key, 'components'])
+      classes = await deps['class renderer'].getResult(fragment)
+      resultSetter(classes, [fragment.key, 'classes'])
     ```
   - buildMessage(fragment, item, classes, renderToPath): `return ''`
 
@@ -1503,18 +1506,18 @@
 - dependencies: ['constants', 'renderer']
 - isJson: false
 - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
-- iterator(fragment, callback, result): 
+- iterator(fragment, callback, resultSetter): 
     ```python
       files = await deps.renderer.getResult(fragment)
       if files:
         if files.components:
           for file in files.components:
             code = readFile(file)
-            iterator(fragment, code)
+            callback(fragment, code)
         if files.classes:
           for file in file.classes:
             code = readFile(file)
-            iterator(fragment, code)
+            callback(fragment, code)
     ```
 - build-message(fragment, code):
   - result (json array):

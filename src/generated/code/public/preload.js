@@ -5,7 +5,6 @@ const params = new URLSearchParams(global.location.search);
 const pluginFile = params.get("plugin");
 const logModeTxt = params.get("log");
 const isLogMode = logModeTxt === 'true' || logModeTxt === true;
-console.log('isLogMode', isLogMode, logModeTxt);
 const dataFile = params.get("file");
 const isPackaged = params.get("isPackaged") === 'true';
 

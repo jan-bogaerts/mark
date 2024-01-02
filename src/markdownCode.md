@@ -2069,7 +2069,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
           >     return [result, [ ]];
           > }
           > function calculateMaxTokens(inputTokenCount) {
-          >   return inputTokenCount + 1;
+          >   return inputTokenCount.total + 1;
           > }
           > module.exports = { getDescription, buildMessage, calculateMaxTokens, services, deps };
           > ```

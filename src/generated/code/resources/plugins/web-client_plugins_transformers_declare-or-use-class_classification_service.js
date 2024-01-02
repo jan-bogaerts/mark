@@ -30,7 +30,7 @@ async function iterator(fragment, callback, resultSetter) {
     var primary = await deps['primary class'].getResult(fragment);
     for (var item of classes) {
       if (item === primary) {
-        resultSetter([fragment.key, item], 'declare');
+        resultSetter('declare', [fragment.key, item]);
       } else {
         await callback(fragment, titles, item);
       }

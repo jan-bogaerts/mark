@@ -57,6 +57,19 @@ class PluginTransformerService extends TransformerBaseService {
     return this.plugin.buildMessage(fragment);
   }
 
+  collectResult(result, keys, itemResult) {
+    if (keys) {
+      result[keys[keys.length - 1]] = itemResult;
+    } else if (Array.isArray(result)) {
+      result.push(itemResult);
+    } else if (typeof result === 'object' && Object.keys(result).length === 0) {
+      result = itemResult;
+    } else {
+      result = [result, itemResult];
+    }
+    return result;
+  }
+
   async renderResult(fragment) {
     if (this.plugin.renderResult) {
       const [result, message] = await this.plugin.renderResult(fragment);
@@ -64,11 +77,11 @@ class PluginTransformerService extends TransformerBaseService {
       return result;
     }
     if (this.plugin.iterator) {
-      const result = {};
-      const resultSetter = (keys, itemResult) => {
-        const key = keys.join(' | ');
+      let result = {};
+      const resultSetter = (itemResult, keys) => {
+        const key = keys ? (Array.isArray(keys) ? keys.join(' | ') : keys) : fragment.key;
         this.cache.setResult(key, itemResult, null);
-        result[keys[keys.length - 1]] = itemResult;
+        result = this.collectResult(result, keys, itemResult);
       };
       const iteratorStepHandler = async (...args) => {
         let [message, keys] = await this.plugin.buildMessage(...args);
@@ -84,7 +97,7 @@ class PluginTransformerService extends TransformerBaseService {
         } else {
           keys = [fragment.key];
         }
-        resultSetter(keys, itemResult);
+        resultSetter(itemResult, keys);
       };
       this.cache.deleteResultsFor(fragment.key);
       await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
@@ -99,14 +112,14 @@ class PluginTransformerService extends TransformerBaseService {
       return this.plugin.updateResult(fragment);
     }
     if (this.plugin.iterator) {
-      const result = {};
+      let result = {};
       const oldResultKeys = this.cache.secondaryCache[fragment.key]?.filter(x => x.startsWith(fragment.key)) || [];
-      const resultSetter = (keys, itemResult, fromCache = false) => {
-        const key = keys.join(' | ');
+      const resultSetter = (itemResult, keys, fromCache = false) => {
+        const key = keys ? (Array.isArray(keys) ? keys.join(' | ') : keys) : fragment.key;
         if (!fromCache) {
           this.cache.setResult(key, itemResult, null);
         }
-        result[keys[keys.length - 1]] = itemResult;
+        result = this.collectResult(result, keys, itemResult);
         const index = oldResultKeys.indexOf(key);
         if (index > -1) {
           oldResultKeys.splice(index, 1);
@@ -134,7 +147,7 @@ class PluginTransformerService extends TransformerBaseService {
           isFromCache = true;
           itemResult = this.cache.getResult(key);
         }
-        resultSetter(keys, itemResult, isFromCache);
+        resultSetter(itemResult, keys, isFromCache);
       };
       await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
       this.cache.deleteAfterUpdate(fragment.key, oldResultKeys);
@@ -153,10 +166,10 @@ class PluginTransformerService extends TransformerBaseService {
       BuildStackService.mode = 'validating';
       try {
         const fragment = this.keyToMessageParams(key.split(' | '))[0]; // first item in the compound key is always the key of the fragment
-        const resultSetter = (keys, itemResult) => {
+        const resultSetter = (itemResult, keys) => {
           // get the result from the cache and compare both, if they are different, the prompt has changed
-          const key = keys.join(' | ');
-          const oldResult = this.cache.getResult(key);
+          const resultKey = keys ? (Array.isArray(keys) ? keys.join(' | ') : keys) : key;
+          const oldResult = this.cache.getResult(resultKey);
           if (JSON.stringify(oldResult) !== JSON.stringify(itemResult)) {
             isChanged = true;
           }

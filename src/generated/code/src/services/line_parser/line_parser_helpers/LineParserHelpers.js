@@ -43,7 +43,11 @@ class LineParserHelpers {
       } else {
         let fragmentLineIndex = index - fragmentStart - 1;
         if (fragmentLineIndex < fragment.lines.length) {
-          fragment.lines[fragmentLineIndex] = '';
+          if (service.fragmentsIndex[index] === fragment) { // if the line already existed in the fragment,it is reset to empty, otherewise this was null and a new line is added
+            fragment.lines[fragmentLineIndex] = '';
+          } else {
+            fragment.lines.splice(fragmentLineIndex, 0, '');
+          }
           service.fragmentsIndex[index] = fragment;
         } else {
           while (fragment.lines.length <= fragmentLineIndex) {

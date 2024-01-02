@@ -24,17 +24,78 @@ To solve this, the prompt engine splits up the markdown text into smaller chunks
 When a project is loaded, the markdown is first split up into text fragments. A fragment basically is a header and the text below that header. If the project contains any custom transformers, these are also loaded, otherwise only the default/built-in set of transformers is available.
 Next, you select a transformer to be run and the scope (only the currently selected fragment or the entire project). 
 Transformers are (shortish) javascript modules that usually call upon an LLM to somehow transform the input. This input can consist out of 1 or more of these fragments, and or the results of other transformers and or any other external data source you can think of.
-A transformer will only update it's result if the input it uses to calculate the result, has changed. To accomplish this, each transformer stores all of it's results in a database and monitors changes in the project and all the other transformers it depends on to compare the new input, triggered by a change somewhere else, with the previous input, stored in the database.
-Because transformers are just javascript modules, they can do lots of other stuff like writing results to a file, monitor file changes, integrate with selenium or write back to the markdown file.
+A transformer will only update it's result if the input it uses to calculate the result, has changed. To accomplish this, each transformer stores all of it's results in a database and monitors changes in the project and all the other transformers it depends on.
+Because transformers are just javascript modules, they can do lots of other stuff like writing results to a file, monitor file changes, integrate with selenium or write back to the markdown file. The coolest thing about transformers though, is that they can build themselves. That's why the only built-in transformers, are used to generate transformers. Everything else, is loaded as a plugin.
 ![diagram](./colored_filled_diagram.svg)
 
 ## transformer libraries
 This is a list of transformer-sets that you can use in your own projects as-is or as a starting point for your own libraries:
-- built-in: this is the set of transformers that is built into the application and which are used when you open the plugin window to edit your own transformers. The main purpose of this set is to create transformer plugins that can be used for other projects.
-- react-client: a set of transformers that can be used for creating/maintaining javascript based front-end apps. This can be for the web or electron. Currently tested for react apps, though I suspect other libraries might also work, except for angular which will probably need some more.
+- [built-in](./src/mark/mark.md#transformers-1): this is the set of transformers that is built into the application and which are used when you open the plugin window to edit your own transformers. The main purpose of this set is to create transformer plugins that can be used for other projects.
+- [web-client](./src/web_client/web_client.md): a set of transformers that can be used for creating/maintaining javascript based front-end apps. This can be for the web or electron. Currently tested for react apps, though I suspect other libraries might also work, except for angular which will probably need some more.
 
-## an example
-Take a look at the [definition of the markdown-code editor & compiler](https://github.com/jan-bogaerts/mark/blob/main/src/mark.md).
+## transformer details
+A transformer is a javascript module which should export an object containing the following fields:
+- getDescription(): (required) a function that returns a json object containing the fields:
+  - name: (required) name of the transformer
+  - dependencies: (required)list of names of other transformers
+  - isJson: (required)boolean, true if the transformer produces json data.
+  - description: (optional) a string that describes what the transformer does
+- buildMessage(fragment): (required) a function that builds and returns the prompt that should be used for the transformer and text-fragment. Note: if there is an iterator function, the argument list may be different and must match the argument list of the callback parameter of the iterator.
+- renderResult(fragment): (optional) a function that renders the result for the specified fragment.
+- renderResults(fragments): (optional) a function that renders a result which requires all the fragments in the project.
+- calculateMaxTokens(inputTokenCount, modelOptions): (optional) a function that calculates and returns the expected maximum token count used for the transformer's prompt
+- iterator(fragment, callback, resultSetter) (optional): a function that iterates over 1 or more values and calls the callback function for each set of values that needs to be processed. The parameters of the callback function are passed on to the buildMessage function. If the result can be calculated without an LLM, use the function `resultSetter(value, key=null)`
+- cleanResponse(response) (optional): cleans or modifies the response that was produced by the llm before saving it. All parameters passed to callback are also passed into the cleanResponse function (ex: pass in a file name).
+
+### examples
+- **the compress service**: an example of a transformer definition that can be converted into a plugin by the application:
+  - The compress service takes a text fragment and makes it shorter.
+  - Useful to check if the system understands the fragment and can be used as input for other processes.
+  - name: 'compress'
+  - dependencies: ['constants']
+  - isJson: false
+  - calculateMaxTokens(inputTokenCount): return inputTokenCount.total
+  - build-message(text-fragment):
+    - result (json array):
+      - role: system, content:
+        
+       > Act as an ai software analyst. You are reviewing the feature description of an application. It is your job to shorten the following text as much as possible and rephrase it in your own words, without loosing any meaning.
+       > compress the following text:
+
+      - role: user, content: 
+        ```python 
+          content: await deps.constants.getResult(fragment)
+        ```
+    - return result, [ ]
+- an example transformer module (normally generated):
+    ```javascript
+        const resources = require('./resources.json');
+        const services = {}; // must always be present
+        const deps = {}; // must always be present
+        {{sharedImport}}
+        function getDescription() {
+        return {name: 'test', dependencies: ['constants'], isJson: true};
+        }
+        async function buildMessage(fragment) {
+        var result = [
+            {
+                role: 'system',
+                content: resources.mark_services_transformers_compress_service_0,
+            },
+            {
+                role: 'user',
+                content: await deps.constants.getResult(fragment),
+            },
+            ];
+
+            return [result, [ ]];
+        }
+        function calculateMaxTokens(inputTokenCount) {
+        return inputTokenCount.total + 1;
+        }
+        module.exports = { getDescription, buildMessage, calculateMaxTokens, services, deps };
+    ```
+- **mark**: the [definition of the editor & compiler](https://github.com/jan-bogaerts/mark/blob/main/src/mark.md) itself. A beefy thing, showing some more 'intense' usage.
 
 ## Supported Languages
 
@@ -58,11 +119,6 @@ That said, in general it is presumed:
 - Plugin definitions rely on the constant-extractor transformer, which uses the > sign at the beginning of the line to find constants, ex:
 
     > this is a constant
-
-
-## Code Conversion Customization
-
-The application only knows a limited set of hardcoded transformers. These are primarily used for building other transformers. Most of the transformers that you will use are loaded as plugins and can very easily be changed/created by you. Here's the [default set of plugins](https://github.com/jan-bogaerts/mark/blob/main/src/plugins.md) which is also used for building the markdown application itself.
 
 ## Installation and Usage
 

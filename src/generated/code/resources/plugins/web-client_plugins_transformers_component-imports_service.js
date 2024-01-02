@@ -23,7 +23,7 @@ async function iterator(fragment, callback, resultSetter) {
     const isDeclare = await shared.getIsDeclared(deps, 'declare or use component', fragment, component);
     if (isDeclare) {
       const imports = await getServiceImports(fragment);
-      resultSetter([fragment.key, component], imports);
+      resultSetter(imports, [fragment.key, component]);
     } else {
       await resolveComponentImports(fragment, component, callback, resultSetter);
     }
@@ -84,13 +84,13 @@ async function resolveComponentImports(fragment, component, callback, resultSett
     const components = await deps.components.getResult(declaredInFragment);
     if (components.includes(component)) {
       const path = shared.buildPath(services, declaredInFragment, component);
-      resultSetter([fragment.key, component], path);
+      resultSetter(path, [fragment.key, component]);
     } else {
       // if there is only 1 component declared in the fragment, we can presume that's the one we need
       const declared_comps = await shared.getAllDeclared(deps, 'declare or use component', declaredInFragment);
       if (declared_comps.length === 1) {
         const path = shared.buildPath(services, declaredInFragment, declared_comps[0]);
-        resultSetter([fragment.key, component], path);
+        resultSetter(path, [fragment.key, component]);
       } else {
         await callback(fragment, component, declared_comps, declaredInFragment); // declaredInFragment is needed for cleanresponse
       }
