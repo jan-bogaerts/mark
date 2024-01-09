@@ -10,6 +10,9 @@ class ProjectService {
     this.blockEvents = false;
     this.eventTarget = new EventTarget();
     this.autoSave = this.getAutoSaveState();
+    this.timeout = null;
+    this.timeoutObjectsBuilding = {};
+    this.timeoutObjectsUpToDate = {};
   }
 
   /**
@@ -68,6 +71,71 @@ class ProjectService {
     this.dispatchEvent('fragment-out-of-date', fragment.key);
   }
 
+  /**
+    uses a setTimeout to delay the calling of the fragment-building event. Uses a list to keep track of the objects to rase the event for, together with timeinfo that is updated
+    every time the fragment is added to the queue before it's time was fully passed.
+    This allows us to use only 1 timeout (is costly to create)
+    only clear the keys for which the time has passed
+   * @param {object} fragment the fragment to queue for building
+   * @param {object} transformer the transformer that is requesting the build
+   */
+  queueFragmentBuilding(fragment, transformer) {
+    const key = fragment.key;
+    const name = transformer.name;
+    const timeoutKey = key + name;
+    if (this.timeoutObjectsUpToDate[timeoutKey]) delete this.timeoutObjectsUpToDate[timeoutKey];
+    if (this.timeoutObjectsBuilding[timeoutKey]) {
+      this.timeoutObjectsBuilding[timeoutKey].time = Date.now();
+      return;
+    }
+    this.timeoutObjectsBuilding[timeoutKey] = { time: Date.now(), fragment, transformer };
+    if (!this.timeout) {
+      this.timeout = setTimeout(() => {
+        const now = Date.now();
+        for (let key in this.timeoutObjectsBuilding) {
+          const obj = this.timeoutObjectsBuilding[key];
+          if (now - obj.time > 200) {
+            delete this.timeoutObjectsBuilding[key];
+            this.dispatchEvent('fragment-building', obj.fragment.key);
+          }
+        }
+        if (Object.keys(this.timeoutObjectsBuilding).length === 0) {
+          clearTimeout(this.timeout);
+          this.timeout = null;
+        }
+      }, 200);
+    }
+    
+  }
+
+  queueFragmentUpToDate(fragment, transformer) {
+    const key = fragment.key;
+    const name = transformer.name;
+    const timeoutKey = key + name;
+    if(this.timeoutObjectsBuilding[timeoutKey]) delete this.timeoutObjectsBuilding[timeoutKey];
+    if (this.timeoutObjectsUpToDate[timeoutKey]) {
+      this.timeoutObjectsUpToDate[timeoutKey].time = Date.now();
+      return;
+    }
+    this.timeoutObjectsUpToDate[timeoutKey] = { time: Date.now(), fragment, transformer };
+    if (!this.timeout) {
+      this.timeout = setTimeout(() => {
+        const now = Date.now();
+        for (let key in this.timeoutObjectsUpToDate) {
+          const obj = this.timeoutObjectsUpToDate[key];
+          if (now - obj.time > 200) {
+            delete this.timeoutObjectsUpToDate[key];
+            this.dispatchEvent('fragment-up-to-date', obj.fragment.key);
+          }
+        }
+        if (Object.keys(this.timeoutObjectsUpToDate).length === 0) {
+          clearTimeout(this.timeout);
+          this.timeout = null;
+        }
+      }, 200);
+    }
+  }
+
   markUpToDate(fragment, transformer) {
     fragment.buildCount--;
     fragment.isBuilding = fragment.buildCount > 0;
@@ -77,17 +145,17 @@ class ProjectService {
     fragment.outOfDateTransformers = fragment.outOfDateTransformers.filter(t => t !== transformer);
     if (fragment.outOfDateTransformers.length === 0) {
       fragment.isOutOfDate = false;
-      this.dispatchEvent('fragment-up-to-date', fragment.key);
+      this.queueFragmentUpToDate(fragment, transformer);
     } else {
       // the state has changed for transformers, let them update
-      this.dispatchEvent('fragment-building', { fragment: fragment, transformer: transformer });
+      this.queueFragmentBuilding(fragment, transformer);
     }
   }
 
   markIsBuilding(fragment, transformer) {
     fragment.isBuilding = true;
     fragment.buildCount = (fragment.buildCount || 0) + 1;
-    this.dispatchEvent('fragment-building', { fragment: fragment, transformer: transformer });
+    this.queueFragmentBuilding(fragment, transformer);
   }
 
   getFragment(key) {

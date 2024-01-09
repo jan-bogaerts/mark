@@ -72,6 +72,8 @@ class BuildService {
 
 
   async runTransformer(fragment, transformer) {
+    // console.profile('runTransformer');
+    console.time('runTransformer');
     this.isBuilding = true;
     try {
       FolderService.init(); // make certain that folders exist when building
@@ -80,7 +82,10 @@ class BuildService {
       if (error !== 'stopped') DialogService.showErrorDialog(error);
     } finally {
       this.isBuilding = false;
+      console.timeEnd('runTransformer');
+      // console.profileEnd('runTransformer');
     }
+
   }
 
   async tryPause() {

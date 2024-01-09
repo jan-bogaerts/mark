@@ -63,8 +63,14 @@ async function resolveClassImports(fragment, item, callback, resultSetter) {
 
 async function iterator(fragment, callback, resultSetter) {
   let classes = await deps.classes.getResult(fragment);
+  const declareOrUseRaw = await deps['declare or use class'].getResult(fragment);
+  const declareOrUse = {};
+  for (var k in declareOrUseRaw) {
+    declareOrUse[k.toLowerCase()] = declareOrUseRaw[k];
+  }
   for (let item of classes) {
-    let isDeclare = await shared.getIsDeclared(deps, 'declare or use class', fragment, item);
+    const name = item.toLowerCase();
+    const isDeclare = declareOrUse[name] === 'declare';
     if (isDeclare) {
       let imports = await getServiceImports(fragment);
       resultSetter(imports, [item]);

@@ -96,7 +96,8 @@
         service = importDef['service']
         servicePath = importDef['path']
         servicePath = os.path.relpath(servicePath, renderToPath)
-        isGlobal = (await deps['is service singleton'].getResult(importDef['key']))?.[service]
+        fragment = await services.projectService.getResult(importDef['key'])
+        isGlobal = (await deps['is service singleton'].getResult(fragment))?.[service]
         if isGlobal:
             serviceTxt = "global object"
             service = service.lower()
@@ -964,8 +965,13 @@
   - iterator(fragment, callback, resultSetter):
     ```python
       components = await deps.components.getResult(fragment)
+      declareOrUseRaw = await deps['declare or use component'].getResult(fragment)
+      declareOrUse = {}
+      for k in declareOrUseRaw.keys():
+        declareOrUse[k.toLowerCase()] = declareOrUseRaw[k]
       for component in components:
-        isDeclare = await shared.getIsDeclared(deps, 'declare or use component', fragment, component) 
+        name = component.toLowerCase()
+        isDeclare = declareOrUse[name] === 'declare'
         if isDeclare:
             imports = await getServiceImports(fragment)
             resultSetter(imports, [fragment.key, component])
@@ -990,11 +996,11 @@
               if not service in imported:
                   imported[service] = True
                   service_path = os.path.join(*cur_path_parts, service.replaceAll(" ", "_"))
-                  results.append({'service': service, 'path': service_path, 'service_loc': service_loc, key: })
-      for fragment in services.projectService.textFragments:
-          globalFeatures = await deps['global component features'].getResult(fragment)
-          if globalFeatures:
-            cur_path_parts = fragment.key.split(" > ")
+                  results.append({'service': service, 'path': service_path, 'service_loc': service_loc })
+      for subFrag in services.projectService.textFragments:
+          globalFeatures = await deps['global component features'].getResult(subFrag)
+          if globalFeatures an len(Object.entries(globalFeatures)) > 0:
+            cur_path_parts = subFrag.key.split(" > ")
             # replace all spaces with underscores
             cur_path_parts = [part.replaceAll(" ", "_").replaceAll('-', '_') for part in cur_path_parts]
             cur_path_parts[0] = 'src' # replace the first part with src so that it replaces the name of the project which isn't the root of the source code
@@ -1002,7 +1008,7 @@
                 if not service in imported:
                     imported[service] = True
                     service_path = os.path.join(*cur_path_parts, service.replaceAll(" ", "_").replaceAll('-', '_')).strip()
-                    results.append({'service': service, 'path': service_path, 'service_loc': fragment.key})
+                    results.append({'service': service, 'path': service_path, 'service_loc': subFrag.key})
       return results  
     ```     
   - resolveComponentImports(fragment, component, callback, resultSetter):
@@ -1062,8 +1068,13 @@
   - iterator(fragment, callback, resultSetter):
     ```python
       classes = await deps.classes.getResult(fragment)
+      declareOrUseRaw = await deps['declare or use class'].getResult(fragment);
+      declareOrUse = {}
+      for k in declareOrUseRaw.keys():
+        declareOrUse[k.toLowerCase()] = declareOrUseRaw[k]
       for item in classes:
-        isDeclare = await shared.getIsDeclared(deps, 'declare or use class', fragment, item) 
+        name = item.toLowerCase()
+        isDeclare = declareOrUse[name] === 'declare'
         if isDeclare:
             imports = await getServiceImports(fragment)
             resultSetter(path, [fragment.key, item])

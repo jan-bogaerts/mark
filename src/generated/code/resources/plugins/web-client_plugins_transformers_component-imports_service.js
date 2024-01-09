@@ -19,8 +19,14 @@ function calculateMaxTokens(inputTokenCount) {
 
 async function iterator(fragment, callback, resultSetter) {
   const components = await deps.components.getResult(fragment);
+  const declareOrUseRaw = await deps['declare or use component'].getResult(fragment);
+  const declareOrUse = {};
+  for (var k in declareOrUseRaw) {
+    declareOrUse[k.toLowerCase()] = declareOrUseRaw[k];
+  }
   for (let component of components) {
-    const isDeclare = await shared.getIsDeclared(deps, 'declare or use component', fragment, component);
+    const name = component.toLowerCase();
+    const isDeclare = declareOrUse[name] === 'declare';
     if (isDeclare) {
       const imports = await getServiceImports(fragment);
       resultSetter(imports, [component]);
@@ -55,7 +61,7 @@ async function getServiceImports(fragment) {
 
   for (let subFrag of services.projectService.textFragments) {
     const globalFeatures = await deps['global component features'].getResult(subFrag);
-    if (globalFeatures) {
+    if (globalFeatures && Object.entries(globalFeatures).length > 0) {
       let cur_path_parts = subFrag.key.split(" > ");
       // replace all spaces with underscores
       cur_path_parts = cur_path_parts.map(part => part.replace(/ /g, "_").replace(/-/g, '_'));
