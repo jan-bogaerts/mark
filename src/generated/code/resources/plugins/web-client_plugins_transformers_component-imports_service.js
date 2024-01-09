@@ -23,7 +23,7 @@ async function iterator(fragment, callback, resultSetter) {
     const isDeclare = await shared.getIsDeclared(deps, 'declare or use component', fragment, component);
     if (isDeclare) {
       const imports = await getServiceImports(fragment);
-      resultSetter(imports, [fragment.key, component]);
+      resultSetter(imports, [component]);
     } else {
       await resolveComponentImports(fragment, component, callback, resultSetter);
     }
@@ -53,10 +53,10 @@ async function getServiceImports(fragment) {
     }
   }
 
-  for (let fragment of services.projectService.textFragments) {
-    const globalFeatures = await deps['global component features'].getResult(fragment);
+  for (let subFrag of services.projectService.textFragments) {
+    const globalFeatures = await deps['global component features'].getResult(subFrag);
     if (globalFeatures) {
-      let cur_path_parts = fragment.key.split(" > ");
+      let cur_path_parts = subFrag.key.split(" > ");
       // replace all spaces with underscores
       cur_path_parts = cur_path_parts.map(part => part.replace(/ /g, "_").replace(/-/g, '_'));
       cur_path_parts[0] = 'src'; // replace the first part with src so that it replaces the name of the project which isn't the root of the source code
@@ -64,7 +64,7 @@ async function getServiceImports(fragment) {
         if (!imported[service]) {
           imported[service] = true;
           const service_path = cur_path_parts.join('/') + '/' + service.replace(/ /g, "_").replace(/-/g, '_').trim();
-          results.push({ 'service': service, 'path': service_path, 'service_loc': fragment.full_title });
+          results.push({ 'service': service, 'path': service_path, 'service_loc': subFrag.key });
         }
       }
     }
@@ -84,13 +84,13 @@ async function resolveComponentImports(fragment, component, callback, resultSett
     const components = await deps.components.getResult(declaredInFragment);
     if (components.includes(component)) {
       const path = shared.buildPath(services, declaredInFragment, component);
-      resultSetter(path, [fragment.key, component]);
+      resultSetter(path, [component]);
     } else {
       // if there is only 1 component declared in the fragment, we can presume that's the one we need
       const declared_comps = await shared.getAllDeclared(deps, 'declare or use component', declaredInFragment);
       if (declared_comps.length === 1) {
         const path = shared.buildPath(services, declaredInFragment, declared_comps[0]);
-        resultSetter(path, [fragment.key, component]);
+        resultSetter(path, [component]);
       } else {
         await callback(fragment, component, declared_comps, declaredInFragment); // declaredInFragment is needed for cleanresponse
       }

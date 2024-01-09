@@ -108,9 +108,9 @@
    ```python
       importsTxt = None
       constants = deps.constants.cache.getFragmentResults(fragment.key)
-      if constants:
+      if constants and len(constants) > 0:
         resourcesPath = os.path.join(services.folderService.output, 'src', 'resources.json')
-        relPath = os.path.relpath(resourcesPath, renderToPath)
+        relPath = os.path.relpath(renderToPath, resourcesPath)
         relPath = relPath.replaceAll('\\', '/')
         importsTxt += f"The const 'resources' can be imported from {relPath}\n"
       imports = await deps[depName].getResult(fragment)?.[item]
@@ -990,7 +990,7 @@
               if not service in imported:
                   imported[service] = True
                   service_path = os.path.join(*cur_path_parts, service.replaceAll(" ", "_"))
-                  results.append({'service': service, 'path': service_path, 'service_loc': service_loc})
+                  results.append({'service': service, 'path': service_path, 'service_loc': service_loc, key: })
       for fragment in services.projectService.textFragments:
           globalFeatures = await deps['global component features'].getResult(fragment)
           if globalFeatures:
@@ -1002,7 +1002,7 @@
                 if not service in imported:
                     imported[service] = True
                     service_path = os.path.join(*cur_path_parts, service.replaceAll(" ", "_").replaceAll('-', '_')).strip()
-                    results.append({'service': service, 'path': service_path, 'service_loc': fragment.full_title})
+                    results.append({'service': service, 'path': service_path, 'service_loc': fragment.key})
       return results  
     ```     
   - resolveComponentImports(fragment, component, callback, resultSetter):
@@ -1370,7 +1370,7 @@
       primary = await deps['primary component'].getResult(fragment)
       if not primary:
         raise Exception('no primary found for ', fragment.title)
-      toRender, used = await shared.getToRenderAndUsed(deps, fragment, components)
+      [toRender, used] = await shared.getToRenderAndUsed(deps, fragment, components)
       await callback(fragment, primary, components, renderToPath)
       for component in toRender:
         if component != primary:

@@ -29,7 +29,7 @@ class LogWindow extends Component {
     if (logObject.response) {
       this.setState(prevState => {
         const logMsgs = prevState.logMsgs.map(log => {
-          if (log.key === logObject.key) {
+          if (log.uuid === logObject.uuid) {
             return { ...log, response: logObject.response };
           }
           return log;

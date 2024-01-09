@@ -1,39 +1,35 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "command": "npx electronmon .",
-            "name": "Run elctron renderer",
-            "request": "launch",
-            "type": "node-terminal"
-        },
+  "version": "0.2.0",
+  "configurations": [
       {
-        "name": "Debug Main Process",
-        "type": "node",
-        "request": "launch",
-        "cwd": "${workspaceFolder}",
-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
-        "windows": {
-          "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
-        },
-        "args" : ["."],
-        "outputCapture": "std"
+          "name": "Electron: Main Process",
+          "type": "node",
+          "request": "launch",
+          "protocol": "inspector",
+          "runtimeExecutable": "yarn",
+          "runtimeArgs": [
+              "start-main-debug"
+          ],
+          "env": {
+              "PORT": "3003"
+          }
       },
       {
-        "name": "Debug Renderer Process",
-        "type": "chrome",
-        "request": "launch",
-        "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-        "windows": {
-          "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
-        },
-        "runtimeArgs": [
-          "${workspaceRoot}/public/electron.js",
-          "--remote-debugging-port=3000"
-        ],
-        "webRoot": "${workspaceRoot}"
-      },
-
-
-    ]
-  }
+          "name": "Electron: Renderer Process",
+          "type": "chrome",
+          "request": "attach",
+          "port": 9223,
+          "webRoot": "${workspaceFolder}",
+          "timeout": 30000
+      }
+  ],
+  "compounds": [
+      {
+          "name": "Electron: All",
+          "configurations": [
+              "Electron: Main Process",
+              "Electron: Renderer Process"
+          ]
+      }
+  ]
+}

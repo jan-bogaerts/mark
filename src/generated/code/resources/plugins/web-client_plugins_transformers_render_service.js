@@ -16,9 +16,9 @@ function getDescription() {
 
 async function iterator(fragment, callback, resultSetter) {
   const comps = await deps['component renderer'].getResult(fragment);
-  resultSetter(comps, [fragment.key, 'components']);
+  resultSetter(comps, ['components']);
   const cls = await deps['class renderer'].getResult(fragment);
-  resultSetter(cls, [fragment.key, 'classes']);
+  resultSetter(cls, ['classes']);
 }
 
 async function buildMessage(fragment, item, classes, renderToPath) {

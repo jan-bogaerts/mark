@@ -57,7 +57,7 @@ function createWindow () {
   }
   // Automatically open Chrome's DevTools in development mode.
   if (!app.isPackaged) {
-    mainWindow.webContents.openDevTools();
+    //mainWindow.webContents.openDevTools();
   }
   mainWindow.loadURL(urlWithParams);
   mainRemote.enable(mainWindow.webContents);

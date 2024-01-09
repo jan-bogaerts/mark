@@ -17,7 +17,7 @@ async function getKeysWithClasses(toExclude) {
   for (var fragment of services.projectService.textFragments) {
     var classes = await deps.classes.getResult(fragment);
     if (classes && fragment.key != toExclude) {
-      result.push(services.keyService.calculateLocation(fragment.key));
+      result.push(services.keyService.calculateLocation(fragment));
     }
   }
   return result;
@@ -30,7 +30,7 @@ async function iterator(fragment, callback, resultSetter) {
     var primary = await deps['primary class'].getResult(fragment);
     for (var item of classes) {
       if (item === primary) {
-        resultSetter('declare', [fragment.key, item]);
+        resultSetter('declare', [item]);
       } else {
         await callback(fragment, titles, item);
       }

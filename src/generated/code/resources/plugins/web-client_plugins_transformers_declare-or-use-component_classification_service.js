@@ -24,7 +24,7 @@ async function iterator(fragment, callback, resultSetter) {
     const primary = await deps['primary component'].getResult(fragment);
     for (let item of components) {
       if (item === primary) {
-        resultSetter('declare', [fragment.key, item]);
+        resultSetter('declare', [item]);
       } else {
         await callback(fragment, titles, item, description[item]);
       }

@@ -48,12 +48,12 @@ async function resolveClassImports(fragment, item, callback, resultSetter) {
     let classes = await deps.classes.getResult(declaredInFragment);
     if (classes.includes(item)) {
       let path = shared.buildPath(services, declaredInFragment, item);
-      resultSetter(path, [fragment.key, item]);
+      resultSetter(path, [item]);
     } else {
       let declaredClasses = await shared.getAllDeclared(deps, 'declare or use class', declaredInFragment);
       if (declaredClasses.length === 1) {
         let path = shared.buildPath(services, declaredInFragment, declaredClasses[0]);
-        resultSetter(path, [fragment.key, item]);
+        resultSetter(path, [item]);
       } else {
         await callback(fragment, item, declaredClasses, declaredInFragment);
       }
@@ -67,7 +67,7 @@ async function iterator(fragment, callback, resultSetter) {
     let isDeclare = await shared.getIsDeclared(deps, 'declare or use class', fragment, item);
     if (isDeclare) {
       let imports = await getServiceImports(fragment);
-      resultSetter(imports, [fragment.key, item]);
+      resultSetter(imports, [item]);
     } else {
       await resolveClassImports(fragment, item, callback, resultSetter);
     }

@@ -118,7 +118,7 @@ class TransformerBaseService {
     }
   }
 
-  calculateMaxTokens(inputTokens) {
+  calculateMaxTokens(inputTokens, modelOptions) {
     let totalInput = 0;
     for (const value of Object.values(inputTokens)) {
       totalInput += value;

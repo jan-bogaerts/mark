@@ -3,16 +3,16 @@ var os = require('os');
 var fs = require('fs');
 var path = require('path');
 
-function getImportServiceLine(deps, importDef, renderToPath) {
+async function getImportServiceLine(deps, services, importDef, renderToPath) {
   var service = importDef['service'];
   var servicePath = importDef['path'];
   servicePath = path.relative(servicePath, renderToPath);
-  return deps['is service singleton'].getResult(importDef['key']).then(function(isGlobal) {
-    isGlobal = isGlobal[service];
-    var serviceTxt = isGlobal ? "global object" : "service";
-    service = service.toLowerCase();
-    return "The " + serviceTxt + " " + service + " can be imported from " + servicePath + " (exported as default)\n";
-  });
+  const fragment = services.projectService.getFragment(importDef['service_loc']);
+  let isGlobal = await deps['is service singleton'].getResult(fragment)
+  isGlobal = isGlobal[service];
+  var serviceTxt = isGlobal ? "global object" : "service";
+  service = service.toLowerCase();
+  return "The " + serviceTxt + " " + service + " can be imported from " + servicePath + " (exported as default)\n";
 }
 
 
@@ -37,11 +37,11 @@ module.exports = {
   },
 
   buildPath: function(services, declaredIn, filename) {
-    declaredIn = services.keyService.calculateLocation(declaredIn.key);
+    declaredIn = services.keyService.calculateLocation(declaredIn);
     var declared_in_parts = declaredIn.split(" > ");
     declared_in_parts[0] = 'src';
-    var path = path.join.apply(path, declared_in_parts.concat([filename.replace(/ /g, "_").replace(/-/g, '_')]));
-    return path;
+    var result = path.join(...declared_in_parts, filename.replace(/ /g, "_").replace(/-/g, '_'));
+    return result;
   },
 
   getDeclaredIn: function(deps, transformerName, fragment, item) {
@@ -150,29 +150,29 @@ module.exports = {
 
   getImportServiceLine: getImportServiceLine,
 
-  getAllImports: function(deps, depName, services, fragment, item, renderToPath) {
-    var importsTxt = '';
-    var constants = deps.constants.cache.getFragmentResults(fragment.key);
-    if (constants) {
-      var resourcesPath = path.join(services.folderService.output, 'src', 'resources.json');
-      var relPath = path.relative(resourcesPath, renderToPath).replace(/\\/g, '/');
-      importsTxt += "The const 'resources' can be imported from " + relPath + "\n";
+  getAllImports: async function(deps, depName, services, fragment, item, renderToPath) {
+    let importsTxt = '';
+    const constants = await deps.constants.cache.getFragmentResults(fragment.key);
+
+    if (constants && constants.length > 0) {
+        const resourcesPath = path.join(services.folderService.output, 'src', 'resources.json');
+        const relPath = path.relative(renderToPath, resourcesPath).replace(/\\/g, '/');
+        importsTxt += "The const 'resources' can be imported from " + relPath + "\n";
     }
-    return deps[depName].getResult(fragment).then(function(imports) {
-      imports = imports[item];
-      if (imports) {
-        return Promise.all(imports.map(function(importDef) {
-          return getImportServiceLine(deps, importDef, renderToPath);
-        })).then(function(lines) {
-          importsTxt += lines.join('');
-          if (importsTxt) {
+
+    const imports = await deps[depName].getResult(fragment);
+    let importedItems = imports[item];
+
+    if (importedItems) {
+        const lines = await Promise.all(importedItems.map(async (importDef) => {
+            return getImportServiceLine(deps, services, importDef, renderToPath);
+        }));
+
+        importsTxt += lines.join('');
+        if (importsTxt) {
             importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt;
-          }
-          return importsTxt;
-        });
-      } else {
-        return importsTxt;
-      }
-    });
+        }
+    }
+    return importsTxt;
   }
 };

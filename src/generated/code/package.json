@@ -35,6 +35,8 @@
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject",
     "electron:start": "concurrently -k \"cross-env BROWSER=none npm run start\" \"electronmon .\"",
+    "electron:start2": "concurrently -k \"cross-env BROWSER=none npm run start\" \"electron . --inspect=5858  --remote-debugging-port=9223\"",
+    "start-main-debug": "concurrently -k \"cross-env BROWSER=none npm run start\" \"wait-on http://localhost:3000 && electron . --inspect=5858  --remote-debugging-port=9223\"",
     "electron:package:mac": "yarn build && electron-builder -m -c.extraMetadata.main=build/electron.js",
     "electron:package:win": "yarn build && electron-builder -w -c.extraMetadata.main=build/electron.js",
     "electron:package:linux": "yarn build && electron-builder -l -c.extraMetadata.main=build/electron.js"

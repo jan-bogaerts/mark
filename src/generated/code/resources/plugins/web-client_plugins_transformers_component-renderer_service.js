@@ -37,7 +37,7 @@ async function iterator(fragment, callback, result) {
   if (!primary) {
     throw new Error("no primary found for " + fragment.title);
   }
-  const { toRender, used } = await shared.getToRenderAndUsed(deps, fragment, components);
+  const [ toRender, used ] = await shared.getToRenderAndUsed(deps, fragment, components);
   await callback(fragment, primary, components, renderToPath);
   for (let component of toRender) {
     if (component !== primary) {

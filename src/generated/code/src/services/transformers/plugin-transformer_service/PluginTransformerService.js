@@ -43,11 +43,11 @@ class PluginTransformerService extends TransformerBaseService {
     }
   }
 
-  calculateMaxTokens(inputTokens) {
+  calculateMaxTokens(inputTokens, modelOptions) {
     if (this.plugin.calculateMaxTokens) {
-      return this.plugin.calculateMaxTokens(inputTokens);
+      return this.plugin.calculateMaxTokens(inputTokens, modelOptions);
     }
-    return super.calculateMaxTokens(inputTokens);
+    return super.calculateMaxTokens(inputTokens, modelOptions);
   }
 
   buildMessage(fragment) {
@@ -58,8 +58,16 @@ class PluginTransformerService extends TransformerBaseService {
   }
 
   collectResult(result, keys, itemResult) {
-    if (keys) {
+    if (keys && Array.isArray(keys) && keys.length > 0) {
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!result[keys[i]]) {
+          result[keys[i]] = {};
+        }
+        result = result[keys[i]];
+      }
       result[keys[keys.length - 1]] = itemResult;
+    } else if (keys && typeof keys === 'string') {
+      result[keys] = itemResult;
     } else if (Array.isArray(result)) {
       result.push(itemResult);
     } else if (typeof result === 'object' && Object.keys(result).length === 0) {
@@ -68,6 +76,14 @@ class PluginTransformerService extends TransformerBaseService {
       result = [result, itemResult];
     }
     return result;
+  }
+
+  async renderResults(fragments) {
+    if (this.plugin.renderResults) {
+      await this.plugin.renderResults(fragments);
+    } else {
+      await super.renderResults(fragments);
+    }
   }
 
   async renderResult(fragment) {
@@ -79,7 +95,7 @@ class PluginTransformerService extends TransformerBaseService {
     if (this.plugin.iterator) {
       let result = {};
       const resultSetter = (itemResult, keys) => {
-        const key = keys ? (Array.isArray(keys) ? keys.join(' | ') : keys) : fragment.key;
+        const key = this.buildFullKey(fragment, keys);
         this.cache.setResult(key, itemResult, null);
         result = this.collectResult(result, keys, itemResult);
       };
@@ -92,11 +108,6 @@ class PluginTransformerService extends TransformerBaseService {
         if (this.plugin.cleanResponse) {
           itemResult = this.plugin.cleanResponse(itemResult, ...args);
         }
-        if (keys) {
-          keys.unshift(fragment.key);
-        } else {
-          keys = [fragment.key];
-        }
         resultSetter(itemResult, keys);
       };
       this.cache.deleteResultsFor(fragment.key);
@@ -107,6 +118,23 @@ class PluginTransformerService extends TransformerBaseService {
     }
   }
 
+  /**
+   * builds the full key in such a way that the list of secondary keys is not modified
+   * @param {object} fragment the text fragment containing the main key
+   * @param {Array} keys list of secondary keys
+   * @returns a string that is the full key
+   */
+  buildFullKey(fragment, keys) {
+    if (keys) {
+      if (Array.isArray(keys)) {
+        return [fragment.key, ...keys].join(' | ');
+      } else {
+        return [fragment.key, keys].join(' | ');
+      }
+    }
+    return fragment.key;
+  }
+
   async updateResult(fragment) {
     if (this.plugin.updateResult) {
       return this.plugin.updateResult(fragment);
@@ -115,7 +143,7 @@ class PluginTransformerService extends TransformerBaseService {
       let result = {};
       const oldResultKeys = this.cache.secondaryCache[fragment.key]?.filter(x => x.startsWith(fragment.key)) || [];
       const resultSetter = (itemResult, keys, fromCache = false) => {
-        const key = keys ? (Array.isArray(keys) ? keys.join(' | ') : keys) : fragment.key;
+        const key = this.buildFullKey(fragment, keys);
         if (!fromCache) {
           this.cache.setResult(key, itemResult, null);
         }
@@ -130,12 +158,7 @@ class PluginTransformerService extends TransformerBaseService {
         if (!message) {
           return;
         }
-        if (keys) {
-          keys.unshift(fragment.key);
-        } else {
-          keys = [fragment.key];
-        }
-        const key = keys.join(' | ');
+        const key = this.buildFullKey(fragment, keys);
         let itemResult;
         let isFromCache = false;
         if (this.cache.isOutOfDate(key)) {
@@ -147,7 +170,7 @@ class PluginTransformerService extends TransformerBaseService {
           isFromCache = true;
           itemResult = this.cache.getResult(key);
         }
-        resultSetter(itemResult, keys, isFromCache);
+        resultSetter(itemResult, keys, isFromCache); // important here: use the original set of keys, dont include the primary key cause that would give a dict with the fragment key as key, instead of raw result or list 
       };
       await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
       this.cache.deleteAfterUpdate(fragment.key, oldResultKeys);
@@ -168,7 +191,7 @@ class PluginTransformerService extends TransformerBaseService {
         const fragment = this.keyToMessageParams(key.split(' | '))[0]; // first item in the compound key is always the key of the fragment
         const resultSetter = (itemResult, keys) => {
           // get the result from the cache and compare both, if they are different, the prompt has changed
-          const resultKey = keys ? (Array.isArray(keys) ? keys.join(' | ') : keys) : key;
+          const resultKey = this.buildFullKey(fragment, keys);
           const oldResult = this.cache.getResult(resultKey);
           if (JSON.stringify(oldResult) !== JSON.stringify(itemResult)) {
             isChanged = true;
@@ -176,12 +199,7 @@ class PluginTransformerService extends TransformerBaseService {
         }
         const iteratorStepHandler = async (...args) => {
           let [message, keys] = await this.plugin.buildMessage(...args);
-          if (keys) {
-            keys.unshift(key);
-          } else {
-            keys = [key];
-          }
-          const newKey = keys.join(' | ');
+          const newKey = this.buildFullKey(fragment, keys);
           if (newKey === key && !isChanged) {
             isChanged = JSON.stringify(message) !== JSON.stringify(prompt);
           }
