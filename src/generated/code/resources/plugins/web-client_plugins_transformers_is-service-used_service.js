@@ -21,6 +21,7 @@ async function iterator(fragment, callback, result) {
   for (let toCheck of services.projectService.textFragments) {
     if (toCheck.key === fragment.key) continue;
     let classes = await deps['declare or use class'].getResult(toCheck);
+    if (!classes) continue;
     for (let [className, value] of Object.entries(classes)) {
       if (value === 'declare') {
         await callback(fragment, toCheck, className);

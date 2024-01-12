@@ -5,12 +5,12 @@ var path = require('path');
 
 async function getImportServiceLine(deps, services, importDef, renderToPath) {
   var service = importDef['service'];
-  var servicePath = importDef['path'];
-  servicePath = path.relative(servicePath, renderToPath);
+  var servicePath = path.join(importDef['path'], service);
+  servicePath = path.relative(renderToPath, servicePath).replace(/\\/g, '/');
   const fragment = services.projectService.getFragment(importDef['service_loc']);
   let isGlobal = await deps['is service singleton'].getResult(fragment)
   isGlobal = isGlobal[service];
-  var serviceTxt = isGlobal ? "global object" : "service";
+  var serviceTxt = isGlobal === 'yes' || isGlobal === true ? "global object" : "service";
   service = service.toLowerCase();
   return "The " + serviceTxt + " " + service + " can be imported from " + servicePath + " (exported as default)\n";
 }
@@ -82,7 +82,7 @@ module.exports = {
       return part.replace(/ /g, "_");
     });
     pathItems[0] = 'src';
-    return path.join.apply(path, [services.folderService.output].concat(pathItems));
+    return path.join(...pathItems);
   },
 
   readFile: function(filePath) {
@@ -161,17 +161,23 @@ module.exports = {
     }
 
     const imports = await deps[depName].getResult(fragment);
-    let importedItems = imports[item];
-
-    if (importedItems) {
-        const lines = await Promise.all(importedItems.map(async (importDef) => {
-            return getImportServiceLine(deps, services, importDef, renderToPath);
-        }));
-
-        importsTxt += lines.join('');
-        if (importsTxt) {
-            importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt;
+    for (let key in imports) {
+        const importInfo = imports[key];
+        if (key === item) {
+          for(let importDef of importInfo) {
+            importsTxt += await getImportServiceLine(deps, services, importDef, renderToPath);
+          }
         }
+        if (typeof importInfo === 'string') {
+          const servicePath = path.relative(renderToPath, importInfo).replace(/\\/g, '/');
+          importsTxt += key + " can be imported from " + servicePath + "\n";
+        } else {
+          const servicePath = `./${key}`;
+          importsTxt += key + " can be imported from " + servicePath + "\n";
+        }
+    }
+    if (importsTxt) {
+        importsTxt = '\nimports (only include the imports that are used in the code):\n' + importsTxt;
     }
     return importsTxt;
   }

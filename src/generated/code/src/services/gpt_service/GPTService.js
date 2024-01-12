@@ -74,7 +74,7 @@ class GPTService {
     return this.getDefaultModel();
   }
 
-  calculateTokens(messages, model) {
+  calculateInputTokens(messages, model) {
     let result = { total: 0 };
     let encoding = encodingForModel(model);
     for (let message of messages) {
@@ -101,18 +101,27 @@ class GPTService {
     return str;
   }
 
+  calculateMaxTokens(transformer, model, messages) {
+    const modelOptions = this.getModelOptions(model);
+    let inputTokens = this.calculateInputTokens(messages, model);
+    const outputTokens = Math.round(transformer.calculateMaxTokens(inputTokens, modelOptions))
+    if (inputTokens.total + outputTokens > modelOptions.maxTokens) {
+      return modelOptions.maxTokens - inputTokens.total;
+    }
+    return outputTokens;
+  }
+
 
   async sendRequest(transformer, fragmentKey, messages) {
     if (!this.openai) {
       return;
     }
     let model = this.getModelForRequest(transformer.name, fragmentKey);
-    const modelOptions = this.getModelOptions(model);
-    let tokens = this.calculateTokens(messages, model);
+    
     let inputData = {
       model: model,
       messages: messages,
-      max_tokens: Math.round(transformer.calculateMaxTokens(tokens, modelOptions)),
+      max_tokens: this.calculateMaxTokens(transformer, model, messages),
       temperature: transformer.temperature || 0
     };
     let config = {

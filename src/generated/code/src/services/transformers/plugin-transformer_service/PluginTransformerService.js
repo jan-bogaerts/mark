@@ -100,7 +100,11 @@ class PluginTransformerService extends TransformerBaseService {
         result = this.collectResult(result, keys, itemResult);
       };
       const iteratorStepHandler = async (...args) => {
-        let [message, keys] = await this.plugin.buildMessage(...args);
+        const msg = await this.plugin.buildMessage(...args);
+        if (!msg || !Array.isArray(msg)) {
+          return;
+        }
+        let [message, keys] = msg;
         if (!message) {
           return;
         }
@@ -154,7 +158,11 @@ class PluginTransformerService extends TransformerBaseService {
         }
       };
       const iteratorStepHandler = async (...args) => {
-        let [message, keys] = await this.plugin.buildMessage(...args);
+        const msg = await this.plugin.buildMessage(...args);
+        if (!msg || !Array.isArray(msg)) {
+          return;
+        }
+        let [message, keys] = msg;
         if (!message) {
           return;
         }
@@ -198,7 +206,11 @@ class PluginTransformerService extends TransformerBaseService {
           }
         }
         const iteratorStepHandler = async (...args) => {
-          let [message, keys] = await this.plugin.buildMessage(...args);
+          const msg = await this.plugin.buildMessage(...args);
+          if (!msg || !Array.isArray(msg)) {
+            return;
+          }
+          let [message, keys] = msg;
           const newKey = this.buildFullKey(fragment, keys);
           if (newKey === key && !isChanged) {
             isChanged = JSON.stringify(message) !== JSON.stringify(prompt);

@@ -10,7 +10,7 @@ Mark is an ideation and software building tool driven by machine learning. It al
 
 ### main window
 - the main-window component is the content of the first window that is shown when the application starts.
-- the root of the main window consists out of a configProvider component (from antd) which is used to apply the theme to the antd components: `theme={{algorithm: theme === 'dark' ? darkAlgorithm : defaultAlgorithm}}`
+- the root of the main window consists out of a configProvider component (from antd) which is used to apply the theme to the antd components: `theme={{algorithm: theme === 'dark' ? darkAlgorithm : defaultAlgorithm}}`. These algorithms are imported from antd.
 - it contains the following components:
   - a toolbar: located at the top of the window.
   - an extra div (together with the toolbar in the header), with classname `os-draggable`, used to drag the window around
@@ -1251,7 +1251,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
     if not this.openai:
       return
     model = this.getModelForRequest(transformer.name, fragmentKey)
-    tokens = this.calculateTokens(messages, model)
+    tokens = this.calculateInputTokens(messages, model)
     inputData = {
       model: model,
       messages: messages,
@@ -1287,7 +1287,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         return section['__default']
     return this.getDefaultModel()
   ```
-- calculateTokens(messages, model): calculates the nr of tokens used by the input message using the  function getEncoding from the js-tiktoken library
+- calculateInputTokens(messages, model): calculates the nr of tokens used by the input message using the  function getEncoding from the js-tiktoken library
   ```python
     result = { total: 0 }
     encoding = getEncoding(model)

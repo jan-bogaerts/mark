@@ -51,10 +51,11 @@ function cleanResponse(response, fragment, item, classes, renderToPath) {
   if (response.endsWith("```")) {
     response = response.substring(0, response.length - "```".length);
   }
-  if (!fs.existsSync(renderToPath)) {
-    fs.mkdirSync(renderToPath, { recursive: true });
+  const fullPath = path.join(services.folderService.output, renderToPath);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
   }
-  const filePath = path.join(renderToPath, item + ".js");
+  const filePath = path.join(fullPath, item + ".js");
   fs.writeFileSync(filePath, response);
   return filePath;
 }

@@ -57,7 +57,7 @@
     pathItems = titleToPath.split(" > ")
     pathItems = [part.replaceAll(" ", "_") for part in pathItems]
     pathItems[0] = 'src' # the first item is the project name, we need to replace it with src so that the code gets rendered nicely
-    return os.path.join(services.folderService.output, *pathItems)
+    return os.path.join( *pathItems)
   ```
 - readFile(filePath): read the contents of the specified file and return as a string.
 - getExternalDescription(deps, fragment, item): get how other code has used the class
@@ -94,11 +94,11 @@
 - getImportServiceLine(importDef, renderToPath): (note: this function needs to be exported and usable within this module like in getAllImports)
     ```python
         service = importDef['service']
-        servicePath = importDef['path']
-        servicePath = os.path.relpath(servicePath, renderToPath)
+        servicePath = os.path.join(importDef['path'], service)
+        servicePath = os.path.relpath(renderToPath, servicePath).replaceAll('\\', '/')
         fragment = await services.projectService.getResult(importDef['key'])
         isGlobal = (await deps['is service singleton'].getResult(fragment))?.[service]
-        if isGlobal:
+        if isGlobal == 'yes' or isGlobal == True:
             serviceTxt = "global object"
             service = service.lower()
         else:
@@ -115,11 +115,18 @@
         relPath = relPath.replaceAll('\\', '/')
         importsTxt += f"The const 'resources' can be imported from {relPath}\n"
       imports = await deps[depName].getResult(fragment)?.[item]
-      if imports:
-        for importDef in imports:
-          importsTxt += await getImportServiceLine(deps, importDef, renderToPath)
+      for key, importInfo in imports:
+        if key == item:
+          for importDef in imports:
+            importsTxt += await getImportServiceLine(deps, importDef, renderToPath)  
+        if typeof importInfo == 'string':
+          servicePath = path.relative(renderToPath, importInfo).replaceAll('\\', '/')
+          importsTxt += key + " can be imported from " + servicePath + "\n"
+        else:
+          servicePath = f"./{key}"
+          importsTxt += key + " can be imported from " + servicePath + "\n"        
       if importsTxt:
-        importsTxt = '\n\nimports (only include the imports that are used in the code):\n' + importsTxt
+        importsTxt = '\nimports (only include the imports that are used in the code):\n' + importsTxt
       return importsTxt
     ```   
 ## transformers
@@ -685,6 +692,7 @@
       for toCheck in services.projectService.textFragments:
         if toCheck.key == fragment.key: continue
         classes = await deps['declare or use class'].getResult(toCheck)
+        if not classes: continue
         for className, value in classes.items():
           if value == 'declare':
             await callback(fragment, toCheck, className)
@@ -1373,7 +1381,7 @@
 - dependencies: ['components', 'declare or use component', 'is service singleton', 'component imports', 'primary component', 'consumed interfaces component', 'usage extractor', 'component exact description', 'consumed interfaces class', 'constants']
 - isJson: false
 - functions: 
-  - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
+  - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens - 1000
   - iterator(fragment, callback, result): 
     ```python
       renderToPath = shared.getPath(services, fragment)
@@ -1394,9 +1402,10 @@
           response = response[len("```javascript"):]
       if response.endswith("```"):
           response = response[:-len("```")]
-      if not os.path.exists(renderToPath):
-          os.makedirs(renderToPath)
-      filePath = os.path.join(renderToPath, component + ".js")
+      fullPath = path.join(services.folderService.output, renderToPath)
+      if not os.path.exists(fullPath):
+          os.makedirs(fullPath)
+      filePath = os.path.join(fullPath, component + ".js")
       with open(filePath, "w") as writer:
           writer.write(response)
       return filePath
@@ -1410,10 +1419,18 @@
         > 
         > use the following development stack:
         > {{devStack}}
+        >
+        > Use small functions.
+        > When the user text contains references to other components, use the component, do not write the functionality inline.
+        > A file always contains the definition for 1 component, service or object, no more.
+        > Add documentation to your code.
+        > Only write valid code
+        > Add css classnames to the html
+        > Do not include any intro or explanation at the end, only write code
 
         replace:
         - {{name}}: `component`
-        - {{devStack}}: `services.projectService.textFragments[1]?.lines.join('\n')`  
+        - {{devStack}}: `services.projectService.textFragments[1]?.lines.join('\n').trim()`  
         
       - role: user, content:
 
@@ -1458,9 +1475,10 @@
           response = response[len("```javascript"):]
       if response.endswith("```"):
           response = response[:-len("```")]
-      if not os.path.exists(renderToPath):
-          os.makedirs(renderToPath)
-      filePath = os.path.join(renderToPath, item + ".js")
+      fullPath = os.path.join(services.folderService.output, renderToPath)
+      if not os.path.exists(fullPath):
+          os.makedirs(fullPath)
+      filePath = os.path.join(fullPath, item + ".js")
       with open(filePath, "w") as writer:
           writer.write(response)
       return filePath

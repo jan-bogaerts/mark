@@ -3,6 +3,7 @@ import path from 'path';
 import FolderService from '../folder_service/FolderService';
 import ProjectService from '../project_service/ProjectService';
 import StorageService from '../project_service/storage_service/StorageService';
+import AsyncEventTarget from '../async-event-target/AsyncEventTarget';
 
 class ResultCacheService {
   constructor(transformer) {
@@ -12,7 +13,7 @@ class ResultCacheService {
     this.overwrites = {};
     this.isDirty = false;
     this.lastSaveDate = null;
-    this.eventTarget = new EventTarget();
+    this.eventTarget = new AsyncEventTarget();
 
     
   }
@@ -81,6 +82,7 @@ class ResultCacheService {
     }
   }
 
+
   async handleTextFragmentChanged(e) {
     const fragmentKey = e.detail;
     const cacheKeys = this.secondaryCache[fragmentKey];
@@ -143,7 +145,10 @@ class ResultCacheService {
     if (isModified) {
       this.isDirty = true;
       StorageService.markDirty();
-      this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }));
+      // use setTimeout cause this is not an async function, and the event listeners are async and we want them to be called after the current function is done and in sequence
+      setTimeout(async () => {
+        await this.eventTarget.dispatchEvent(new CustomEvent('result-changed', { detail: key }));
+      }, 0);
     }
   }
 

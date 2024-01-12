@@ -1,3 +1,4 @@
+import AsyncEventTarget from '../async-event-target/AsyncEventTarget';
 import CybertronService from '../cybertron_service/CybertronService';
 import DialogService from '../dialog_service/DialogService';
 
@@ -8,9 +9,10 @@ class ProjectService {
     this.filename = '';
     this.isDirty = false;
     this.blockEvents = false;
-    this.eventTarget = new EventTarget();
+    this.eventTarget = new AsyncEventTarget();
     this.autoSave = this.getAutoSaveState();
-    this.timeout = null;
+    this.timeoutBuilding = null;
+    this.timeoutUpToDate = null;
     this.timeoutObjectsBuilding = {};
     this.timeoutObjectsUpToDate = {};
   }
@@ -89,8 +91,8 @@ class ProjectService {
       return;
     }
     this.timeoutObjectsBuilding[timeoutKey] = { time: Date.now(), fragment, transformer };
-    if (!this.timeout) {
-      this.timeout = setTimeout(() => {
+    if (!this.timeoutBuilding) {
+      this.timeoutBuilding = setInterval(() => {
         const now = Date.now();
         for (let key in this.timeoutObjectsBuilding) {
           const obj = this.timeoutObjectsBuilding[key];
@@ -100,8 +102,8 @@ class ProjectService {
           }
         }
         if (Object.keys(this.timeoutObjectsBuilding).length === 0) {
-          clearTimeout(this.timeout);
-          this.timeout = null;
+          clearTimeout(this.timeoutBuilding);
+          this.timeoutBuilding = null;
         }
       }, 200);
     }
@@ -118,8 +120,8 @@ class ProjectService {
       return;
     }
     this.timeoutObjectsUpToDate[timeoutKey] = { time: Date.now(), fragment, transformer };
-    if (!this.timeout) {
-      this.timeout = setTimeout(() => {
+    if (!this.timeoutUpToDate) {
+      this.timeoutUpToDate = setInterval(() => {
         const now = Date.now();
         for (let key in this.timeoutObjectsUpToDate) {
           const obj = this.timeoutObjectsUpToDate[key];
@@ -129,8 +131,8 @@ class ProjectService {
           }
         }
         if (Object.keys(this.timeoutObjectsUpToDate).length === 0) {
-          clearTimeout(this.timeout);
-          this.timeout = null;
+          clearTimeout(this.timeoutUpToDate);
+          this.timeoutUpToDate = null;
         }
       }, 200);
     }
@@ -182,7 +184,7 @@ class ProjectService {
     if (!fragment.isOutOfDate) {
       fragment.outOfDateTransformers = [transformer];
       this.markOutOfDate(fragment);
-    } else if (fragment.outOfDateTransformers.length > 0) {
+    } else if (fragment.outOfDateTransformers.length > 0 && !fragment.outOfDateTransformers.includes(transformer)) {
       fragment.outOfDateTransformers.push(transformer);
       if (fragment.outOfDateTransformers.length === CybertronService.transformers.length) {
         fragment.outOfDateTransformers = [];
@@ -198,7 +200,10 @@ class ProjectService {
   dispatchEvent(event, value) {
     if (!this.blockEvents) {
       const eventObject = value ? new CustomEvent(event, { detail: value }) : new Event(event);
-      this.eventTarget.dispatchEvent(eventObject);
+      // use setTimeout cause this is not an async function, and the event listeners are async and we want them to be called after the current function is done and in sequence
+      setTimeout(async () => {
+        await this.eventTarget.dispatchEvent(eventObject);
+      }, 0);
     }
   }
 

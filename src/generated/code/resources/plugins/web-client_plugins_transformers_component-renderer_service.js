@@ -27,7 +27,7 @@ function getDescription() {
 }
 
 function calculateMaxTokens(inputTokenCount, modelOptions) {
-  return modelOptions.maxTokens;
+  return modelOptions.maxTokens - inputTokenCount.total - 500;
 }
 
 async function iterator(fragment, callback, result) {
@@ -54,10 +54,11 @@ function cleanResponse(response, fragment, component, components, renderToPath) 
   if (response.endsWith("```")) {
     response = response.substring(0, response.length - "```".length);
   }
-  if (!fs.existsSync(renderToPath)) {
-    fs.mkdirSync(renderToPath, { recursive: true });
+  const fullPath = path.join(services.folderService.output, renderToPath);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
   }
-  const filePath = path.join(renderToPath, component + ".js");
+  const filePath = path.join(fullPath, component + ".js");
   fs.writeFileSync(filePath, response);
   return filePath;
 }
