@@ -51,6 +51,9 @@ class PluginTransformerService extends TransformerBaseService {
   }
 
   buildMessage(fragment) {
+    if (!fragment) {
+      return null;
+    }
     if (!this.plugin.buildMessage) {
       throw new Error('Invalid plugin: buildMessage function not provided');
     }

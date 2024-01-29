@@ -84,7 +84,8 @@ class ResultCacheService {
 
 
   async handleTextFragmentChanged(e) {
-    const fragmentKey = e.detail;
+    let fragmentKey = e.detail;
+    fragmentKey = fragmentKey.split(' | ')[0]; // sometimes this is called from the project, sometimes from another transformer which can have a composite key.
     const cacheKeys = this.secondaryCache[fragmentKey];
     let isModified = false;
     if (cacheKeys) {

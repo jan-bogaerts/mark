@@ -133,7 +133,7 @@ module.exports = {
   getOtherInterfaces: function(deps, fragment, item) {
     return deps['consumed interfaces class'].getResult(fragment).then(function(all) {
       var interfaceTxt = '';
-      all = all[item];
+      all = all && all[item];
       if (all) {
         for (var key in all) {
           var value = all[key];

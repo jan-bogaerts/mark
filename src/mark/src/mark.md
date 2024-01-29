@@ -689,6 +689,7 @@ Remember that each button needs it's own appropriate icon.
   - clear(): makes certain all references to data that was previously loaded, is cleared
     ```python (pseudo)
     projectService.textFragments = []
+    projectService.filename = null
     projectService.content = ''
     lineParser.clear()
     positionTrackingService.clear()
@@ -974,7 +975,7 @@ Use the 'calculateLocation' function to build this string.
   - pseudo code for the parse function and related:
     ```python (pseudo)
 
-      def parse(line, index):
+      def parse(line, index, isInsert=False):
         trimmedLine = line.trim()
         if trimmedLine == '':
           lineParserHelpers.handleEmptyLine(this, index)
@@ -983,11 +984,11 @@ Use the 'calculateLocation' function to build this string.
         else:
           if line[-1] == '\r':
             line = line[:-1]
-          lineParserHelpers.handleRegularLine(this, line, index) # keep the full line with spaces cause it's regular text
+          lineParserHelpers.handleRegularLine(this, line, index, isInsert) # keep the full line with spaces cause it's regular text
 
       def insertLine(line, index):
         this.fragmentsIndex.insert(index, null)
-        this.parse(line, index)
+        this.parse(line, index, True)
 
       def deleteLine(index):
         lineParserHelpers.deleteLine(this, index)
@@ -1103,12 +1104,16 @@ The module 'LineParserHelpers' contains the following helper functions used by t
             insertFragment(service, fragment, fragmentStart, line, fragmentPrjIndex + 1, index)
 
 
-      def updateFragmentLines(service, fragment, line, index, fragmentStart):
+      def updateFragmentLines(service, fragment, line, index, fragmentStart, isInsert=false):
         fragmentLineIndex = index - fragmentStart - 1 # extra - 1 cause the text starts at the line below the title
         isChanged = True
         if fragmentLineIndex < fragment.lines.length: # changing existing line
-          isChanged = fragment.lines[fragmentLineIndex] !== line
-          fragment.lines[fragmentLineIndex] = line
+          if isInsert:
+            fragment.lines.splice(fragmentLineIndex, 0, line)
+            service.fragmentsIndex[index] = fragment
+          else:
+            isChanged = fragment.lines[fragmentLineIndex] !== line
+            fragment.lines[fragmentLineIndex] = line
         else:
           while fragment.lines.length < fragmentLineIndex:
             service.fragmentsIndex[fragmentStart + fragment.lines.length] = fragment
@@ -1119,7 +1124,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
           projectService.markOutOfDate(fragment)
 
 
-      def handleRegularLine(service, line, index):
+      def handleRegularLine(service, line, index, isInsert=false):
         fragment, fragmentStart = service.getFragmentAt(index)
         # no fragment yet at this line or in front of it, create new one
         if not fragment:
@@ -1131,7 +1136,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
         elif fragmentStart == index and fragment.title: # went from title to regular
           removeFragmentTitle(service, fragment, line, index)
         else:
-          updateFragmentLines(service, fragment, line, index, fragmentStart)
+          updateFragmentLines(service, fragment, line, index, fragmentStart, isInsert)
 
       
       def deleteLine(service, index):
@@ -1141,6 +1146,7 @@ The module 'LineParserHelpers' contains the following helper functions used by t
             removeFragmentTitle(service, fragment None, index)
           else:
             del fragment.lines[index - fragmentStart - 1]
+            ProjectService.markOutOfDate(fragment)
 
     ```
   
@@ -1874,7 +1880,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       return this.plugin.calculateMaxTokens(inputTokens)
     return super.calculateMaxTokens(inputTokens)
   ```
-- buildMessage(fragment): if not this.plugin.buildMessage: raise error else return this.plugin.buildMessage(fragment)
+- buildMessage(fragment): if no fragment, return null. If not this.plugin.buildMessage: raise error else return this.plugin.buildMessage(fragment)
 - renderResults():
   ```python
     if this.plugin.renderResults:
@@ -2018,6 +2024,7 @@ getResult(key): `if key in this.overwrites: return this.overwrites[key] else if 
       return filename
     ```
   - buildMessage(fragment, asShared, hasShared):
+  - if not fragment, return null
     - count the nr of non-empty lines in fragment.lines. When 0, return null
     - if asShared:
       - result (json array):

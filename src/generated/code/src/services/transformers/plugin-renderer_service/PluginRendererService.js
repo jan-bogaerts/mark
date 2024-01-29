@@ -88,6 +88,9 @@ class PluginRendererService extends TransformerBaseService {
    * @returns {Promise<Array>} - The built message and keys
    */
   async buildMessage(fragment, asShared, hasShared) {
+    if (!fragment) {
+      return null;
+    }
     const nonEmptyLines = fragment.lines.filter(x => x.trim().length > 0);
     if (nonEmptyLines.length === 0) {
       return [null, []];

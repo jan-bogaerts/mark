@@ -75,7 +75,7 @@ class TransformerBaseService {
   keyToMessageParams(key) {
     return key.map(part => {
       const fragment = ProjectService.getFragment(part);
-      return fragment || part;
+      return fragment || null; // if deleted, return null
     });
   }
 

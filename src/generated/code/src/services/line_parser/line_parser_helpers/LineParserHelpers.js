@@ -172,13 +172,19 @@ class LineParserHelpers {
    * @param {string} line - The line to parse.
    * @param {number} index - The index of the line.
    * @param {number} fragmentStart - The start index of the fragment.
+   * @param {boolean} isInsert - Whether the line is being inserted.
    */
-  static updateFragmentLines(service, fragment, line, index, fragmentStart) {
+  static updateFragmentLines(service, fragment, line, index, fragmentStart, isInsert=false) {
     const fragmentLineIndex = index - fragmentStart - 1;
     let isChanged = true;
     if (fragmentLineIndex < fragment.lines.length) {
-      isChanged = fragment.lines[fragmentLineIndex] !== line;
-      fragment.lines[fragmentLineIndex] = line;
+      if (isInsert) {
+        fragment.lines.splice(fragmentLineIndex, 0, line);
+        service.fragmentsIndex[index] = fragment;
+      } else {
+        isChanged = fragment.lines[fragmentLineIndex] !== line;
+        fragment.lines[fragmentLineIndex] = line;
+      }
     } else {
       while (fragment.lines.length < fragmentLineIndex) {
         service.fragmentsIndex[fragmentStart + fragment.lines.length] = fragment;
@@ -198,7 +204,7 @@ class LineParserHelpers {
    * @param {string} line - The line to parse.
    * @param {number} index - The index of the line.
    */
-  static handleRegularLine(service, line, index) {
+  static handleRegularLine(service, line, index, isInsert=false) {
     const [fragment, fragmentStart] = this.getFragmentAt(service, index);
     if (!fragment) {
       const toAdd = service.createTextFragment('', 0);
@@ -210,7 +216,7 @@ class LineParserHelpers {
     } else if (fragmentStart === index && fragment.title) {
       this.removeFragmentTitle(service, fragment, line, index);
     } else {
-      this.updateFragmentLines(service, fragment, line, index, fragmentStart);
+      this.updateFragmentLines(service, fragment, line, index, fragmentStart, isInsert);
     }
   }
 
@@ -224,6 +230,7 @@ class LineParserHelpers {
         this.removeFragmentTitle(service, fragment, null, index);
       } else {
         fragment.lines.splice(index - fragmentStart - 1, 1);
+        ProjectService.markOutOfDate(fragment);
       }
     }
   }

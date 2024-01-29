@@ -6,14 +6,14 @@ const deps = {}; // must always be present
 function getDescription() {
   return {
     name: 'component exact description',
-    dependencies: ['compress', 'components', 'primary component'],
+    dependencies: ['components', 'primary component'],
     isJson: false,
     description: 'The component-exact-description-service is responsible for generating descriptions of components based on the text-fragments that contain references to those components. A single description can only contain info about the requested component, any information about other components is removed.'
   };
 }
 
 async function buildContent(fragment, components, primary, item) {
-  var info = await deps.compress.getResult(fragment);
+  var info = fragment.lines.join('\n');
   if (!info) {
     return null;
   }
@@ -26,7 +26,7 @@ async function buildContent(fragment, components, primary, item) {
   } else if (other_components.length > 1) {
     to_be = ' are';
     var last_join = item === primary ? ' and ' : ' or ';
-    other_components = other_components.slice(0, -1).join(', ') + last_join + other_components[other_components.length - 1];
+    other_components = other_components.slice(0, -1).join(', ') + last_join + other_components.slice(-1);
   } else {
     other_components = '';
   }
@@ -35,7 +35,7 @@ async function buildContent(fragment, components, primary, item) {
       remember_prompt = 'Remember: mention where ' + other_components + to_be + ' used but not their features';
       other_components = ', only mention where ' + other_components + to_be + ' used but not their features';
     } else {
-      other_components = ', nothing about ' + other_components;
+      other_components = ', do not mention anything about ' + other_components;
     }
   }
   return [info, other_components, remember_prompt];

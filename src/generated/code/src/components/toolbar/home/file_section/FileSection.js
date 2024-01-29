@@ -54,6 +54,7 @@ class FileSection extends Component {
   newProject = async () => {
     if (await this.trySave()) {
       if (!window.electron.isPluginMode) {
+        this.setState({ filename: null });
         await storageService.new();
       }
     }

@@ -56,7 +56,7 @@ class LineParser {
    * @param {string} line
    * @param {number} index
    */
-  parse(line, index) {
+  parse(line, index, isInsert=false) {
     let trimmedLine = line.trim();
     if (trimmedLine === '') {
       LineParserHelpers.handleEmptyLine(this, index);
@@ -66,7 +66,7 @@ class LineParser {
       if (line[line.length - 1] === '\r') {
         line = line.slice(0, -1);
       }
-      LineParserHelpers.handleRegularLine(this, line, index);
+      LineParserHelpers.handleRegularLine(this, line, index, isInsert);
     }
   }
 
@@ -77,7 +77,7 @@ class LineParser {
    */
   insertLine(line, index) {
     this.fragmentsIndex.splice(index, 0, null);
-    this.parse(line, index);
+    this.parse(line, index, true);
   }
 
   /**

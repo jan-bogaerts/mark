@@ -19,6 +19,7 @@ class StorageService {
 
   clear() {
     projectService.textFragments = [];
+    projectService.filename = null;
     projectService.content = '';
     lineParser.clear();
     positionTrackingService.clear();

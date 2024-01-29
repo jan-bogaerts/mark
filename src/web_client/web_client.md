@@ -82,7 +82,8 @@
 - getOtherInterfaces(deps, fragment, item): get the interface definitions of other classes that are used by this class. Only include parts of the interface that are actually used in the code that needs to be rendered.
   ```python
       interfaceTxt = ''
-      all = (await deps['consumed interfaces class'].getResult(fragment))?.[item]
+      all = (await deps['consumed interfaces class'].getResult(fragment))
+      all = all and all[item]
       if all:
         for key, value in all.items():
           found = False
@@ -463,7 +464,7 @@
 - The component-exact-description-service is responsible for generating descriptions of components based on the text-fragments that contain references to those components. A single description can only contain info about the requested component, any information about other components is removed.
 - Used as input for various other transformers that require the description of exactly only 1 component in a fragment instead of everything.
 - name: 'component exact description'
-- dependencies: ['compress', 'components', 'primary component']
+- dependencies: ['components', 'primary component']
 - isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount): return inputTokenCount.total
@@ -481,8 +482,8 @@
     - result (json array):
       - role: system, content:
         
-        > Act as an ai feature classification system.
-        > It is your task to build the feature list related to the UI component '{{name}}' using the provided feature list.
+        > Act as an ai software analyst.
+        > It is your task to write a description of the UI component '{{name}}' using the provided feature list.
         > Only return what is in the feature list about {{name}}{{otherCompText}}. No introduction or explanation.
         
         replaceAll:
@@ -503,7 +504,7 @@
   
   - buildContent(fragment, components, primary, item):
     ```python
-      info = await deps.compress.getResult(fragment)
+      info = '\n'.join(fragment.lines)
       if not info:
         return None
       other_components = [c for c in components if c != item]
@@ -525,7 +526,7 @@
               remember_prompt = 'Remember: mention where ' + other_components + to_be + ' used but not their features'
               other_components = ', only mention where ' + other_components + to_be + ' used but not their features'
           else:
-              other_components = ', nothing about ' + other_components
+              other_components = ', do not mention anything about ' + other_components
       return info, other_components, remember_prompt
     ```
 
@@ -1222,7 +1223,7 @@
       - role: system, content:
 
           > It is your task to find functions, properties, fields and constants related to a specific {{type}} in the specified code. 
-          > Return the result as a json object of key-value pairs where the value is a short description of the key with enough information so that '{{name}}' can implement the feature. Include parameters declarations. Do not include any introduction or explanation. Return an empty object if nothing is found.
+          > Return the result as a json object of key-value pairs where the value is a short description of the key with enough information so that '{{name}}' can implement the feature. Include parameters declarations for functions. Do not include any introduction or explanation. Return an empty object if nothing is found.
 
           replace:
           - {{name}}: `service`
@@ -1381,7 +1382,7 @@
 - dependencies: ['components', 'declare or use component', 'is service singleton', 'component imports', 'primary component', 'consumed interfaces component', 'usage extractor', 'component exact description', 'consumed interfaces class', 'constants']
 - isJson: false
 - functions: 
-  - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens - 1000
+  - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens - inputTokenCount.total - 500
   - iterator(fragment, callback, result): 
     ```python
       renderToPath = shared.getPath(services, fragment)
@@ -1403,8 +1404,8 @@
       if response.endswith("```"):
           response = response[:-len("```")]
       fullPath = path.join(services.folderService.output, renderToPath)
-      if not os.path.exists(fullPath):
-          os.makedirs(fullPath)
+      if not fs.exists(fullPath):
+          fs.mkdirSync(fullPath)
       filePath = os.path.join(fullPath, component + ".js")
       with open(filePath, "w") as writer:
           writer.write(response)
@@ -1445,6 +1446,10 @@
         - {{otherInterfaces}}: `await shared.getOtherInterfaces(deps, fragment, component)`
         - {{importsToAdd}}: `await shared.getAllImports(deps, 'component imports', services, fragment, component, renderToPath)`
 
+      - role: assistant, content:
+
+        > Remember: Do not include any introduction or explanation, only write code.
+
     - return: `result, [ component ]`
 
 
@@ -1455,7 +1460,7 @@
 - dependencies: ['classes', 'declare or use class', 'is service singleton', 'class imports', 'primary class', 'consumed interfaces class', 'usage extractor']
 - isJson: false
 - functions:
-  - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens
+  - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens - inputTokenCount.total - 500
   - iterator(fragment, callback, result): 
     ```python
       renderToPath = shared.getPath(services, fragment)
@@ -1509,6 +1514,10 @@
         - {{externalDescription}}:  `await shared.getExternalDescription(deps, fragment, item)`
         - {{otherInterfaces}}: `await shared.getOtherInterfaces(deps, fragment, item)`
         - {{importsToAdd}}: `await shared.getAllImports(deps, 'class imports', services, fragment, item, renderToPath)`
+
+      - role: assistant, content:
+
+        > Remember: Do not include any introduction or explanation, only write code.
 
     - return: `result, [ item ]`
 

@@ -36,7 +36,7 @@ class ChangeProcessorService {
       }
 
       // Now there are either lines to delete or to insert
-      while (curLine < lineEnd) {
+      while (curLine <= lineEnd) {
         LineParser.deleteLine(lineEnd); // need to do in reverse
         lineEnd -= 1;
       }
