@@ -31,6 +31,7 @@ function calculateMaxTokens(inputTokenCount, modelOptions) {
 async function iterator(fragment, callback, resultSetter) {
   const renderToPath = shared.getPath(services, fragment);
   const classes = await deps.classes.getResult(fragment);
+  if (!classes) return;
   const primary = await deps['primary class'].getResult(fragment);
   if (!primary) {
     throw new Error('no primary found for ' + fragment.title);

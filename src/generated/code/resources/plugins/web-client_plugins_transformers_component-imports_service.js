@@ -19,6 +19,9 @@ function calculateMaxTokens(inputTokenCount) {
 
 async function iterator(fragment, callback, resultSetter) {
   const components = await deps.components.getResult(fragment);
+  if (!components) {
+    return;
+  }
   const declareOrUseRaw = await deps['declare or use component'].getResult(fragment);
   const declareOrUse = {};
   for (var k in declareOrUseRaw) {

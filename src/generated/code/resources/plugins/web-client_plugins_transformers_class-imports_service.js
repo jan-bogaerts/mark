@@ -63,6 +63,9 @@ async function resolveClassImports(fragment, item, callback, resultSetter) {
 
 async function iterator(fragment, callback, resultSetter) {
   let classes = await deps.classes.getResult(fragment);
+  if (!classes) {
+    return;
+  }
   const declareOrUseRaw = await deps['declare or use class'].getResult(fragment);
   const declareOrUse = {};
   for (var k in declareOrUseRaw) {

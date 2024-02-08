@@ -26,7 +26,10 @@ async function getKeysWithClasses(toExclude) {
 async function iterator(fragment, callback, resultSetter) {
   var titles = await getKeysWithClasses(fragment.key);
   var classes = await deps.classes.getResult(fragment);
-  if (classes?.length > 0) {
+  if (!classes) {
+    return;
+  }
+  if (classes.length > 0) {
     var primary = await deps['primary class'].getResult(fragment);
     for (var item of classes) {
       if (item === primary) {

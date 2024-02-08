@@ -15,7 +15,7 @@ function getDescription() {
 }
 
 function calculateMaxTokens(inputTokenCount) {
-  return inputTokenCount.total / 5;
+  return inputTokenCount.total + (inputTokenCount.total / 5);
 }
 
 async function iterator(fragment, callback, result) {

@@ -63,14 +63,16 @@ module.exports = {
       for (var k in classifications) {
         temp_classifications[k.toLowerCase()] = classifications[k];
       }
-      components.forEach(function(component) {
-        var name = component.toLowerCase();
-        if (temp_classifications[name] === 'declare') {
-          to_render.push(component);
-        } else {
-          used.push(component);
-        }
-      });
+      if (components) {
+        components.forEach(function(component) {
+          var name = component.toLowerCase();
+          if (temp_classifications[name] === 'declare') {
+            to_render.push(component);
+          } else {
+            used.push(component);
+          }
+        });
+      }
       return [to_render, used];
     });
   },

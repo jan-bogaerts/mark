@@ -19,6 +19,9 @@ function calculateMaxTokens(inputTokenCount) {
 
 async function iterator(fragment, callback) {
   const components = await deps.components.getResult(fragment);
+  if (!components) {
+    return;
+  }
   for (let item of components) {
     await callback(fragment, item);
   }

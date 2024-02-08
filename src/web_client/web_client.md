@@ -42,12 +42,13 @@
     used = []
     classifications = await deps['declare or use component'].getResult(fragment)
     classifications = {k.lower(): v for k, v in classifications.items()}
-    for component in components:
-      name = component.lower()
-      if classifications[name] === 'declare':
-          to_render.append(component)
-      else:
-          used.append(component)
+    if components:
+      for component in components:
+        name = component.lower()
+        if classifications[name] === 'declare':
+            to_render.append(component)
+        else:
+            used.append(component)
     return to_render, used
   ```
 - getPath(services, fragment): calculate the path to the files we will generate cause we need it to get the import paths of the locally declared components
@@ -297,6 +298,7 @@
   - iterator(fragment, callback, resultSetter):
       ```python
         components = await deps.components.getResult(fragment)  
+        if not components: return
         if len(components) > 1:
           await callback(fragment, components)
         elif len(components) == 1:
@@ -349,6 +351,7 @@
   - iterator(fragment, callback, resultSetter):
       ```python
         classes = await deps.classes.getResult(fragment)  
+        if not classes: return
         if len(classes) > 1:
           await callback(fragment, classes)
         elif len(classes) == 1:
@@ -399,6 +402,7 @@
   - iterator(fragment, callback):
     ```python
       classes = await deps.classes.getResult(fragment)  
+      if not classes: return
       for item in classes:
         await callback(fragment, item)
     ```
@@ -435,6 +439,7 @@
   - iterator(fragment, callback):
     ```python
       components = await deps.components.getResult(fragment)
+      if not components: return
       for item in components:
         await callback(fragment, item)
     ```
@@ -471,6 +476,7 @@
   - iterator(fragment, callback):
     ```python
       components = await deps.components.getResult(fragment)
+      if not components: return
       primary = await deps['primary component'].getResult(fragment)
       for item in components:
         await callback(fragment, components, primary, item)
@@ -543,6 +549,7 @@
       description = await deps['component description'].getResult(fragment)
       titles = await getOtherTitles(fragment.key)
       components = await deps.components.getResult(fragment)
+      if not components: return
       if len(components) > 0:
         primary = await deps['primary component'].getResult(fragment)
         for item in components:
@@ -620,7 +627,8 @@
     ```python
       titles = await getKeysWithClasses(fragment.key)
       classes = await deps.classes.getResult(fragment)
-      if len(classes?) > 0:
+      if not classes: return
+      if len(classes) > 0:
         primary = await deps['primary class'].getResult(fragment)
         for item in classes:
           if item == primary:
@@ -974,6 +982,7 @@
   - iterator(fragment, callback, resultSetter):
     ```python
       components = await deps.components.getResult(fragment)
+      if not components: return
       declareOrUseRaw = await deps['declare or use component'].getResult(fragment)
       declareOrUse = {}
       for k in declareOrUseRaw.keys():
@@ -1077,6 +1086,7 @@
   - iterator(fragment, callback, resultSetter):
     ```python
       classes = await deps.classes.getResult(fragment)
+      if not classes: return
       declareOrUseRaw = await deps['declare or use class'].getResult(fragment);
       declareOrUse = {}
       for k in declareOrUseRaw.keys():
@@ -1164,7 +1174,7 @@
 - dependencies: ['component renderer', 'components', 'component imports', 'declare or use component', 'class renderer', 'classes', 'class imports', 'primary component']
 - isJson: true
 - functions:
-  - calculateMaxTokens(inputTokenCount): inputTokenCount / 5
+  - calculateMaxTokens(inputTokenCount): inputTokenCount.total + (inputTokenCount.total / 5)
   - iterator(fragment, callback, result):
     ```python
       allCode = None
@@ -1257,7 +1267,7 @@
 - dependencies: ['components', 'component imports', 'usage extractor', 'component exact description', 'global component features']
 - isJson: true
 - functions:
-  - calculateMaxTokens(inputTokenCount): inputTokenCount
+  - calculateMaxTokens(inputTokenCount): inputTokenCount.total
   - iterator(fragment, callback, result): 
     ```python
       components = await deps.components.getResult(fragment)
@@ -1322,7 +1332,7 @@
 - dependencies: ['classes', 'class imports', 'usage extractor', 'class description']
 - isJson: true
 - functions:
-  - calculateMaxTokens(inputTokenCount): inputTokenCount
+  - calculateMaxTokens(inputTokenCount): inputTokenCount.total
   - iterator(fragment, callback, result): 
     ```python
       classes = await deps.classes.getResult(fragment)

@@ -107,7 +107,7 @@ class ResultCacheService {
     for (const key of additionalKeys) {
       if (!this.secondaryCache[key]) {
         this.secondaryCache[key] = [resultKey];
-      } else {
+      } else if (this.secondaryCache[key].indexOf(resultKey) === -1) { // some parts can be multiple times in the key, only save 1 time
         this.secondaryCache[key].push(resultKey);
       }
     }

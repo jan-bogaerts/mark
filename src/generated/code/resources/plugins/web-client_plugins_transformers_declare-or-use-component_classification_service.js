@@ -20,6 +20,9 @@ async function iterator(fragment, callback, resultSetter) {
   const titles = await getOtherTitles(fragment.key);
   const description = await deps['component description'].getResult(fragment);
   const components = await deps.components.getResult(fragment);
+  if (!components) {
+    return;
+  }
   if (components.length > 0) {
     const primary = await deps['primary component'].getResult(fragment);
     for (let item of components) {
