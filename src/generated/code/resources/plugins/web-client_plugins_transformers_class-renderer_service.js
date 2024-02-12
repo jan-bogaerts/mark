@@ -18,6 +18,7 @@ function getDescription() {
       "primary class",
       "consumed interfaces class",
       "usage extractor",
+      "constants",
     ],
     isJson: false,
     description: 'the class-renderer service is responsible for generating all the code for the services in the form of classes.'
@@ -31,7 +32,7 @@ function calculateMaxTokens(inputTokenCount, modelOptions) {
 async function iterator(fragment, callback, resultSetter) {
   const renderToPath = shared.getPath(services, fragment);
   const classes = await deps.classes.getResult(fragment);
-  if (!classes) return;
+  if (!classes || !classes.length) return;
   const primary = await deps['primary class'].getResult(fragment);
   if (!primary) {
     throw new Error('no primary found for ' + fragment.title);
@@ -77,7 +78,7 @@ async function buildMessage(fragment, item, classes, renderToPath) {
           "{{ownDescription}}",
           classes.length > 1
             ? await deps["class exact description"].getResult(fragment)
-            : "\n".join(fragment.lines)
+            : fragment.lines.join("\n")
         )
         .replace(
           "{{externalDescription}}",

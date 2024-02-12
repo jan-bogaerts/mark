@@ -131,7 +131,7 @@ class ResultCacheService {
       const keyParts = key.split(' | ');
       this.addSecondaryKeys(key, keyParts);
       this.addSecondaryKeys(key, additionalKeys);
-    } else if (this.cache[key].result !== result || JSON.stringify(this.cache[key].prompt) !== JSON.stringify(prompt)) {
+    } else if (JSON.stringify(this.cache[key].result) !== JSON.stringify(result) || JSON.stringify(this.cache[key].prompt) !== JSON.stringify(prompt)) {
       this.removeSecondaryKeys(key, this.cache[key].additionalKeys);
       this.addSecondaryKeys(key, additionalKeys);
       this.cache[key].result = result;

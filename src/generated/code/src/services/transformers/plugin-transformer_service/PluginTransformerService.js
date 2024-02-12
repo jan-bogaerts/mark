@@ -97,9 +97,9 @@ class PluginTransformerService extends TransformerBaseService {
     }
     if (this.plugin.iterator) {
       let result = {};
-      const resultSetter = (itemResult, keys) => {
+      const resultSetter = (itemResult, keys, prompt=null) => {
         const key = this.buildFullKey(fragment, keys);
-        this.cache.setResult(key, itemResult, null);
+        this.cache.setResult(key, itemResult, prompt);
         result = this.collectResult(result, keys, itemResult);
       };
       const iteratorStepHandler = async (...args) => {
@@ -115,7 +115,7 @@ class PluginTransformerService extends TransformerBaseService {
         if (this.plugin.cleanResponse) {
           itemResult = this.plugin.cleanResponse(itemResult, ...args);
         }
-        resultSetter(itemResult, keys);
+        resultSetter(itemResult, keys, message);
       };
       this.cache.deleteResultsFor(fragment.key);
       await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
@@ -149,10 +149,10 @@ class PluginTransformerService extends TransformerBaseService {
     if (this.plugin.iterator) {
       let result = {};
       const oldResultKeys = this.cache.secondaryCache[fragment.key]?.filter(x => x.startsWith(fragment.key)) || [];
-      const resultSetter = (itemResult, keys, fromCache = false) => {
+      const resultSetter = (itemResult, keys, fromCache = false, prompt=null) => {
         const key = this.buildFullKey(fragment, keys);
         if (!fromCache) {
-          this.cache.setResult(key, itemResult, null);
+          this.cache.setResult(key, itemResult, prompt);
         }
         result = this.collectResult(result, keys, itemResult);
         const index = oldResultKeys.indexOf(key);
@@ -181,7 +181,7 @@ class PluginTransformerService extends TransformerBaseService {
           isFromCache = true;
           itemResult = this.cache.getResult(key);
         }
-        resultSetter(itemResult, keys, isFromCache); // important here: use the original set of keys, dont include the primary key cause that would give a dict with the fragment key as key, instead of raw result or list 
+        resultSetter(itemResult, keys, isFromCache, message); // important here: use the original set of keys, dont include the primary key cause that would give a dict with the fragment key as key, instead of raw result or list 
       };
       await this.plugin.iterator(fragment, iteratorStepHandler, resultSetter);
       this.cache.deleteAfterUpdate(fragment.key, oldResultKeys);

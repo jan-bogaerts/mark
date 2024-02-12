@@ -298,7 +298,7 @@
   - iterator(fragment, callback, resultSetter):
       ```python
         components = await deps.components.getResult(fragment)  
-        if not components: return
+        if not components or not len(components): return
         if len(components) > 1:
           await callback(fragment, components)
         elif len(components) == 1:
@@ -351,7 +351,7 @@
   - iterator(fragment, callback, resultSetter):
       ```python
         classes = await deps.classes.getResult(fragment)  
-        if not classes: return
+        if not classes or not len(classes): return
         if len(classes) > 1:
           await callback(fragment, classes)
         elif len(classes) == 1:
@@ -402,7 +402,7 @@
   - iterator(fragment, callback):
     ```python
       classes = await deps.classes.getResult(fragment)  
-      if not classes: return
+      if not classes or not len(classes): return
       for item in classes:
         await callback(fragment, item)
     ```
@@ -510,6 +510,7 @@
   
   - buildContent(fragment, components, primary, item):
     ```python
+      if not len(fragment.lines) return
       info = '\n'.join(fragment.lines)
       if not info:
         return None
@@ -1467,7 +1468,7 @@
 - the class-renderer service is responsible for generating all the code for the services in the form of classes.
 - used to build UI applications
 - name: 'class renderer'
-- dependencies: ['classes', 'declare or use class', 'is service singleton', 'class imports', 'primary class', 'consumed interfaces class', 'usage extractor']
+- dependencies: ['classes', 'declare or use class', 'is service singleton', 'class imports', 'primary class', 'consumed interfaces class', 'usage extractor', 'constants']
 - isJson: false
 - functions:
   - calculateMaxTokens(inputTokenCount, modelOptions): modelOptions.maxTokens - inputTokenCount.total - 500
@@ -1475,6 +1476,7 @@
     ```python
       renderToPath = shared.getPath(services, fragment)
       classes = await deps.classes.getResult(fragment)
+      if not classes or len(classes) === 0: return
       primary = await deps['primary class'].getResult(fragment)
       if not primary:
         raise Exception('no primary found for ', fragment.title)

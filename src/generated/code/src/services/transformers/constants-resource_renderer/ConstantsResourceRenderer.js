@@ -58,7 +58,7 @@ class ConstantsResourceRenderer extends TransformerBaseService {
   }
 
   buildMessage(fragment) {
-    return ['', []];
+    return [[], []];
   }
 }
 

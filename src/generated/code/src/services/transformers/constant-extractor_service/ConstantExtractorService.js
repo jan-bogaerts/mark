@@ -134,7 +134,7 @@ class ConstantExtractorService extends TransformerBaseService {
     if (!fragment) {
       return null;
     }
-    return [fragment.lines.join('\n'), []];
+    return [fragment.lines, []];
   }
 }
 

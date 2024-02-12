@@ -33,7 +33,7 @@ function calculateMaxTokens(inputTokenCount, modelOptions) {
 async function iterator(fragment, callback, resultSetter) {
   const renderToPath = shared.getPath(services, fragment);
   const components = await deps.components.getResult(fragment);
-  if (!components) {
+  if (!components || !components.length) {
     return;
   }
   const primary = await deps['primary component'].getResult(fragment);
