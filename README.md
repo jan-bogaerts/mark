@@ -1,5 +1,7 @@
 # Mark
 
+Note: this project is no longer being developed. Conclusion: this approach works especially for new starting projects, but is not so good in maintenance. Better solutions are currently available for this.
+
 Mark is an ideation and corpus building/manipulation tool driven by machine learning. It allows users to enter text in markdown of any length, which can be transformed (and reverted) into something else. This is done using transformers that are completely customizable.
 
 Some use cases:
@@ -137,4 +139,5 @@ As this is an active project, new limitations or issues may be discovered. We ap
 ## Contribution Guidelines
 
 Contributions are welcome! If you'd like to contribute to the Mark project, please make a Pull Request (PR) and send it for review.
+
 
